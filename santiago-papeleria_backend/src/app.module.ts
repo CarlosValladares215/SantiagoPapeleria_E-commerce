@@ -13,7 +13,7 @@ import { PromocionesModule } from './promociones/promociones.module';
 @Module({
   imports: [
     // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
-    MongooseModule.forRoot(process.env.MONGO_URI as string),
+    MongooseModule.forRoot('mongodb+srv://admin:admin@santiagopapeleria.ogosw2n.mongodb.net/PapeleriaSantiago?retryWrites=true&w=majority'),
     ProductosModule,
     PedidosModule,
     UsuariosModule,
@@ -23,4 +23,4 @@ import { PromocionesModule } from './promociones/promociones.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
