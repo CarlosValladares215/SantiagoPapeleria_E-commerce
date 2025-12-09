@@ -1,0 +1,61 @@
+<div [class]="'lg:w-80 ' + (showFilters ? 'block' : 'hidden lg:block')">
+    <div class="bg-white rounded-xl shadow-lg p-6 sticky top-24">
+        <div class="mb-6 pb-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-[#104D73]">Filtros</h2>
+        </div>
+
+        <!-- Categorías -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-[#104D73] mb-4">Categorías</h3>
+            <div class="space-y-2">
+                <button *ngFor="let cat of categories" (click)="onCategorySelect(cat.name)" [class]="'w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ' +
+            (filters.category === cat.name 
+              ? 'bg-[#104D73] text-white' 
+              : 'bg-gray-100 hover:bg-gray-200')">
+                    <span class="font-medium">{{ getCategoryLabel(cat.name) }}</span>
+                    <span [class]="'text-sm px-2 py-1 rounded ' +
+            (filters.category === cat.name 
+              ? 'bg-white bg-opacity-20' 
+              : 'bg-gray-200')">
+                        {{ cat.count }}
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Rango de Precio -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold text-[#104D73] mb-4">Rango de Precio</h3>
+            <div class="space-y-3">
+                <label *ngFor="let range of priceRanges" class="flex items-center space-x-3 cursor-pointer group">
+                    <div class="relative">
+                        <input type="radio" name="priceRange" [checked]="isPriceRangeActive(range.min, range.max)"
+                            (change)="onPriceRangeSelect(range.min, range.max)"
+                            class="w-5 h-5 text-[#104D73] border-2 border-gray-300 focus:ring-2 focus:ring-[#104D73] cursor-pointer" />
+                    </div>
+                    <span class="text-gray-700 group-hover:text-[#104D73] transition-colors">
+                        {{ range.label }}
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Stock Filter -->
+        <div class="mb-6">
+            <label class="flex items-center space-x-3 cursor-pointer group">
+                <input type="checkbox" [checked]="filters.inStock" (change)="onStockToggle($any($event.target).checked)"
+                    class="w-5 h-5 text-[#104D73] border-2 border-gray-300 rounded focus:ring-2 focus:ring-[#104D73] cursor-pointer" />
+                <span class="text-gray-700 font-medium group-hover:text-[#104D73] transition-colors">
+                    Solo productos en stock
+                </span>
+            </label>
+        </div>
+
+        <!-- Clear Filters Button -->
+        <button (click)="onClearFilters()"
+            class="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+            <i class="ri-refresh-line"></i>
+            Limpiar Filtros
+        </button>
+    </div>
+</div>

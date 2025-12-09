@@ -1,0 +1,51 @@
+.specs-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 18px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  margin-top: 2rem;
+
+  .specs-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #104D73;
+    margin-bottom: 1.4rem;
+  }
+}
+
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    width: 30%;
+    text-align: left;
+    background: #F9FAFB;
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+    color: #104D73;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  td {
+    padding: 0.8rem 1rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+  }
+}
+
+.specs-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: white;
+  border-radius: 12px;
+  color: #6b7280;
+  font-size: 1rem;
+
+  i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #104D73;
+  }
+}

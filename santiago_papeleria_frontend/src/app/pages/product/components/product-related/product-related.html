@@ -1,0 +1,59 @@
+<div class="related-wrapper" *ngIf="related.length > 0">
+
+  <h2 class="section-title">Productos Relacionados</h2>
+
+  <div class="grid">
+    <div class="card" *ngFor="let p of related">
+
+      <!-- Imagen -->
+      <div class="image-box">
+        <img [src]="p.image" [alt]="p.name" />
+
+        <!-- Badge oferta -->
+        <div class="badge-offer" *ngIf="p.discount && p.stock > 0">
+          -{{ p.discount }}%
+        </div>
+
+        <!-- Badge nuevo -->
+        <div class="badge-new" *ngIf="p.isNew && p.stock > 0">
+          NUEVO
+        </div>
+
+        <!-- Overlay agotado -->
+        <div class="overlay" *ngIf="p.stock === 0">
+          <span>AGOTADO</span>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="info">
+        <span class="category">{{ p.category }}</span>
+
+        <h3 class="name" title="{{ p.name }}">
+          {{ p.name }}
+        </h3>
+
+        <app-product-price
+          [price]="p.price"
+          [originalPrice]="p.originalPrice"
+          [discount]="p.discount"
+          [isOffer]="p.isOffer">
+        </app-product-price>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button class="btn-outline">Ver Detalles</button>
+
+        <button
+          class="btn-add"
+          [class.disabled]="p.stock === 0"
+          [disabled]="p.stock === 0">
+          {{ p.stock === 0 ? "Agotado" : "Agregar" }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

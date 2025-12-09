@@ -1,0 +1,26 @@
+<div class="space-y-4">
+    <!-- Color Selection -->
+    <div *ngIf="colors.length > 0">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+            Color: {{ getSelectedColorLabel() }}
+        </label>
+        <div class="flex gap-2">
+            <button *ngFor="let color of colors" (click)="selectColor(color.name)" [class]="'w-8 h-8 rounded-full border-2 transition-all ' +
+          (selectedColor === color.name ? 'border-gray-900 scale-110' : 'border-gray-300')"
+                [style.backgroundColor]="color.hex" [title]="color.label"></button>
+        </div>
+    </div>
+
+    <!-- Size Selection -->
+    <div *ngIf="sizes.length > 0">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Tamaño:</label>
+        <div class="grid grid-cols-3 gap-2">
+            <button *ngFor="let size of sizes" (click)="selectSize(size.name)" [class]="'px-3 py-2 text-sm border rounded-lg transition-all whitespace-nowrap ' +
+          (selectedSize === size.name
+            ? 'border-[#104D73] bg-blue-50 text-[#104D73]'
+            : 'border-gray-300 hover:border-gray-400')">
+                {{ size.label }}
+            </button>
+        </div>
+    </div>
+</div>

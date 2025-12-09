@@ -1,0 +1,31 @@
+<div class="mt-8 flex justify-center">
+    <div class="flex gap-2">
+        <!-- Previous Button -->
+        <button (click)="onPrevious()" [disabled]="currentPage === 1"
+            class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="ri-arrow-left-s-line"></i>
+        </button>
+
+        <!-- Page Numbers -->
+        <ng-container *ngFor="let page of getPageNumbers()">
+            <!-- Ellipsis -->
+            <span *ngIf="page === -1" class="w-10 h-10 flex items-center justify-center text-gray-400">
+                ...
+            </span>
+
+            <!-- Page Button -->
+            <button *ngIf="page > 0" (click)="onPageClick(page)" [class]="'w-10 h-10 flex items-center justify-center rounded-lg whitespace-nowrap transition-colors ' +
+          (currentPage === page 
+            ? 'bg-[#104D73] text-white' 
+            : 'border border-gray-300 hover:bg-gray-100')">
+                {{ page }}
+            </button>
+        </ng-container>
+
+        <!-- Next Button -->
+        <button (click)="onNext()" [disabled]="currentPage === totalPages"
+            class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="ri-arrow-right-s-line"></i>
+        </button>
+    </div>
+</div>

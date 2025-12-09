@@ -1,0 +1,138 @@
+<div class="container mx-auto px-4 md:px-8 lg:px-12 py-8">
+
+  <!-- ✅ GUARD: Solo renderiza si product() existe -->
+  <ng-container *ngIf="product() as p">
+
+    <!-- BREADCRUMB -->
+    <app-product-breadcrumb [category]="p.category" [categoryPath]="categoryPath(p.category)" [productName]="p.name">
+    </app-product-breadcrumb>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-6">
+
+      <!-- IMAGE GALLERY -->
+      <app-product-image-gallery [images]="p.images" [selectedIndex]="selectedImage()" [productName]="p.name"
+        (imageSelect)="onImageSelect($event)">
+      </app-product-image-gallery>
+
+      <!-- PRODUCT DETAILS -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl p-6 shadow-lg">
+
+          <!-- Brand and SKU -->
+          <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <span>Marca: {{ p.brand }}</span>
+            <span *ngIf="p.sku">•</span>
+            <span *ngIf="p.sku">SKU: {{ p.sku }}</span>
+          </div>
+
+          <!-- Product Name -->
+          <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ p.name }}</h1>
+
+          <!-- Rating -->
+          <div class="flex items-center gap-3 mb-6" *ngIf="p.rating">
+            <div class="flex items-center">
+              <ng-container *ngFor="let star of [1,2,3,4,5]; let i = index">
+                <i
+                  [class]="'ri-star-' + (i < Math.floor(p.rating!) ? 'fill' : 'line') + ' text-yellow-400 text-lg'"></i>
+              </ng-container>
+            </div>
+            <span class="text-gray-600">{{ p.rating }} ({{ p.reviews.length }} reseñas)</span>
+          </div>
+
+          <!-- PRICING TIERS -->
+          <app-pricing-tiers [basePrice]="p.basePrice || p.price" [tiers]="p.priceTiers || []" [quantity]="quantity()"
+            [sizeMultiplier]="sizeMultiplier()" [stock]="p.stock" (selectTier)="onTierSelect($event)">
+          </app-pricing-tiers>
+
+          <!-- PRICE SUMMARY -->
+          <app-price-summary [currentPrice]="currentPrice()" [quantity]="quantity()" [totalPrice]="totalPrice()"
+            [savings]="savings()">
+          </app-price-summary>
+
+          <!-- PRODUCT VARIANTS -->
+          <app-product-variants [colors]="p.colors || []" [sizes]="p.sizes || []" [selectedColor]="selectedColor()"
+            [selectedSize]="selectedSize()" (colorSelect)="onColorSelect($event)" (sizeSelect)="onSizeSelect($event)">
+          </app-product-variants>
+
+          <!-- PRODUCT ACTIONS -->
+          <app-product-actions [product]="p" [quantity]="quantity()" [customMessage]="customMessage()" [stock]="p.stock"
+            (quantityChange)="onQuantityChange($event)" (customMessageChange)="onCustomMessageChange($event)"
+            (addToCart)="onAddToCart($event)" (buyNow)="onBuyNow($event)" (notify)="onNotify($event)">
+          </app-product-actions>
+
+          <!-- TRUST BADGES -->
+          <app-trust-badges></app-trust-badges>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT DESCRIPTION & FEATURES -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+
+      <!-- Description -->
+      <div class="bg-white rounded-xl p-6 shadow-lg">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción del Producto</h2>
+        <p class="text-gray-700 leading-relaxed mb-6">
+          {{ p.description || 'Este producto es parte de nuestro catálogo oficial. Detalles adicionales próximamente.'
+          }}
+        </p>
+
+        <div *ngIf="p.features && p.features.length > 0">
+          <h3 class="text-lg font-semibold text-gray-900 mb-3">Características:</h3>
+          <ul class="space-y-2">
+            <li *ngFor="let feature of p.features" class="flex items-start gap-2">
+              <i class="ri-check-line text-green-500 mt-1"></i>
+              <span class="text-gray-700">{{ feature }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- SHIPPING & PAYMENT INFO -->
+      <app-shipping-info></app-shipping-info>
+
+    </div>
+
+    <!-- ESPECIFICACIONES -->
+    <div class="mt-12">
+      <app-product-specs [specs]="p.specs">
+      </app-product-specs>
+    </div>
+
+    <!-- RESEÑAS -->
+    <div class="mt-12">
+      <app-product-reviews [reviews]="p.reviews">
+      </app-product-reviews>
+    </div>
+
+    <!-- RELACIONADOS -->
+    <div class="mt-12">
+      <app-product-related [products]="related()">
+      </app-product-related>
+    </div>
+
+  </ng-container>
+
+  <!-- ✅ OPCIONAL: Loader mientras carga -->
+  <div *ngIf="!product() && !error()" class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <i class="ri-loader-4-line text-4xl animate-spin text-[#104D73]"></i>
+      <p class="mt-4 text-gray-600">Cargando producto...</p>
+    </div>
+  </div>
+
+  <!-- ❌ ERROR: Mostrar mensaje si falla la carga -->
+  <div *ngIf="error()" class="flex items-center justify-center min-h-screen">
+    <div class="text-center max-w-md px-4">
+      <i class="ri-error-warning-line text-4xl text-red-500 mb-4"></i>
+      <h2 class="text-xl font-bold text-gray-900 mb-2">Error</h2>
+      <p class="text-gray-600 mb-6">{{ error() }}</p>
+      <a routerLink="/products"
+        class="inline-block px-6 py-2 bg-[#104D73] text-white rounded-lg hover:bg-[#012E40] transition-colors">
+        Volver al Catálogo
+      </a>
+    </div>
+  </div>
+
+</div>

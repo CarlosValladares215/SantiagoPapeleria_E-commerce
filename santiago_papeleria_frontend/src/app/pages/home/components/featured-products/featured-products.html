@@ -1,0 +1,127 @@
+<section class="py-16 bg-[#F2F2F2]">
+  <div class="container mx-auto px-4">
+
+    <div class="text-center mb-12">
+      <h2 class="text-4xl font-bold text-[#104D73] mb-4">
+        Productos <span class="text-[#F2CB07]">Destacados</span>
+      </h2>
+      <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+        Los productos más vendidos con precios especiales para mayoristas
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+
+      <div
+        *ngFor="let product of products"
+        class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+      >
+
+        <div class="relative">
+          <img
+            [src]="product.image"
+            [alt]="product.name"
+            class="w-full h-48 object-cover"
+          />
+
+          <div
+            *ngIf="product.isLowStock && product.stock > 0"
+            class="absolute top-3 left-3 bg-[#F2CB07] text-[#012E40] px-3 py-1 rounded-full text-sm font-bold animate-pulse"
+          >
+            ¡Pocas unidades! Solo {{ product.stock }} disponibles
+          </div>
+
+          <div
+            *ngIf="product.stock === 0"
+            class="absolute inset-0 bg-black/50 flex items-center justify-center"
+          >
+            <span class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold">
+              AGOTADO
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6">
+          <div class="text-sm text-gray-500 mb-2">{{ product.brand }}</div>
+
+          <h3 class="text-lg font-bold text-[#104D73] mb-3 line-clamp-2">
+            {{ product.name }}
+          </h3>
+
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-2xl font-bold text-[#104D73]">
+                ${{ product.price.toFixed(2) }}
+              </span>
+              <span class="text-sm text-gray-500">PVP (inc. IVA)</span>
+            </div>
+
+            <div class="bg-[#F2DF7E] p-2 rounded-lg">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-[#012E40] font-semibold">
+                  Precio Mayorista: ${{ product.wholesalePrice.toFixed(2) }}
+                </span>
+                <a routerLink="/login" class="text-xs text-[#104D73] hover:underline">
+                  Iniciar Sesión
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <span
+              *ngIf="product.stock > 5"
+              class="text-green-600 text-sm font-medium"
+            >
+              <i class="ri-check-line mr-1"></i>
+              En Stock - Envío Inmediato
+            </span>
+
+            <span
+              *ngIf="product.stock > 0 && product.stock <= 5"
+              class="text-[#F2CB07] text-sm font-medium"
+            >
+              <i class="ri-error-warning-line mr-1"></i>
+              ¡Pocas unidades! Solo {{ product.stock }} disponibles
+            </span>
+
+            <span
+              *ngIf="product.stock === 0"
+              class="text-red-600 text-sm font-medium"
+            >
+              <i class="ri-close-line mr-1"></i>
+              Producto Agotado
+            </span>
+          </div>
+
+          <div class="flex gap-2">
+            <a [routerLink]="['/producto', product.id]" class="flex-1">
+              <button class="w-full border border-[#104D73] text-[#104D73] px-4 py-2 rounded-lg hover:bg-[#104D73] hover:text-white transition">
+                Ver Detalles
+              </button>
+            </a>
+
+            <button
+              class="flex-1 px-4 py-2 rounded-lg"
+              [ngClass]="product.stock === 0 ? 'border border-gray-400 text-gray-400 cursor-not-allowed' : 'bg-[#104D73] text-white hover:bg-[#0d3d5a]'"
+              [disabled]="product.stock === 0"
+            >
+              {{ product.stock === 0 ? 'Agotado' : 'Agregar al Carrito' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="text-center mt-12">
+      <a routerLink="/products">
+        <button class="bg-[#F2CB07] text-[#012E40] px-8 py-3 rounded-lg font-semibold shadow hover:bg-[#F2DF7E] transition inline-flex items-center">
+          Ver Todos los Productos
+          <i class="ri-arrow-right-line ml-2"></i>
+        </button>
+      </a>
+    </div>
+
+  </div>
+</section>

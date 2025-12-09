@@ -1,0 +1,106 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" data-product-shop>
+  <div *ngFor="let product of products" 
+       class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+
+    <!-- IMAGE SECTION -->
+    <div class="relative">
+      <img
+        [src]="product.image"
+        [alt]="product.name"
+        class="w-full h-48 object-cover object-top"
+      />
+
+      <!-- DISCOUNT BADGE -->
+      <div *ngIf="product.discount && product.stock > 0"
+           class="absolute top-3 left-3 bg-red-600 text-white px-3 py-1.5 rounded-md text-sm font-bold shadow-lg">
+        -{{ product.discount }}%
+      </div>
+
+      <!-- NEW BADGE -->
+      <div *ngIf="product.isNew && product.stock > 0"
+           class="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+        NUEVO
+      </div>
+
+      <!-- OUT OF STOCK OVERLAY -->
+      <div *ngIf="product.stock === 0"
+           class="absolute inset-0 bg-black/50 flex items-center justify-center">
+        <span class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold">AGOTADO</span>
+      </div>
+    </div>
+
+    <!-- PRODUCT INFO -->
+    <div class="p-6">
+      <div class="text-xs text-gray-500 mb-2">{{ product.category }}</div>
+
+      <h3 class="text-lg font-bold text-[#104D73] mb-3 line-clamp-2 min-h-[3.5rem]">
+        {{ product.name }}
+      </h3>
+
+      <!-- PRICE -->
+      <div class="mb-4">
+        <div class="flex items-baseline gap-2">
+          <span *ngIf="product.originalPrice"
+                class="text-lg text-gray-400 line-through">
+            ${{ product.originalPrice!.toFixed(2) }}
+          </span>
+
+          <span class="text-3xl font-bold text-[#104D73]">
+            ${{ product.price.toFixed(2) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- STOCK STATUS -->
+      <div class="mb-4">
+
+        <!-- EN STOCK (20+) -->
+        <span *ngIf="product.stock >= 20"
+              class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-green-100 text-green-700 font-medium whitespace-nowrap">
+          <i class="ri-checkbox-circle-fill"></i>
+          En Stock
+        </span>
+
+        <!-- STOCK BAJO (10–19) -->
+        <span *ngIf="product.stock >= 10 && product.stock < 20"
+              class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-700 font-medium whitespace-nowrap">
+          <i class="ri-alert-fill"></i>
+          Solo {{ product.stock }} disponibles
+        </span>
+
+        <!-- STOCK MUY BAJO (1–9) -->
+        <span *ngIf="product.stock > 0 && product.stock < 10"
+              class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-red-100 text-red-700 font-medium whitespace-nowrap">
+          <i class="ri-alert-fill"></i>
+          Solo {{ product.stock }} disponibles
+        </span>
+
+        <!-- AGOTADO -->
+        <span *ngIf="product.stock === 0"
+              class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded bg-red-100 text-red-700 font-medium whitespace-nowrap">
+          <i class="ri-close-circle-fill"></i>
+          Agotado
+        </span>
+      </div>
+
+      <!-- BUTTONS -->
+      <div class="flex gap-2">
+        <button
+          class="flex-1 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+          Ver Detalles
+        </button>
+
+        <button
+          [disabled]="product.stock === 0"
+          class="flex-1 py-2 rounded-lg text-white font-medium transition-colors"
+          [ngClass]="product.stock === 0 ?
+            'bg-gray-300 cursor-not-allowed' :
+            'bg-[#F2CB07] hover:bg-[#d4b006] text-[#012E40]'">
+          
+          {{ product.stock === 0 ? 'Agotado' : 'Agregar' }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

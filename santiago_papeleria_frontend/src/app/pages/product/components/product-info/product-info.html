@@ -1,0 +1,39 @@
+<ng-container *ngIf="product as p">
+
+  <div class="product-info">
+
+    <!-- CATEGORY -->
+    <p class="category">{{ p.category }}</p>
+
+    <!-- TITLE -->
+    <h1 class="title">{{ p.name }}</h1>
+
+    <!-- BRAND -->
+    <p class="brand">Marca: <strong>{{ p.brand }}</strong></p>
+
+    <!-- PRICE -->
+    <div class="price-box">
+      <span class="price">${{ p.price | number:'1.2-2' }}</span>
+
+      <span *ngIf="p.originalPrice" class="old-price">
+        ${{ p.originalPrice | number:'1.2-2' }}
+      </span>
+
+      <span *ngIf="p.discount" class="discount">
+        -{{ p.discount }}%
+      </span>
+    </div>
+
+    <!-- STOCK -->
+    <div class="stock" [ngClass]="stockStatus">
+      {{ stockText }}
+    </div>
+
+    <!-- DESCRIPTION -->
+    <p class="description">
+      {{ safeDescription }}
+    </p>
+
+  </div>
+
+</ng-container>

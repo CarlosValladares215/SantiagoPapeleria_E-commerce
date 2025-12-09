@@ -1,0 +1,55 @@
+<div class="min-h-screen bg-[#F2F2F2]">
+  <!-- Hero -->
+  <div class="bg-gradient-to-r from-[#104D73] to-[#012E40] text-white py-16">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">¡Ofertas Especiales!</h1>
+      <p class="text-xl text-gray-200 max-w-2xl mx-auto">
+        Aprovecha nuestros descuentos exclusivos en productos seleccionados
+      </p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-6">
+      <div class="flex flex-wrap gap-3 items-center justify-between">
+        <app-category-filter
+          [categories]="categories"
+          [selectedCategory]="selectedCategory()"
+          (categoryChange)="onCategoryChange($event)">
+        </app-category-filter>
+
+        <app-sort-dropdown
+          [sortBy]="sortBy()"
+          [showSortMenu]="showSortMenu()"
+          (sortChange)="onSortChange($event)"
+          (toggleSortMenu)="toggleSortMenu()">
+        </app-sort-dropdown>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grilla -->
+  <div class="container mx-auto px-4 py-12">
+    <div *ngIf="sortedOffers().length === 0" class="text-center py-16">
+      <i class="ri-inbox-line text-6xl text-gray-300 mb-4"></i>
+      <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay ofertas disponibles</h3>
+      <p class="text-gray-500">No se encontraron ofertas en esta categoría</p>
+    </div>
+
+    <div *ngIf="sortedOffers().length > 0"
+         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <app-offer-card *ngFor="let o of sortedOffers(); trackBy: trackById"
+                      [offer]="o">
+      </app-offer-card>
+    </div>
+
+    <div *ngIf="sortedOffers().length >= 8" class="text-center mt-12">
+      <button class="bg-[#104D73] text-white px-8 py-3 rounded-lg hover:bg-[#012E40] transition-colors font-semibold">
+        Cargar Más Ofertas
+      </button>
+    </div>
+  </div>
+
+  <app-newsletter-cta></app-newsletter-cta>
+</div>

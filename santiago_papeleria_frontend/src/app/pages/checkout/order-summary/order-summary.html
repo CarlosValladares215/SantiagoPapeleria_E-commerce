@@ -1,0 +1,82 @@
+<div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+  <h2 class="text-xl font-bold text-[#104D73] mb-4">Resumen del Pedido</h2>
+
+  <div class="space-y-6">
+    <ng-container *ngIf="cartItems.length > 0; else emptyCart">
+
+      <div *ngFor="let item of cartItems"
+           class="flex items-start gap-6 pb-4 border-b border-gray-200 last:border-b-0 relative">
+
+        <!-- Botón Eliminar -->
+        <button
+          (click)="handleRemoveItem(item.id)"
+          class="absolute top-0 right-0 w-6 h-6 bg-red-500 hover:bg-red-600
+                 text-white rounded-full flex items-center justify-center
+                 transition-colors cursor-pointer z-10"
+          title="Eliminar producto">
+          <i class="ri-close-line text-sm"></i>
+        </button>
+
+        <!-- Información del producto -->
+        <div class="flex-1 pr-24">   <!-- padding aumentado -->
+          <h3 class="font-semibold text-[#104D73]">{{ item.name }}</h3>
+          <p class="text-sm text-gray-600">{{ item.variant }}</p>
+
+          <ng-container *ngIf="item.customMessage">
+            <p class="text-sm text-[#F2CB07] font-medium mt-1">
+              <i class="ri-message-3-line mr-1"></i>
+              Personalización: {{ item.customMessage }}
+            </p>
+          </ng-container>
+
+          <div class="flex items-center gap-2 mt-2">
+            <span class="text-sm text-gray-600">Cantidad:</span>
+            <div class="flex items-center gap-1">
+              <button
+                (click)="handleChangeQuantity(item.id, item.quantity, -1)"
+                [disabled]="item.quantity <= 1"
+                class="w-6 h-6 border border-gray-300 rounded
+                       flex items-center justify-center transition-colors
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="ri-subtract-line text-xs"></i>
+              </button>
+              <span class="w-8 text-center font-semibold text-[#104D73]">
+                {{ item.quantity }}
+              </span>
+              <button
+                (click)="handleChangeQuantity(item.id, item.quantity, 1)"
+                class="w-6 h-6 border border-gray-300 rounded
+                       flex items-center justify-center hover:bg-gray-100">
+                <i class="ri-add-line text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Precio -->
+        <div class="text-right pl-6 min-w-[5.5rem]">   <!-- separación y ancho mínimo -->
+          <p class="font-bold text-[#104D73]">
+            {{ item.price * item.quantity | currency:'USD':'symbol':'1.2-2' }}
+          </p>
+          <p class="text-xs text-gray-500">
+            {{ item.price | currency:'USD':'symbol':'1.2-2' }} c/u
+          </p>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #emptyCart>
+      <div class="text-center py-8">
+        <i class="ri-shopping-cart-line text-6xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500 text-lg mb-4">Tu carrito está vacío</p>
+        <a routerLink="/products"
+           class="inline-flex items-center justify-center rounded-lg
+                  font-semibold transition-colors duration-200
+                  px-6 py-3 text-sm bg-[#F2CB07] text-[#012E40]
+                  hover:bg-[#F2DF7E]">
+          Ir a Productos
+        </a>
+      </div>
+    </ng-template>
+  </div>
+</div>

@@ -1,0 +1,31 @@
+<div class="mb-6" *ngIf="tiers.length > 0">
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">Precios por Cantidad</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let tier of tiers" (click)="select(tier)" [class]="'relative border rounded-xl p-4 text-center transition-all duration-200 ' +
+        (isTierDisabled(tier) 
+            ? 'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200' 
+            : 'cursor-pointer hover:shadow-lg ' + (isTierActive(tier) 
+                ? 'border-[#104D73] bg-white ring-2 ring-[#104D73] shadow-md' 
+                : 'border-gray-200 bg-white hover:border-[#104D73]'))">
+
+            <!-- Quantity Range -->
+            <div class="text-sm text-gray-500 mb-2 font-medium">{{ tier.label }}</div>
+
+            <!-- Price -->
+            <div class="text-2xl font-extrabold text-[#104D73] mb-3">
+                ${{ getTierPrice(tier) | number:'1.2-2' }}
+            </div>
+
+            <!-- Savings Badge (Red Pill) -->
+            <div *ngIf="!isTierDisabled(tier) && getSavings(tier) > 0"
+                class="inline-block bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                {{ tier.badge || (getSavingsPercentage(tier) + '% OFF') }}
+            </div>
+
+            <!-- Out of Stock Label -->
+            <div *ngIf="isTierDisabled(tier)" class="text-xs text-red-500 font-bold mt-2">
+                Sin Stock Suficiente
+            </div>
+        </div>
+    </div>
+</div>

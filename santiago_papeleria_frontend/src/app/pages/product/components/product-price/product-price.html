@@ -1,0 +1,30 @@
+<div class="price-box">
+
+  <!-- Si hay oferta -->
+  <ng-container *ngIf="hasDiscount; else normalPrice">
+
+    <!-- Precio original -->
+    <span class="old-price">
+      ${{ originalPrice!.toFixed(2) }}
+    </span>
+
+    <!-- Precio actual -->
+    <span class="current-price">
+      ${{ price.toFixed(2) }}
+    </span>
+
+    <!-- Badge descuento -->
+    <span class="discount-badge">
+      -{{ discount }}%
+    </span>
+
+  </ng-container>
+
+  <!-- Si NO hay descuento -->
+  <ng-template #normalPrice>
+    <span class="current-price">
+      ${{ price.toFixed(2) }}
+    </span>
+  </ng-template>
+
+</div>

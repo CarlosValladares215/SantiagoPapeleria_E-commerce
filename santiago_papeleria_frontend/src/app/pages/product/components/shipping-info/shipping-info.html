@@ -1,0 +1,22 @@
+<div class="bg-white rounded-xl p-6 shadow-lg">
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">Información de Envío y Pago</h2>
+
+    <!-- Shipping Methods -->
+    <div class="space-y-4">
+        <div *ngFor="let method of shippingMethods" [class]="'border-l-4 pl-4 ' + method.borderColor">
+            <h4 class="font-semibold text-gray-900">{{ method.title }}</h4>
+            <p class="text-gray-600 text-sm">{{ method.description }}</p>
+        </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="mt-6 pt-6 border-t">
+        <h4 class="font-semibold text-gray-900 mb-3">Métodos de Pago</h4>
+        <div class="grid grid-cols-2 gap-3 text-sm text-gray-600">
+            <div *ngFor="let payment of paymentMethods" class="flex items-center gap-2">
+                <i [class]="payment.icon + ' ' + payment.iconColor"></i>
+                <span>{{ payment.label }}</span>
+            </div>
+        </div>
+    </div>
+</div>

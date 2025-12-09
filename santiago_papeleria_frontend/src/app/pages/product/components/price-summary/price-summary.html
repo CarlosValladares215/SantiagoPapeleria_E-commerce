@@ -1,0 +1,13 @@
+<div class="bg-gray-50 rounded-lg p-4 mb-6">
+    <div class="flex justify-between items-center mb-2">
+        <span class="text-gray-600">Precio unitario:</span>
+        <span class="text-xl font-bold text-[#104D73]">${{ currentPrice.toFixed(2) }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+        <span class="text-gray-600">Total ({{ quantity }} unidades):</span>
+        <span class="text-2xl font-bold text-[#104D73]">${{ totalPrice.toFixed(2) }}</span>
+    </div>
+    <div *ngIf="savings > 0" class="text-sm text-green-600 mt-2">
+        ¡Ahorras ${{ savings.toFixed(2) }} con este descuento!
+    </div>
+</div>

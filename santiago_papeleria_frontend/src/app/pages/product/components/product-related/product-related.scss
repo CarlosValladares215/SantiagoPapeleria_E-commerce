@@ -1,0 +1,145 @@
+.related-wrapper {
+  margin-top: 3rem;
+
+  .section-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #104D73;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.image-box {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .badge-offer {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    background: #dc2626;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  .badge-new {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background: #16a34a;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    span {
+      background: #dc2626;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+  }
+}
+
+.info {
+  padding: 1rem;
+
+  .category {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #104D73;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    line-height: 1.3;
+    min-height: 2.6em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1rem 1rem;
+
+  .btn-outline {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid #104D73;
+    font-weight: 600;
+    color: #104D73;
+    background: transparent;
+
+    &:hover {
+      background: #f0f4f8;
+    }
+  }
+
+  .btn-add {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    background: #F2CB07;
+    border: 2px solid #F2CB07;
+    color: #012E40;
+    font-weight: bold;
+
+    &:hover {
+      background: #d4b006;
+    }
+
+    &.disabled {
+      background: #e5e7eb;
+      border-color: #e5e7eb;
+      color: #9ca3af;
+    }
+  }
+}

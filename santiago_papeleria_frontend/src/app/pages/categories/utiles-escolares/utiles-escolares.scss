@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+.group:hover .scale-105 {
+  transform: scale(1.05);
+}
+
+img {
+  transition: transform 0.3s ease;
+}

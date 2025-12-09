@@ -1,0 +1,12 @@
+<div class="flex flex-wrap gap-3">
+  <button *ngFor="let c of categories"
+          type="button"
+          (click)="categoryChange.emit(c.id)"
+          [ngClass]="selectedCategory === c.id
+            ? 'bg-[#104D73] text-white shadow-lg'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+          class="px-6 py-2.5 rounded-full font-medium transition-all duration-300 flex items-center gap-2 whitespace-nowrap">
+    <i [class]="c.icon + ' text-lg'"></i>
+    {{ c.name }}
+  </button>
+</div>

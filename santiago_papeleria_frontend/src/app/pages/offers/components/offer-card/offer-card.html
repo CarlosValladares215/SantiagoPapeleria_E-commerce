@@ -1,0 +1,41 @@
+<div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+  <div class="relative overflow-hidden group">
+    <img [src]="offer.image" [alt]="offer.name" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300">
+    <div class="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-bold">-{{ offer.discount }}%</div>
+  </div>
+
+  <div class="p-4">
+    <h3 class="font-semibold text-gray-900 mb-3 line-clamp-2 group-hover:text-[#104D73] transition-colors">{{ offer.name }}</h3>
+
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-gray-400 line-through text-sm">{{ offer.originalPrice | currency:'USD':'symbol':'1.2-2' }}</span>
+      <span class="text-2xl font-bold text-[#104D73]">{{ offer.discountPrice | currency:'USD':'symbol':'1.2-2' }}</span>
+    </div>
+
+    <div class="mb-4">
+      <span [ngClass]="{
+            'bg-red-100 text-red-700': offer.stock === 0,
+            'bg-green-100 text-green-700': offer.stock >= 20,
+            'bg-yellow-100 text-yellow-700': offer.stock > 0 && offer.stock < 20
+          }" class="text-xs px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap w-fit">
+        <i [ngClass]="{
+              'ri-close-circle-fill': offer.stock === 0,
+              'ri-checkbox-circle-fill': offer.stock >= 20,
+              'ri-alert-fill': offer.stock > 0 && offer.stock < 20
+            }"></i>
+        <ng-container *ngIf="offer.stock === 0">Agotado</ng-container>
+        <ng-container *ngIf="offer.stock >= 20">En Stock</ng-container>
+        <ng-container *ngIf="offer.stock > 0 && offer.stock < 20">Solo {{ offer.stock }} disponibles</ng-container>
+      </span>
+    </div>
+
+    <div class="flex gap-2">
+      <a [routerLink]="['/product', offer.id]" class="flex-1 py-2.5 px-4 rounded-lg transition-colors font-semibold border whitespace-nowrap text-center"
+         [ngClass]="offer.stock === 0 ? 'bg-white text-gray-400 border-gray-300 cursor-not-allowed' : 'bg-white text-[#104D73] border-[#104D73] hover:bg-gray-50'">Ver Detalles</a>
+      <button [disabled]="offer.stock === 0" class="flex-1 py-2.5 px-4 rounded-lg transition-colors font-semibold whitespace-nowrap"
+              [ngClass]="offer.stock === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#F2CB07] text-[#012E40] hover:bg-[#d4b006]'">
+        {{ offer.stock === 0 ? 'Agotado' : 'Agregar' }}
+      </button>
+    </div>
+  </div>
+</div>

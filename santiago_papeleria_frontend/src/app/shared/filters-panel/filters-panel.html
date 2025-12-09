@@ -1,0 +1,52 @@
+<div class="filters-container">
+  
+  <!-- Categorías -->
+  <div class="block">
+    <h3>Categorías</h3>
+
+    <button
+      *ngFor="let c of filters.categories"
+      [class.active]="filters.current().category === c.id"
+      (click)="setCategory(c.id)"
+      class="category-item"
+    >
+      {{ c.name }}
+      <span class="count">{{ c.count }}</span>
+    </button>
+  </div>
+
+  <!-- Rango de precio -->
+  <div class="block">
+    <h3>Rango de Precio</h3>
+
+    <button
+      *ngFor="let r of filters.priceRanges"
+      [class.active]="
+        filters.current().priceRange[0] === r.min &&
+        filters.current().priceRange[1] === r.max
+      "
+      (click)="setPrice(r.min, r.max)"
+      class="range-item"
+    >
+      {{ r.label }}
+    </button>
+  </div>
+
+  <!-- Stock -->
+  <div class="block">
+    <label class="stock-check">
+      <input
+        type="checkbox"
+        [checked]="filters.current().inStock"
+        (change)="toggleStock()"
+      />
+      Solo productos en stock
+    </label>
+  </div>
+
+  <!-- Clear -->
+  <button class="clear-btn" (click)="clearFilters()">
+    Limpiar Filtros
+  </button>
+
+</div>

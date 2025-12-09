@@ -1,0 +1,22 @@
+<div class="specs-box" *ngIf="specs && specs.length; else noSpecs">
+
+  <h2 class="specs-title">Especificaciones</h2>
+
+  <table class="specs-table">
+    <tbody>
+      <tr *ngFor="let s of specs">
+        <th>{{ s.label }}</th>
+        <td>{{ s.value }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<!-- Si no hay especificaciones -->
+<ng-template #noSpecs>
+  <div class="specs-empty">
+    <i class="ri-information-line"></i>
+    No hay especificaciones técnicas disponibles.
+  </div>
+</ng-template>

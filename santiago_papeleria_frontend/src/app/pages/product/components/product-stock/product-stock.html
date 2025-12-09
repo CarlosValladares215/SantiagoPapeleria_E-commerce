@@ -1,0 +1,34 @@
+<div class="stock-box" *ngIf="stock !== null; else noStock">
+  
+  <!-- STOCK ALTO -->
+  <div *ngIf="stock > 20" class="stock stock-high">
+    <i class="ri-checkbox-circle-fill"></i>
+    En stock
+  </div>
+
+  <!-- STOCK MEDIO -->
+  <div *ngIf="stock <= 20 && stock >= 10" class="stock stock-medium">
+    <i class="ri-alert-fill"></i>
+    Solo {{ stock }} disponibles
+  </div>
+
+  <!-- STOCK BAJO -->
+  <div *ngIf="stock < 10 && stock > 0" class="stock stock-low">
+    <i class="ri-alert-fill"></i>
+    ¡Últimos {{ stock }} disponibles!
+  </div>
+
+  <!-- SIN STOCK -->
+  <div *ngIf="stock === 0" class="stock stock-out">
+    <i class="ri-close-circle-fill"></i>
+    Agotado
+  </div>
+
+</div>
+
+<ng-template #noStock>
+  <div class="stock stock-unknown">
+    <i class="ri-question-line"></i>
+    Stock no disponible
+  </div>
+</ng-template>

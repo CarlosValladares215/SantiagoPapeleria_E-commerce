@@ -1,0 +1,14 @@
+<div class="space-y-4">
+    <!-- Main Image -->
+    <div class="bg-white rounded-xl p-6 shadow-lg">
+        <img [src]="images[selectedIndex]" [alt]="productName" class="w-full h-96 object-cover rounded-lg" />
+    </div>
+
+    <!-- Thumbnail Images -->
+    <div class="grid grid-cols-4 gap-3">
+        <button *ngFor="let image of images; let i = index" (click)="selectImage(i)" [class]="'bg-white rounded-lg p-2 shadow-md transition-all ' + 
+        (selectedIndex === i ? 'ring-2 ring-[#104D73]' : 'hover:shadow-lg')">
+            <img [src]="image" [alt]="productName + ' ' + (i + 1)" class="w-full h-16 object-cover rounded" />
+        </button>
+    </div>
+</div>

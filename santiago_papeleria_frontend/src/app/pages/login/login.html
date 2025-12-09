@@ -1,0 +1,161 @@
+<div class="min-h-screen bg-gradient-to-br from-[#F2F2F2] to-white">
+
+  <main class="container mx-auto px-4 py-12">
+    <div class="max-w-md mx-auto">
+
+      <!-- Section Header -->
+      <div class="text-center mb-8">
+        <div
+          class="bg-gradient-to-br from-[#104D73] to-[#012E40] p-4 rounded-2xl w-20 h-20 mx-auto mb-4 shadow-lg">
+          <i class="ri-user-line text-3xl text-[#F2CB07]"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-[#104D73] mb-2">Iniciar Sesión</h1>
+        <p class="text-gray-600">Accede a tu cuenta de Santiago Papelería</p>
+      </div>
+
+      <!-- Login Card -->
+      <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <form (ngSubmit)="handleSubmit()" class="space-y-6">
+
+          <!-- Email -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="ri-mail-line mr-2 text-[#104D73]"></i>
+              Correo Electrónico
+            </label>
+
+            <input
+              type="email"
+              id="email"
+              name="email"
+              [(ngModel)]="formData.email"
+              placeholder="tucorreo@email.com"
+              required
+              class="w-full border border-gray-300 px-4 py-2 rounded-xl focus:ring-[#104D73]"
+            />
+          </div>
+
+          <!-- Password -->
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+              <i class="ri-lock-line mr-2 text-[#104D73]"></i>
+              Contraseña
+            </label>
+
+            <div class="relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                name="password"
+                [(ngModel)]="formData.password"
+                placeholder="Tu contraseña"
+                required
+                class="w-full border border-gray-300 px-4 py-2 rounded-xl pr-12 focus:ring-[#104D73]"
+              />
+
+              <button
+                type="button"
+                (click)="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#104D73] transition-colors"
+              >
+                <i [class]="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Remember + Forgot -->
+          <div class="flex items-center justify-between">
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox"
+                class="w-4 h-4 text-[#104D73] bg-gray-100 border-gray-300 rounded focus:ring-[#104D73]" />
+              <span class="ml-2 text-sm text-gray-600">Recordarme</span>
+            </label>
+
+            <a routerLink="/forgot-password"
+              class="text-sm text-[#104D73] hover:text-[#012E40] transition-colors cursor-pointer">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="w-full bg-[#104D73] text-white py-3 rounded-xl hover:bg-[#012E40] transition-colors flex justify-center items-center"
+          >
+            <ng-container *ngIf="!isLoading">
+              <i class="ri-login-circle-line mr-2"></i> Iniciar Sesión
+            </ng-container>
+
+            <ng-container *ngIf="isLoading">
+              <i class="ri-loader-4-line animate-spin mr-2"></i> Iniciando Sesión...
+            </ng-container>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="my-6 flex items-center">
+          <div class="flex-1 border-t border-gray-300"></div>
+          <span class="px-4 text-sm text-gray-500">o</span>
+          <div class="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        <!-- Social buttons -->
+        <div class="space-y-3">
+          <button class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition">
+            <i class="ri-google-fill text-red-500 mr-3"></i>
+            Continuar con Google
+          </button>
+
+          <button class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition">
+            <i class="ri-facebook-fill text-blue-600 mr-3"></i>
+            Continuar con Facebook
+          </button>
+        </div>
+
+        <!-- Register -->
+        <div class="mt-8 text-center">
+          <p class="text-gray-600">
+            ¿No tienes una cuenta?
+            <a routerLink="/register"
+              class="text-[#104D73] hover:text-[#012E40] font-medium transition-colors">
+              Regístrate aquí
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Benefits -->
+      <div class="mt-8 bg-gradient-to-r from-[#F2CB07] to-[#F2DF7E] rounded-2xl p-6">
+        <h3 class="text-lg font-bold text-[#012E40] mb-4 text-center">
+          <i class="ri-gift-line mr-2"></i>
+          Beneficios de tener cuenta
+        </h3>
+
+        <div class="grid grid-cols-1 gap-3">
+          <div class="flex items-center text-[#012E40]">
+            <i class="ri-check-line text-green-600 mr-3"></i>
+            <span class="text-sm">Historial de compras y seguimiento</span>
+          </div>
+
+          <div class="flex items-center text-[#012E40]">
+            <i class="ri-check-line text-green-600 mr-3"></i>
+            <span class="text-sm">Precios mayoristas exclusivos</span>
+          </div>
+
+          <div class="flex items-center text-[#012E40]">
+            <i class="ri-check-line text-green-600 mr-3"></i>
+            <span class="text-sm">Ofertas y descuentos especiales</span>
+          </div>
+
+          <div class="flex items-center text-[#012E40]">
+            <i class="ri-check-line text-green-600 mr-3"></i>
+            <span class="text-sm">Lista de favoritos personalizada</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+</div>

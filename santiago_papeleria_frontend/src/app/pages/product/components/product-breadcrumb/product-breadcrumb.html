@@ -1,0 +1,32 @@
+<nav class="mb-8">
+  <ol class="flex items-center space-x-2 text-sm text-gray-600">
+
+    <!-- INICIO -->
+    <li>
+      <a routerLink="/" class="hover:text-[#104D73] transition-colors">
+        Inicio
+      </a>
+    </li>
+
+    <li><i class="ri-arrow-right-s-line"></i></li>
+
+    <!-- CATEGORÍA -->
+    <li>
+      <a 
+        [routerLink]="categoryPath"
+        class="hover:text-[#104D73] text-[#104D73] font-medium transition-colors"
+      >
+        {{ category }}
+      </a>
+    </li>
+
+    <!-- PRODUCTO -->
+    @if (productName) {
+      <li><i class="ri-arrow-right-s-line"></i></li>
+
+      <li class="text-gray-500">
+        {{ productName }}
+      </li>
+    }
+  </ol>
+</nav>

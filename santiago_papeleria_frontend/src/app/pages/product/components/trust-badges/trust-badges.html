@@ -1,0 +1,7 @@
+<div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
+    <div *ngFor="let badge of badges" class="text-center">
+        <i [class]="badge.icon + ' text-2xl ' + badge.iconColor + ' mb-2'"></i>
+        <div class="text-xs text-gray-600">{{ badge.title }}</div>
+        <div class="text-xs text-gray-500">{{ badge.subtitle }}</div>
+    </div>
+</div>

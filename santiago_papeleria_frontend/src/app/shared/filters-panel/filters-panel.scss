@@ -1,0 +1,79 @@
+.filters {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 7rem;
+}
+
+.filters-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #104D73;
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid #e6e6e6;
+  padding-bottom: .5rem;
+}
+
+.filter-section {
+  margin-bottom: 1.6rem;
+}
+
+.filter-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #012E40;
+  margin-bottom: .7rem;
+}
+
+.filter-option {
+  width: 100%;
+  text-align: left;
+  padding: .65rem .9rem;
+  border-radius: 10px;
+  background: #f7f7f7;
+  margin-bottom: .45rem;
+  font-size: .9rem;
+  display: flex;
+  justify-content: space-between;
+  transition: .2s ease;
+  border: 1px solid transparent;
+
+  &:hover {
+    background: #eee;
+  }
+
+  &.active {
+    background: #104D73;
+    color: white;
+  }
+
+  .count {
+    background: rgba(255,255,255,0.3);
+    padding: 0.15rem 0.45rem;
+    border-radius: 5px;
+    font-size: 0.78rem;
+  }
+}
+
+.stock-check {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .9rem;
+}
+
+.clear-button {
+  width: 100%;
+  padding: .7rem;
+  background: #eaeaea;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: .2s;
+  margin-top: .8rem;
+
+  &:hover {
+    background: #dcdcdc;
+  }
+}

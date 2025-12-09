@@ -1,0 +1,52 @@
+<div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <button (click)="onToggleFilters()"
+                class="lg:hidden flex items-center px-4 py-2 bg-[#104D73] text-white rounded-lg hover:bg-[#012E40] transition-colors">
+                <i class="ri-filter-line mr-2"></i>
+                Filtros
+            </button>
+
+            <div class="text-gray-600">
+                <span class="font-semibold text-[#104D73]">{{ productCount }}</span> productos encontrados
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4">
+            <!-- Sort Dropdown -->
+            <div class="relative">
+                <button (click)="toggleSortDropdown()"
+                    class="flex items-center justify-between px-4 py-2 border-2 border-gray-200 rounded-lg hover:border-[#104D73] focus:border-[#104D73] focus:outline-none transition-colors bg-white min-w-[220px]">
+                    <div class="flex items-center space-x-2">
+                        <i [class]="currentSortOption.icon + ' text-[#104D73]'"></i>
+                        <span class="text-sm font-medium text-gray-700">{{ currentSortOption.label }}</span>
+                    </div>
+                    <i
+                        [class]="'ri-arrow-down-s-line text-gray-500 transition-transform ' + (showSortDropdown ? 'rotate-180' : '')"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <ng-container *ngIf="showSortDropdown">
+                    <div class="fixed inset-0 z-10" (click)="closeSortDropdown()">
+                    </div>
+                    <div
+                        class="absolute right-0 mt-2 w-64 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-20 overflow-hidden">
+                        <button *ngFor="let option of sortOptions" (click)="onSortSelect(option.value)" [class]="'w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors ' +
+                (currentSort === option.value ? 'bg-blue-50' : '')">
+                            <div class="flex items-center space-x-3">
+                                <i
+                                    [class]="option.icon + ' ' + (currentSort === option.value ? 'text-[#104D73]' : 'text-gray-400')"></i>
+                                <span
+                                    [class]="'text-sm ' + (currentSort === option.value ? 'font-semibold text-[#104D73]' : 'text-gray-700')">
+                                    {{ option.label }}
+                                </span>
+                            </div>
+                            <i *ngIf="currentSort === option.value"
+                                class="ri-check-line text-[#104D73] font-semibold"></i>
+                        </button>
+                    </div>
+                </ng-container>
+            </div>
+        </div>
+    </div>
+</div>

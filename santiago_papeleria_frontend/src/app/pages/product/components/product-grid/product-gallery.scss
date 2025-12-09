@@ -1,0 +1,13 @@
+/* Optional additional styling */
+
+:host {
+  display: block;
+}
+
+img {
+  transition: transform .3s ease;
+}
+
+img:hover {
+  transform: scale(1.03);
+}

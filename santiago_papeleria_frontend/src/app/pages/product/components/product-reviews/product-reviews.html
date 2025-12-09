@@ -1,0 +1,50 @@
+<div class="reviews-wrapper">
+
+  <!-- HEADER -->
+  <div class="reviews-header">
+    <h2>Reseñas de Clientes</h2>
+    <div class="rating-box">
+      <div class="avg">{{ avgRating() | number : '1.1-1' }}</div>
+      <div class="stars">
+        <ng-container *ngFor="let s of getStarsArray(5); let i = index">
+          <i class="ri-star-fill" [class.active]="i < avgRating()"></i>
+        </ng-container>
+      </div>
+      <span class="total">{{ reviews?.length || 0 }} reseñas</span>
+    </div>
+  </div>
+
+  <!-- BREAKDOWN DE ESTRELLAS -->
+  <div class="breakdown">
+    <div class="row" *ngFor="let s of [5,4,3,2,1]">
+      <span class="label">{{ s }} estrellas</span>
+
+      <div class="bar">
+        <div class="fill" [style.width.%]="ratingPercent(s)"></div>
+      </div>
+
+      <span class="count">{{ ratingPercent(s) }}%</span>
+    </div>
+  </div>
+
+  <!-- LISTA DE RESEÑAS -->
+  <div class="reviews-list">
+    <div class="review-card" *ngFor="let r of reviews">
+      <div class="header">
+        <strong>{{ r.user_name }}</strong>
+        <span class="date">{{ r.date | date: 'short' }}</span>
+      </div>
+
+      <div class="stars small">
+        <ng-container *ngFor="let s of getStarsArray(5); let i = index">
+          <i class="ri-star-fill" [class.active]="i < r.rating"></i>
+        </ng-container>
+      </div>
+
+      <p class="comment">
+        {{ r.comment }}
+      </p>
+    </div>
+  </div>
+
+</div>

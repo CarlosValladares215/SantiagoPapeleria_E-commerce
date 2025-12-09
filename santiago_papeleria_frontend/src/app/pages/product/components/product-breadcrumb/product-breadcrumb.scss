@@ -1,0 +1,9 @@
+nav {
+  a {
+    transition: color .2s ease;
+
+    &:hover {
+      color: #F2CB07;
+    }
+  }
+}

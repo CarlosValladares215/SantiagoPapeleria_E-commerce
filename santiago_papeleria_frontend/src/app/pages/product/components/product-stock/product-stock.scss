@@ -1,0 +1,42 @@
+.stock-box {
+  margin-top: 1rem;
+}
+
+.stock {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .9rem;
+  font-weight: 600;
+  padding: .45rem .8rem;
+  border-radius: 10px;
+
+  i {
+    font-size: 1.1rem;
+  }
+}
+
+.stock-high {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.stock-medium {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.stock-low {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.stock-out {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.stock-unknown {
+  background: #e5e7eb;
+  color: #6b7280;
+}

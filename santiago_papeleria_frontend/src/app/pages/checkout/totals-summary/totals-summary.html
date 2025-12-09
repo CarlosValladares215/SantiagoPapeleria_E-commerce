@@ -1,0 +1,58 @@
+<div class="bg-white p-6 rounded-lg shadow-2xl sticky top-8">
+  <h2 class="text-xl font-bold text-[#104D73] mb-4 border-b pb-3">
+    Resumen de Compra
+  </h2>
+
+  <div class="space-y-3 mb-6">
+    <div class="flex justify-between text-gray-700">
+      <span>Subtotal:</span>
+      <span class="font-semibold">{{ subtotal | currency: 'USD': 'symbol': '1.2-2' }}</span>
+    </div>
+
+    <div class="flex justify-between text-gray-700">
+      <span>Envío:</span>
+      <span [ngClass]="{'text-green-600 font-bold': shippingCost === 0, 'font-semibold': shippingCost > 0}">
+        <ng-container *ngIf="shippingCost === 0; else showShippingCost">
+          GRATIS
+        </ng-container>
+        <ng-template #showShippingCost>
+          {{ shippingCost | currency: 'USD': 'symbol': '1.2-2' }}
+        </ng-template>
+      </span>
+    </div>
+
+    <hr class="border-gray-300" />
+    
+    <div class="flex justify-between text-lg">
+      <span class="font-bold text-[#104D73]">Total:</span>
+      <span class="font-bold text-[#104D73]">{{ total | currency: 'USD': 'symbol': '1.2-2' }}</span>
+    </div>
+  </div>
+
+  <button 
+    (click)="handleConfirmOrder()"
+    [disabled]="!isOrderButtonEnabled()"
+    class="w-full inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F2CB07] px-6 py-3 text-lg"
+    [ngClass]="{
+      'bg-[#104D73] text-white hover:bg-[#012E40] shadow-md': isOrderButtonEnabled(),
+      'bg-gray-300 text-gray-500 cursor-not-allowed': !isOrderButtonEnabled()
+    }"
+  >
+    <i class="ri-secure-payment-line mr-2"></i>
+    Confirmar Pedido
+  </button>
+
+  <ng-container *ngIf="!isOrderButtonEnabled()">
+    <p class="mt-3 text-sm text-center text-red-500 font-medium">
+      <i class="ri-alert-line mr-1"></i>
+      {{ buttonHelperText() }}
+    </p>
+  </ng-container>
+
+  <div class="mt-4 text-center">
+    <div class="flex items-center justify-center space-x-2 text-sm text-gray-600">
+      <i class="ri-shield-check-line text-green-600"></i>
+      <span>Compra 100% Segura</span>
+    </div>
+  </div>
+</div>

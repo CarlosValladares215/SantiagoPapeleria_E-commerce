@@ -1,0 +1,108 @@
+/* ============================================
+   TECNOLOGÍA — Estilos personalizados
+   ============================================ */
+
+/* ---- Animación de tarjetas ---- */
+.product-card {
+  transition: box-shadow .25s ease, transform .2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+  }
+}
+
+/* ---- Fade-in suave para el grid ---- */
+.grid-fade-in {
+  animation: fadeIn .4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Dropdown de Sort ---- */
+.sort-dropdown {
+  opacity: 0;
+  transform: translateY(5px);
+  animation: dropdownIn .18s ease forwards;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Scrollbar estilizada para listas largas ---- */
+.filter-scroll {
+  max-height: 350px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #104d73;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #e5e5e5;
+  }
+}
+
+/* ---- Hover en filtros ---- */
+.filter-button {
+  transition: background .2s ease, color .2s ease, border .2s ease;
+}
+
+/* ---- Badge de stock ---- */
+.stock-badge {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+/* ---- Breadcrumb ---- */
+.breadcrumb a {
+  transition: color .2s ease;
+
+  &:hover {
+    color: #f2cb07;
+  }
+}
+
+/* ---- Imagen de producto (min. altura asegurada) ---- */
+.product-image {
+  min-height: 260px;
+  object-fit: cover;
+}
+
+/* ---- Botones ---- */
+.button-primary {
+  background: #f2cb07;
+  transition: background .2s ease;
+
+  &:hover {
+    background: #d9b306;
+  }
+}
+
+
+
+.btn-outline {
+  transition: background .2s ease;
+
+  &:hover {
+    background: #f8f8f8;
+  }
+}
+
+/* ---- Responsive fix para columnas pequeñas ---- */
+@media (max-width: 480px) {
+  .product-image {
+    min-height: 200px;
+  }
+}

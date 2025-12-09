@@ -1,0 +1,270 @@
+<div class="min-h-screen bg-gray-50">
+
+  <!-- Breadcrumb -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <nav class="flex items-center space-x-2 text-sm">
+        <a routerLink="/" class="text-gray-500 hover:text-blue-600">Inicio</a>
+        <i class="ri-arrow-right-s-line text-gray-400"></i>
+        <a routerLink="/categories" class="text-gray-500 hover:text-blue-600">Categorías</a>
+        <i class="ri-arrow-right-s-line text-gray-400"></i>
+        <span class="text-gray-900 font-medium">Mobiliario</span>
+      </nav>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Sidebar -->
+      <aside class="lg:w-64 flex-shrink-0">
+        <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+          <div class="mb-6 pb-4 border-b">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+              <i class="ri-filter-3-line mr-2 text-[#104D73]"></i>
+              Filtros
+            </h2>
+          </div>
+
+          <!-- Subcategorías -->
+          <div class="mb-6">
+            <h3 class="text-base font-bold text-gray-900 mb-4">Subcategorías</h3>
+            <div class="space-y-2">
+              @for (sub of subcategories; track sub.id) {
+              <button
+                (click)="setSubcategory(sub.id)"
+                [class]="
+                  'w-full text-left px-4 py-2.5 rounded-lg transition-colors flex items-center justify-between cursor-pointer text-sm ' +
+                  (selectedSubcategory() === sub.id
+                    ? 'bg-[#104D73] text-white font-medium'
+                    : 'hover:bg-gray-50 text-gray-700 border border-gray-200')
+                ">
+                <span>{{ sub.name }}</span>
+                <span
+                  [class]="
+                    'text-xs px-2 py-0.5 rounded-full font-medium ' +
+                    (selectedSubcategory() === sub.id
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-100 text-gray-600')
+                  ">
+                  {{ sub.count }}
+                </span>
+              </button>
+              }
+            </div>
+          </div>
+
+          <!-- Precio -->
+          <div class="mb-6">
+            <h3 class="text-base font-bold text-gray-900 mb-4">Rango de Precio</h3>
+            <div class="space-y-3">
+              @for (range of priceRanges; track range.id) {
+              <label class="flex items-center cursor-pointer group">
+                <input
+                  type="radio"
+                  name="priceRange"
+                  [checked]="priceRange() === range.id"
+                  (change)="setPriceRange(range.id)"
+                  class="w-4 h-4 text-[#104D73] border-gray-300 focus:ring-[#104D73] cursor-pointer" />
+                <span
+                  [class]="
+                    'ml-3 text-sm ' +
+                    (priceRange() === range.id
+                      ? 'text-[#104D73] font-medium'
+                      : 'text-gray-700 group-hover:text-[#104D73]')
+                  ">
+                  {{ range.label }}
+                </span>
+              </label>
+              }
+            </div>
+          </div>
+
+          <!-- Reset -->
+          <button
+            (click)="resetFilters()"
+            class="w-full bg-gray-100 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium cursor-pointer whitespace-nowrap flex items-center justify-center">
+            <i class="ri-refresh-line mr-2"></i>
+            Limpiar Filtros
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="flex-1">
+        <!-- Toolbar -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            Mostrando <strong class="text-gray-900">{{ sortedProducts().length }}</strong> productos
+          </div>
+
+          <!-- Sort dropdown -->
+          <div class="relative">
+            <button
+              (click)="isSortOpen.set(!isSortOpen())"
+              class="flex items-center gap-2 text-sm text-gray-700 hover:text-[#104D73] transition-colors cursor-pointer whitespace-nowrap">
+              <i class="ri-arrow-up-down-line"></i>
+              <span>
+                @switch (sortBy()) {
+                @case ('name') { Ordenar por Nombre }
+                @case ('price-low') { Precio: Menor a Mayor }
+                @case ('price-high') { Precio: Mayor a Menor }
+                @default { Más Nuevos }
+                }
+              </span>
+              <i class="ri-arrow-down-s-line"></i>
+            </button>
+
+            @if (isSortOpen()) {
+            <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border z-50">
+              <div class="py-2">
+                <button
+                  (click)="setSort('name')"
+                  class="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                  [class]="sortBy() === 'name' ? 'text-[#104D73] bg-blue-50' : 'text-gray-700'">
+                  <i class="ri-list-unordered mr-3 text-lg"></i>
+                  <span class="flex-1 text-left">Ordenar por Nombre</span>
+                  @if (sortBy() === 'name') {
+                  <i class="ri-check-line text-[#104D73]"></i>
+                  }
+                </button>
+                <button
+                  (click)="setSort('price-low')"
+                  class="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                  [class]="sortBy() === 'price-low' ? 'text-[#104D73] bg-blue-50' : 'text-gray-700'">
+                  <i class="ri-arrow-up-line mr-3 text-lg"></i>
+                  <span class="flex-1 text-left">Precio: Menor a Mayor</span>
+                  @if (sortBy() === 'price-low') {
+                  <i class="ri-check-line text-[#104D73]"></i>
+                  }
+                </button>
+                <button
+                  (click)="setSort('price-high')"
+                  class="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                  [class]="sortBy() === 'price-high' ? 'text-[#104D73] bg-blue-50' : 'text-gray-700'">
+                  <i class="ri-arrow-down-line mr-3 text-lg"></i>
+                  <span class="flex-1 text-left">Precio: Mayor a Menor</span>
+                  @if (sortBy() === 'price-high') {
+                  <i class="ri-check-line text-[#104D73]"></i>
+                  }
+                </button>
+                <button
+                  (click)="setSort('featured')"
+                  class="flex items-center w-full px-4 py-2 text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                  [class]="sortBy() === 'featured' ? 'text-[#104D73] bg-blue-50' : 'text-gray-700'">
+                  <i class="ri-time-line mr-3 text-lg"></i>
+                  <span class="flex-1 text-left">Más Nuevos</span>
+                  @if (sortBy() === 'featured') {
+                  <i class="ri-check-line text-[#104D73]"></i>
+                  }
+                </button>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" data-product-shop>
+          @for (product of paginatedProducts(); track product.id) {
+          <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+            <div class="relative">
+              <img
+                [src]="product.image"
+                [alt]="product.name"
+                class="w-full h-64 object-cover object-top" />
+              @if (product.stock === 0) {
+              <div class="absolute inset-0 bg-black/50"></div>
+              <div class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded whitespace-nowrap">AGOTADO</div>
+              }
+              @if (product.discount > 0 && product.stock > 0) {
+              <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded whitespace-nowrap">-{{ product.discount }}%</span>
+              }
+              @if (product.isNew && product.stock > 0) {
+              <span class="absolute top-2 right-2 bg-[#00A651] text-white text-[10px] font-bold px-2 py-0.5 rounded whitespace-nowrap">NUEVO</span>
+              }
+            </div>
+
+            <div class="p-4">
+              <div class="mb-3">
+                <p class="text-xs text-gray-500 mb-1">{{ categoryLabel(product.category) }}</p>
+                <h3 class="font-bold text-[#012E40] mb-2 hover:text-[#104D73] cursor-pointer text-lg">
+                  {{ product.name }}
+                </h3>
+
+                <div class="flex items-baseline gap-2 mb-3">
+                  @if (product.originalPrice) {
+                  <span class="text-gray-400 line-through text-base">${{ product.originalPrice.toFixed(2) }}</span>
+                  }
+                  <span class="text-3xl font-bold text-[#104D73]">${{ product.price.toFixed(2) }}</span>
+                </div>
+
+                <div class="flex items-center gap-2 mb-3">
+                  <span
+                    [class]="
+                      'text-xs px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap ' +
+                      (product.stock === 0
+                        ? 'bg-red-100 text-red-700'
+                        : product.stock >= 5
+                        ? 'bg-green-100 text-green-700'
+                        : product.stock >= 2
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-red-100 text-red-700')
+                    ">
+                    @if (product.stock === 0) {
+                    <i class="ri-close-circle-fill"></i>Agotado
+                    } @else if (product.stock >= 5) {
+                    <i class="ri-checkbox-circle-fill"></i>En Stock
+                    } @else {
+                    <i class="ri-alert-fill"></i>Solo {{ product.stock }} disponibles
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button
+                  (click)="navigateToProduct()"
+                  [disabled]="product.stock === 0"
+                  [class]="
+                    'flex-1 py-2.5 px-4 rounded-lg transition-colors font-semibold border whitespace-nowrap ' +
+                    (product.stock === 0
+                      ? 'bg-white text-gray-400 border-gray-300 cursor-not-allowed'
+                      : 'bg-white text-[#104D73] border-[#104D73] hover:bg-gray-50')
+                  ">
+                  Ver Detalles
+                </button>
+                <button
+                  [disabled]="product.stock === 0"
+                  [class]="
+                    'flex-1 py-2.5 px-4 rounded-lg transition-colors font-semibold whitespace-nowrap ' +
+                    (product.stock === 0
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#F2CB07] text-[#012E40] hover:bg-[#d4b006]')
+                  ">
+                  {{ product.stock === 0 ? 'Agotado' : 'Agregar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- Paginación (placeholder) -->
+        <div class="mt-8 flex justify-center">
+          <div class="flex gap-2">
+            <button class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+              <i class="ri-arrow-left-s-line"></i>
+            </button>
+            <button class="w-10 h-10 flex items-center justify-center bg-[#104D73] text-white rounded-lg whitespace-nowrap">1</button>
+            <button class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">2</button>
+            <button class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">3</button>
+            <button class="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+              <i class="ri-arrow-right-s-line"></i>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+</div>
