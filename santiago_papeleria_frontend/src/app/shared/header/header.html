@@ -59,17 +59,17 @@
             <!-- Avatar -->
             <div class="avatar">
               <span>
-                {{ auth.user()?.name?.[0] | uppercase }}
+                {{ auth.user()?.nombres?.[0] | uppercase }}
               </span>
             </div>
 
             <!-- Nombre / tipo de cuenta -->
             <div class="profile-text">
               <p class="profile-name">
-                {{ auth.user()?.name }}
+                {{ auth.user()?.nombres }}
               </p>
               <p class="profile-type">
-                {{ auth.user()?.accountType }}
+                {{ auth.user()?.tipo_cliente }}
               </p>
             </div>
 
@@ -82,13 +82,13 @@
 
             <div class="profile-menu-header">
               <p class="profile-menu-name">
-                {{ auth.user()?.name }}
+                {{ auth.user()?.nombres }}
               </p>
               <p class="profile-menu-email">
                 {{ auth.user()?.email }}
               </p>
               <span class="profile-menu-tag">
-                {{ auth.user()?.accountType }}
+                {{ auth.user()?.tipo_cliente }}
               </span>
             </div>
 
