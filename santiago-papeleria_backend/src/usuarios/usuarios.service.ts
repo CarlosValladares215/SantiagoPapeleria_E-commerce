@@ -10,7 +10,7 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 export class UsuariosService {
   constructor(
     @InjectModel(Usuario.name) private usuarioModel: Model<UsuarioDocument>,
-  ) {}
+  ) { }
 
   // Crear un nuevo usuario (Registro)
   async create(createUsuarioDto: CreateUsuarioDto): Promise<UsuarioDocument> {
@@ -26,6 +26,20 @@ export class UsuariosService {
       fecha_creacion: new Date(),
     });
     return createdUsuario.save();
+  }
+
+  // Validar credenciales (Login)
+  async validateUser(email: string, password: string): Promise<UsuarioDocument | null> {
+    const user = await this.usuarioModel.findOne({ email }).exec();
+    if (!user) return null;
+
+    // Verificar password (Lógica simple temporal coincidiendo con el create)
+    const expectedHash = `HASH_DE_${password}`;
+    if (user.password_hash === expectedHash) {
+      return user;
+    }
+
+    return null;
   }
 
   // Buscar todos los usuarios

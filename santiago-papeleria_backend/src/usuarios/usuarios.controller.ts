@@ -7,7 +7,7 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 
 @Controller('usuarios') // Ruta base: /usuarios
 export class UsuariosController {
-  constructor(private readonly usuariosService: UsuariosService) {}
+  constructor(private readonly usuariosService: UsuariosService) { }
 
   // POST /usuarios (Ruta de Registro)
   @Post()
@@ -21,5 +21,20 @@ export class UsuariosController {
   @Get()
   async findAll(): Promise<UsuarioDocument[]> {
     return this.usuariosService.findAll();
+  }
+
+  // POST /usuarios/login
+  @Post('login')
+  async login(@Body() body: any): Promise<UsuarioDocument> {
+    const { email, password } = body;
+    const user = await this.usuariosService.validateUser(email, password);
+
+    if (!user) {
+      throw new Error('Credenciales inválidas');
+      // En una app real usaríamos: throw new UnauthorizedException('Credenciales inválidas');
+      // pero para mantenerlo simple y sin importar más cosas por ahora:
+    }
+
+    return user;
   }
 }

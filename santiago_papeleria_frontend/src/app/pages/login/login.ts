@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
@@ -7,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './login.html',
   styleUrls: ['./login.scss'],
 })
@@ -23,24 +23,24 @@ export class Login {
 
   constructor(
     private router: Router,
-    private auth: AuthService
-  ) {}
+    private authService: AuthService
+  ) { }
 
   handleSubmit() {
     this.isLoading = true;
 
-    setTimeout(() => {
-      this.isLoading = false;
-
-      const userData = {
-        id: '1',
-        name: 'Juan Pérez',
-        email: this.formData.email,
-        accountType: 'minorista' as const
-      };
-
-      this.auth.login(userData);
-      this.router.navigate(['/']);
-    }, 1500);
+    this.authService.loginApi(this.formData).subscribe({
+      next: (user) => {
+        this.isLoading = false;
+        console.log('Login exitoso:', user);
+        this.authService.setSession(user);
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Error login', err);
+        alert('Credenciales incorrectas o error en el servidor');
+      }
+    });
   }
 }

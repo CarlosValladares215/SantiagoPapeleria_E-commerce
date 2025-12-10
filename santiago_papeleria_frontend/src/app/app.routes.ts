@@ -29,6 +29,7 @@ export const routes: Routes = [
   { path: 'offers', component: Offers },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
+  { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password/forgot-password').then(m => m.ForgotPassword) },
 
   { path: '**', component: NotFound },
 ];

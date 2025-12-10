@@ -65,10 +65,13 @@ export class Usuario {
   nombres: string;
 
   @Prop()
+  cedula: string;
+
+  @Prop()
   telefono: string;
 
-  @Prop({ required: true, default: 'FINAL' })
-  tipo_cliente: string; // MAYORISTA, FINAL
+  @Prop({ required: true, default: 'MINORISTA' })
+  tipo_cliente: string; // MAYORISTA, MINORISTA
 
   @Prop({ default: 'ACTIVO' })
   estado: string; // ACTIVO, INACTIVO
