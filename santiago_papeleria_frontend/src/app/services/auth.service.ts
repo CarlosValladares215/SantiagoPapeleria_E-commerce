@@ -50,4 +50,25 @@ export class AuthService {
     }
     this.router.navigate(['/']);
   }
+
+  updateProfile(userId: string, data: Partial<Usuario>): Observable<Usuario> {
+    return new Observable(observer => {
+      this.http.put<Usuario>(`${this.apiUrl}/${userId}`, data).subscribe({
+        next: (updatedUser) => {
+          // Update local state and storage
+          // Merge with existing session data to keep tokens etc if backend doesn't return them
+          const currentUser = this.user();
+          const newUserData = { ...currentUser, ...updatedUser };
+
+          this.user.set(newUserData);
+          if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(newUserData));
+          }
+          observer.next(newUserData);
+          observer.complete();
+        },
+        error: (err) => observer.error(err)
+      });
+    });
+  }
 }

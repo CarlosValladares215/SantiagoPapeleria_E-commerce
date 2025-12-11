@@ -1,1 +1,225 @@
-<p>tracking works!</p>
+<div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- Title -->
+    <h1 class="text-2xl font-bold text-[#012e40] mb-6">Seguimiento de pedido</h1>
+
+    <!-- Top Card: Order Info & Courier -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <!-- Order Info Header -->
+        <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Order # -->
+            <div>
+                <p class="text-xs text-gray-500 font-bold uppercase mb-1">Número de pedido</p>
+                <p class="text-xl font-bold text-[#012e40]">SP-2025-001</p>
+            </div>
+            <!-- Date -->
+            <div>
+                <p class="text-xs text-gray-500 font-bold uppercase mb-1">Fecha del Pedido</p>
+                <p class="text-[#374151]">15 de enero de 2025</p>
+            </div>
+            <!-- Total -->
+            <div>
+                <p class="text-xs text-gray-500 font-bold uppercase mb-1">Total</p>
+                <p class="text-xl font-bold text-[#012e40]">$ 30.00</p>
+            </div>
+        </div>
+
+        <!-- Courier Banner -->
+        <div class="px-6 md:px-8 pb-8">
+            <div class="bg-[#FDEE87] p-5 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <p class="text-xs font-bold text-[#012e40] opacity-70 mb-1">Número de Guía del Courier</p>
+                    <p class="text-[#012e40] font-medium text-lg">SRV123456789</p>
+                </div>
+                <div class="md:text-right">
+                    <p class="text-xs font-bold text-[#012e40] opacity-70 mb-1">Entrega estimada:</p>
+                    <p class="text-[#012e40] font-bold text-lg">17 de enero de 2025</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+        <h2 class="text-lg font-bold text-[#012e40] mb-8">Estado del Pedido</h2>
+
+        <div class="relative">
+            <!-- Vertical Line (absolute customized) -->
+            <!-- Position logic: icon is 40px wide (w-10). Line should be centered at 20px (left-5). -->
+            <div class="absolute left-5 top-2 bottom-2 w-0.5 bg-gray-100 hidden md:block z-0"></div>
+
+            <div class="space-y-12 relative z-10">
+
+                <!-- Step 1: Completed (Received) -->
+                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
+                    <!-- Icon -->
+                    <div class="shrink-0 flex items-center md:justify-center">
+                        <div
+                            class="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-white border-4 border-white shadow-sm ring-1 ring-gray-100">
+                            <i class="ri-check-line text-lg font-bold"></i>
+                        </div>
+                        <span class="md:hidden ml-3 font-bold text-[#10B981]">Pedido Recibido</span>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 md:flex md:justify-between md:items-start pt-1">
+                        <div class="ml-10 md:ml-0 -mt-8 md:mt-0">
+                            <!-- negative margin for mobile visual alignment if needed, simplifying layout for now -->
+                            <!-- Mobile content adjustment -->
+                            <div class="hidden md:block">
+                                <h3 class="font-bold text-[#10B981] text-base">Pedido Recibido</h3>
+                            </div>
+                            <p class="text-gray-500 text-sm mt-1">Tu pedido ha sido confirmado</p>
+                        </div>
+                        <div class="ml-10 md:ml-0 mt-1 md:mt-0">
+                            <span class="text-xs text-gray-400">15/01/2025 10:30</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Completed (Payment) -->
+                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
+                    <!-- Icon -->
+                    <div class="shrink-0 flex items-center md:justify-center">
+                        <div
+                            class="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-white border-4 border-white shadow-sm ring-1 ring-gray-100 pb-0.5">
+                            <i class="ri-secure-payment-line text-lg"></i>
+                        </div>
+                        <span class="md:hidden ml-3 font-bold text-[#10B981]">Pago verificado</span>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 md:flex md:justify-between md:items-start pt-1">
+                        <div>
+                            <h3 class="font-bold text-[#10B981] hidden md:block">Pago verificado</h3>
+                            <p class="text-gray-500 text-sm mt-1">El pago ha sido confirmado</p>
+                        </div>
+                        <div>
+                            <span class="text-xs text-gray-400">15/01/2025 11:15</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Current (Preparation) -->
+                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
+                    <!-- Icon: Yellow solid circle -->
+                    <div class="shrink-0 flex items-center md:justify-center">
+                        <div
+                            class="w-10 h-10 rounded-full bg-[#f2cb07] border-4 border-white shadow-sm ring-1 ring-gray-100">
+                        </div>
+                        <span class="md:hidden ml-3 font-bold text-[#012e40]">En preparación</span>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 pt-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-[#012e40] hidden md:block">En preparación</h3>
+                            <span class="text-xs text-gray-400">15/01/2025 14:20</span>
+                        </div>
+                        <p class="text-gray-500 text-sm mb-4">Enviado a Bodega DobraNet para preparación</p>
+
+                        <!-- Info Box -->
+                        <div class="bg-[#FDEE87] p-4 rounded-md text-[#012e40] text-sm flex gap-3 items-start">
+                            <i class="ri-information-line text-lg mt-px"></i>
+                            <p class="font-medium">Tu pedido está siendo preparado en nuestra bodega. Recibirás una
+                                notificación cuando sea enviado.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Pending (Enviado) -->
+                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
+                    <!-- Icon -->
+                    <div class="shrink-0 flex items-center md:justify-center">
+                        <div
+                            class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border-4 border-white shadow-sm ring-1 ring-gray-100">
+                            <i class="ri-truck-line text-lg"></i>
+                        </div>
+                        <span class="md:hidden ml-3 font-bold text-gray-400">Enviado</span>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 pt-1">
+                        <h3 class="font-bold text-gray-400 hidden md:block">Enviado</h3>
+                        <p class="text-gray-400 text-sm mt-1">Tu pedido está en camino</p>
+                    </div>
+                </div>
+
+                <!-- Step 5: Pending (Entregado) -->
+                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
+                    <!-- Icon -->
+                    <div class="shrink-0 flex items-center md:justify-center">
+                        <div
+                            class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border-4 border-white shadow-sm ring-1 ring-gray-100 pb-0.5">
+                            <i class="ri-home-4-line text-lg"></i>
+                        </div>
+                        <span class="md:hidden ml-3 font-bold text-gray-400">Entregado</span>
+                    </div>
+                    <!-- Content -->
+                    <div class="flex-1 pt-1">
+                        <h3 class="font-bold text-gray-400 hidden md:block">Entregado</h3>
+                        <p class="text-gray-400 text-sm mt-1">Pedido entregado con éxito</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
+        <h2 class="text-lg font-bold text-[#012e40] mb-8">Detalle del pedido</h2>
+
+        <div class="space-y-8">
+            <!-- Item 1 -->
+            <div class="flex flex-col sm:flex-row gap-5 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                <!-- Thumbnail -->
+                <div
+                    class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center text-gray-300 shrink-0">
+                    <i class="ri-file-text-line text-3xl"></i>
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="font-bold text-[#012e40] mb-1">Cuaderno Universitario Norma 100 Hojas</h3>
+                            <p class="text-sm text-gray-500 mb-0.5">Variante: Azul - 100 hojas</p>
+                            <p class="text-sm text-gray-500">Cantidad: 2</p>
+                        </div>
+                        <div class="text-right shrink-0 ml-4">
+                            <p class="font-bold text-[#012e40] text-lg">$ 5.00</p>
+                            <p class="text-xs text-gray-400">$ 2.50 c/u</p>
+                        </div>
+                    </div>
+
+                    <!-- Personalization Note -->
+                    <div
+                        class="bg-[#FDEE87] px-4 py-2.5 rounded text-sm text-[#012e40] flex items-start gap-2.5 mt-3 sm:w-fit">
+                        <i class="ri-message-3-line mt-0.5"></i>
+                        <span><strong>Personalización:</strong> Para María - Feliz cumpleaños</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="flex flex-col sm:flex-row gap-5 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                <!-- Thumbnail -->
+                <div
+                    class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center text-gray-300 shrink-0">
+                    <i class="ri-file-text-line text-3xl"></i>
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-bold text-[#012e40] mb-1">Bolígrafo BIC Cristal Azul (Caja 50 unidades)</h3>
+                            <p class="text-sm text-gray-500 mb-0.5">Variante: Azul</p>
+                            <p class="text-sm text-gray-500">Cantidad: 1</p>
+                        </div>
+                        <div class="text-right shrink-0 ml-4">
+                            <p class="font-bold text-[#012e40] text-lg">$ 25.00</p>
+                            <p class="text-xs text-gray-400">$ 25.00 c/u</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>

@@ -25,11 +25,15 @@ export const routes: Routes = [
 
   { path: 'contact', component: Contact },
   { path: 'checkout', component: Checkout },
+  { path: 'cart', loadComponent: () => import('./pages/cart/cart').then(m => m.Cart) },
   { path: 'tracking', component: Tracking },
   { path: 'offers', component: Offers },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
   { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password/forgot-password').then(m => m.ForgotPassword) },
+  { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
+  { path: 'orders', loadComponent: () => import('./pages/orders/orders').then(m => m.Orders) },
+  { path: 'favorites', loadComponent: () => import('./pages/favorites/favorites').then(m => m.Favorites) },
 
   { path: '**', component: NotFound },
 ];

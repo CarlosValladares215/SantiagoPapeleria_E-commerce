@@ -1,6 +1,6 @@
 // src/usuarios/usuarios.controller.ts
 
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, NotFoundException } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import { UsuarioDocument } from './schemas/usuario.schema';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -21,6 +21,19 @@ export class UsuariosController {
   @Get()
   async findAll(): Promise<UsuarioDocument[]> {
     return this.usuariosService.findAll();
+  }
+
+  // PUT /usuarios/:id
+  @Put(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateData: any,
+  ): Promise<UsuarioDocument> {
+    const updatedUser = await this.usuariosService.update(id, updateData);
+    if (!updatedUser) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return updatedUser;
   }
 
   // POST /usuarios/login

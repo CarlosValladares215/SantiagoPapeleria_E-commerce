@@ -46,4 +46,9 @@ export class UsuariosService {
   async findAll(): Promise<UsuarioDocument[]> {
     return this.usuarioModel.find().exec();
   }
+
+  // Actualizar usuario
+  async update(id: string, updateData: any): Promise<UsuarioDocument | null> {
+    return this.usuarioModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+  }
 }

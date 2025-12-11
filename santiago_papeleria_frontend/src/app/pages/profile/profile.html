@@ -1,0 +1,185 @@
+<div class="bg-gray-50 min-h-screen pb-12">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center">
+                    <div
+                        class="w-24 h-24 rounded-full bg-[#012e40] text-white flex items-center justify-center text-3xl font-bold mb-4">
+                        <span *ngIf="authService.user()?.nombres as name; else fallback">{{ name.charAt(0) | uppercase
+                            }}</span>
+                        <ng-template #fallback>L</ng-template>
+                    </div>
+                    <h2 class="text-xl font-bold text-[#012e40] mb-1">{{ authService.user()?.nombres }}</h2>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-6">{{ authService.user()?.tipo_cliente ||
+                        'Minorista' }}</p>
+
+                    <nav class="w-full flex flex-col gap-2">
+                        <a routerLink="/profile" routerLinkActive="bg-[#0f4c75] text-white"
+                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors text-white bg-[#0f4c75]">
+                            <i class="ri-user-line text-lg"></i> Mi Perfil
+                        </a>
+                        <a routerLink="/orders" routerLinkActive="bg-[#0f4c75] text-white"
+                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
+                            <i class="ri-shopping-bag-3-line text-lg"></i> Mis Pedidos
+                        </a>
+                        <a routerLink="/favorites"
+                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
+                            <i class="ri-heart-line text-lg"></i> Favoritos
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-6">
+
+                <!-- Header Card -->
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-[#0f4c75] mb-1">Mi Perfil</h1>
+                        <p class="text-gray-500 text-sm mb-4">Administra tu información personal</p>
+                        <span
+                            class="bg-[#f2cb07] text-[#012e40] text-sm font-bold px-4 py-1.5 rounded-full inline-flex items-center gap-2">
+                            <i class="ri-vip-crown-line"></i> Cuenta {{ authService.user()?.tipo_cliente | titlecase }}
+                        </span>
+                    </div>
+                    <button (click)="toggleEdit()"
+                        class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-all flex items-center gap-2">
+                        <i class="ri-edit-line"></i> {{ isEditing ? 'Cancelar Edición' : 'Editar Perfil' }}
+                    </button>
+                </div>
+
+                <!-- Form Card -->
+                <form [formGroup]="profileForm" (ngSubmit)="onSubmit()"
+                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
+
+                    <h3 class="text-lg font-bold text-[#0f4c75] mb-6 flex items-center gap-2">
+                        <i class="ri-user-line"></i> Información Personal
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <!-- Nombre -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Nombre Completo</label>
+                            <input type="text" formControlName="nombres"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                        </div>
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Correo Electrónico</label>
+                            <input type="email" formControlName="email"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                        </div>
+                        <!-- Telefono -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono</label>
+                            <input type="tel" formControlName="telefono"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                        </div>
+                        <!-- Empresa -->
+                        <div *ngIf="isMayorista">
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Empresa / Institución</label>
+                            <input type="text" formControlName="empresa" placeholder="Escuela San Francisco"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                        </div>
+                        <!-- RUC/Cedula -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5">RUC / Cédula</label>
+                            <input type="text" formControlName="identificacion"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100 my-8"></div>
+
+                    <h3 class="text-lg font-bold text-[#0f4c75] mb-6 flex items-center gap-2">
+                        <i class="ri-map-pin-line"></i> Dirección de Envío
+                    </h3>
+
+                    <div class="space-y-6">
+                        <!-- Direccion -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Dirección/Calles</label>
+                            <input type="text" formControlName="direccion"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Ciudad -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Ciudad</label>
+                                <input type="text" formControlName="ciudad"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                            </div>
+                            <!-- Provincia -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Provincia</label>
+                                <div class="relative">
+                                    <select formControlName="provincia"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed appearance-none">
+                                        <option value="" disabled>Selecciona una provincia</option>
+                                        <option *ngFor="let p of provincias" [value]="p">{{ p }}</option>
+                                    </select>
+                                    <i
+                                        class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end" *ngIf="isEditing">
+                        <button type="submit" [disabled]="isLoading"
+                            class="bg-[#0f4c75] text-white font-bold py-3 px-8 rounded-md hover:bg-[#0b3a5a] transition-colors flex items-center gap-2">
+                            <i class="ri-save-line"></i> {{ isLoading ? 'Guardando...' : 'Guardar Cambios' }}
+                        </button>
+                    </div>
+
+                    <p *ngIf="successMessage"
+                        class="mt-4 text-green-600 text-sm font-bold text-center bg-green-50 p-3 rounded border border-green-100">
+                        <i class="ri-checkbox-circle-line bg-green-600 text-white rounded-full p-0.5 text-xs mr-2"></i>
+                        {{ successMessage }}
+                    </p>
+
+                </form>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Card 1 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div
+                            class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-[#0f4c75] mb-3">
+                            <i class="ri-shopping-bag-3-line text-xl"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-[#012e40] mb-1">{{ userStats.orders }}</p>
+                        <p class="text-sm text-gray-500">Pedidos Realizados</p>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div
+                            class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mb-3">
+                            <i class="ri-heart-line text-xl"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-[#012e40] mb-1">{{ userStats.favorites }}</p>
+                        <p class="text-sm text-gray-500">Productos Favoritos</p>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div
+                            class="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center text-yellow-600 mb-3">
+                            <i class="ri-star-line text-xl"></i>
+                        </div>
+                        <p class="text-3xl font-bold text-[#012e40] mb-1">{{ userStats.reviews }}</p>
+                        <p class="text-sm text-gray-500">Reseñas Escritas</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

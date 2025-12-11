@@ -1,0 +1,215 @@
+<header
+  class="fixed top-0 left-0 right-0 z-[1000] bg-white shadow-sm transition-transform duration-300 will-change-transform"
+  [class.translate-y-[-100%]]="isHidden" [class.shadow-lg]="isScrolled">
+
+  <!-- Main Header -->
+  <div class="flex items-center justify-between py-4 px-5 gap-8 max-w-[1400px] mx-auto">
+    <!-- Logo & Hamburger -->
+    <div class="flex items-center gap-5 shrink-0">
+      <a routerLink="/" class="no-underline flex items-center" aria-label="Santiago Papelería">
+        <div class="flex items-center gap-3">
+          <img src="/assets/Logo_Grafica.png" alt="Logo Santiago Papelería" class="h-[50px] w-auto object-contain">
+        </div>
+      </a>
+    </div>
+
+    <!-- Search -->
+    <div class="flex-1 max-w-[600px] min-w-0 hidden md:block">
+      <form class="flex flex-col gap-2" role="search" (submit)="$event.preventDefault()">
+        <div class="relative w-full">
+          <input type="search"
+            class="w-full h-12 pl-5 pr-[52px] text-[0.9375rem] font-normal text-gray-800 bg-gray-100 border-2 border-transparent rounded-full outline-none transition-all focus:bg-white focus:border-brand-yellow focus:shadow-[0_0_0_3px_rgba(242,203,7,0.1)]"
+            placeholder="¿Qué producto buscas hoy?" [formControl]="searchControl" (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()">
+          <button type="submit"
+            class="absolute right-1 top-1 bottom-1 w-10 bg-brand-blue text-white border-0 rounded-full cursor-pointer transition-colors flex items-center justify-center hover:bg-brand-blue-dark z-10"
+            aria-label="Buscar">
+            <i class="ri-search-line text-lg"></i>
+          </button>
+
+          <div class="absolute top-full left-0 right-0 bg-white rounded-md shadow-xl mt-1 z-[1001] overflow-hidden"
+            *ngIf="showSuggestions && (searchSuggestions$ | async) as suggestions">
+            <a *ngFor="let item of suggestions" [routerLink]="item.url"
+              class="flex items-center gap-3 p-3 px-5 text-gray-700 no-underline transition-colors cursor-pointer hover:bg-gray-50 hover:text-brand-blue">
+              <i [class]="'fas fa-' + item.icon"></i>
+              <div class="flex-1 flex flex-col">
+                <span class="font-medium">{{ item.title }}</span>
+                <span class="text-xs text-gray-500">{{ item.category }}</span>
+              </div>
+              <i class="fas fa-chevron-right"></i>
+            </a>
+            <div *ngIf="suggestions.length === 0"
+              class="flex items-center justify-center gap-3 p-3 px-5 text-gray-500 cursor-default">
+              <span>No se encontraron resultados</span>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- User Actions -->
+    <div class="flex items-center gap-6 shrink-0 pr-12">
+
+      <!-- UN-AUTHENTICATED -->
+      <ng-container *ngIf="!auth.isAuthenticated()">
+        <a routerLink="/login"
+          class="no-underline px-4 py-2 rounded-md border border-brand-blue text-brand-blue bg-white font-medium hover:bg-gray-50 transition-colors">
+          Iniciar Sesión
+        </a>
+        <a routerLink="/register"
+          class="no-underline px-4 py-2 rounded-md bg-brand-yellow text-brand-blue font-bold hover:bg-brand-yellow/80 hover:text-brand-blue-dark transition-colors border border-transparent">
+          Registrarse
+        </a>
+      </ng-container>
+
+      <!-- AUTHENTICATED PROFILE (Only if logged in) -->
+      <div class="relative group" *ngIf="auth.isAuthenticated()">
+        <!-- Trigger Button -->
+        <button
+          class="flex items-center gap-3 pl-1 pr-3 py-1 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md h-[46px]"
+          aria-label="Mi cuenta">
+
+          <!-- Avatar Circle -->
+          <div class="w-8 h-8 rounded-full bg-[#012e40] text-white flex items-center justify-center font-bold text-sm">
+            <span *ngIf="auth.user()?.nombres as name; else fallbackIcon">
+              {{ name.charAt(0) | uppercase}}
+            </span>
+            <ng-template #fallbackIcon><i class="ri-user-line"></i></ng-template>
+          </div>
+
+          <!-- Text Info -->
+          <div class="flex flex-col items-start leading-tight">
+            <span class="text-sm font-bold text-[#012e40] max-w-[100px] truncate">{{ auth.user()?.nombres }}</span>
+            <span class="text-[0.65rem] text-gray-500 capitalize">{{ auth.user()?.tipo_cliente | lowercase }}</span>
+          </div>
+
+          <!-- Chevron -->
+          <i class="ri-arrow-down-s-line text-gray-400 text-lg ml-1"></i>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div
+          class="absolute top-full left-0 w-64 bg-white rounded-lg shadow-xl mt-2 opacity-0 invisible translate-y-[-10px] transition-all z-[1001] group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 border border-gray-100 overflow-hidden">
+
+          <!-- Menu Header -->
+          <div class="p-5 border-b border-gray-100">
+            <p class="font-bold text-[#012e40] text-base mb-0.5 truncate">{{ auth.user()?.nombres }}</p>
+            <p class="text-xs text-gray-500 mb-3 truncate">{{ auth.user()?.email }}</p>
+            <span class="bg-[#f2cb07] text-[#012e40] text-xs font-bold px-3 py-1 rounded-full inline-block capitalize">
+              {{ auth.user()?.tipo_cliente | lowercase }}
+            </span>
+          </div>
+
+          <!-- Menu Items -->
+          <div class="py-2">
+            <a routerLink="/profile"
+              class="flex items-center gap-3 py-2.5 px-5 text-gray-600 no-underline text-sm font-medium transition-all hover:bg-gray-50 hover:text-[#012e40]">
+              <i class="ri-user-line text-lg"></i> Mi Perfil
+            </a>
+            <a routerLink="/orders"
+              class="flex items-center gap-3 py-2.5 px-5 text-gray-600 no-underline text-sm font-medium transition-all hover:bg-gray-50 hover:text-[#012e40]">
+              <i class="ri-shopping-bag-3-line text-lg"></i> Mis Pedidos
+            </a>
+            <a routerLink="/favorites"
+              class="flex items-center gap-3 py-2.5 px-5 text-gray-600 no-underline text-sm font-medium transition-all hover:bg-gray-50 hover:text-[#012e40]">
+              <i class="ri-heart-line text-lg"></i> Favoritos
+            </a>
+          </div>
+
+          <!-- Menu Footer -->
+          <div class="border-t border-gray-100 p-2">
+            <button (click)="logout()"
+              class="w-full flex items-center gap-3 py-2.5 px-3 text-red-500 no-underline text-sm font-medium transition-all hover:bg-red-50 rounded bg-transparent border-0 cursor-pointer">
+              <i class="ri-logout-box-r-line text-lg"></i> Cerrar Sesión
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Track Order (Always visible or only if auth? Image implies visible) -->
+      <a routerLink="/tracking"
+        class="flex items-center gap-2 text-gray-700 no-underline font-medium hover:text-brand-blue">
+        <i class="ri-truck-line text-lg"></i>
+        <span class="hidden xl:inline">Rastrear Pedido</span>
+      </a>
+
+      <!-- Cart -->
+      <a routerLink="/cart"
+        class="flex items-center gap-2 text-gray-700 no-underline font-medium hover:text-brand-blue cursor-pointer">
+        <div class="relative">
+          <i class="ri-shopping-cart-line text-lg"></i>
+          <span *ngIf="(cartItemCount$ | async) as count"
+            class="absolute -top-2 -right-2 min-w-[18px] h-[18px] bg-red-500 text-white text-[0.625rem] font-bold rounded-full flex items-center justify-center px-1">
+            {{ count }}
+          </span>
+        </div>
+        <span class="hidden xl:inline">Carrito</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="border-t border-gray-200 w-full hidden md:block">
+    <div class="max-w-[1400px] mx-auto">
+      <ul class="flex list-none justify-center gap-0.5">
+        <li class="relative">
+          <a routerLink="/"
+            class="flex items-center gap-2 py-4 px-6 text-gray-700 no-underline font-medium text-[0.9375rem] transition-all relative whitespace-nowrap hover:text-[#f2cb07]"
+            routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+            <i class="fas fa-home text-sm opacity-80"></i>
+            <span>INICIO</span>
+          </a>
+        </li>
+
+        <li class="relative h-full flex items-center" (mouseenter)="onMegaMenuEnter('papeleria')"
+          (mouseleave)="onMegaMenuLeave()">
+          <span
+            class="flex items-center gap-2 py-4 px-6 text-gray-700 font-medium text-[0.9375rem] transition-all relative whitespace-nowrap hover:text-[#f2cb07] cursor-default">
+            <i class="fas fa-pen-nib text-sm opacity-80"></i>
+            <span>PAPELERÍA & OFICINA</span>
+            <i class="fas fa-chevron-down text-xs ml-0.5 transition-transform"></i>
+          </span>
+        </li>
+
+        <li class="relative h-full flex items-center" (mouseenter)="onMegaMenuEnter('hogar')"
+          (mouseleave)="onMegaMenuLeave()">
+          <span
+            class="flex items-center gap-2 py-4 px-6 text-gray-700 font-medium text-[0.9375rem] transition-all relative whitespace-nowrap hover:text-[#f2cb07] cursor-default">
+            <i class="fas fa-home text-sm opacity-80"></i>
+            <span>HOGAR & LIFESTYLE</span>
+            <i class="fas fa-chevron-down text-xs ml-0.5 transition-transform"></i>
+          </span>
+        </li>
+
+        <li class="relative h-full flex items-center" (mouseenter)="onMegaMenuEnter('creatividad')"
+          (mouseleave)="onMegaMenuLeave()">
+          <span
+            class="flex items-center gap-2 py-4 px-6 text-gray-700 font-medium text-[0.9375rem] transition-all relative whitespace-nowrap hover:text-[#f2cb07] cursor-default">
+            <i class="fas fa-palette text-sm opacity-80"></i>
+            <span>CREATIVIDAD & REGALOS</span>
+            <i class="fas fa-chevron-down text-xs ml-0.5 transition-transform"></i>
+          </span>
+        </li>
+
+        <li class="relative">
+          <a routerLink="/contact"
+            class="flex items-center gap-2 py-4 px-6 text-gray-700 no-underline font-medium text-[0.9375rem] transition-all relative whitespace-nowrap hover:text-[#f2cb07]"
+            routerLinkActive="active">
+            <i class="fas fa-envelope text-sm opacity-80"></i>
+            <span>CONTACTO</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- Mega Menu Container -->
+  <app-mega-menu (mouseenter)="onMegaMenuHover()" (mouseleave)="onMegaMenuLeave()"></app-mega-menu>
+</header>
+
+<!-- Overlays -->
+<app-mobile-menu></app-mobile-menu>

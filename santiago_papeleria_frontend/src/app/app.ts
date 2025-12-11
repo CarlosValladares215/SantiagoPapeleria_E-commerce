@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { Header } from './shared/header/header';
+import { Header } from './shared/header/header.component';
 import { Footer } from './shared/footer/footer';
 
 @Component({
@@ -10,4 +10,4 @@ import { Footer } from './shared/footer/footer';
   templateUrl: './app.html',
   styleUrls: ['./app.scss'],
 })
-export class App {}
+export class App { }

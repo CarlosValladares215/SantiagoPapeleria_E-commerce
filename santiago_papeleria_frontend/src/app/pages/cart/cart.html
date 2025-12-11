@@ -1,0 +1,191 @@
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- LEFT COLUMN: Order Summary & Payment -->
+        <div class="lg:col-span-2 space-y-8">
+
+            <!-- Order Summary Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h2 class="text-xl font-bold text-[#012e40] mb-6">Resumen del Pedido</h2>
+
+                <div class="space-y-6">
+                    <!-- Item 1 -->
+                    <div class="flex flex-col sm:flex-row gap-4 border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                        <!-- Thumbnail (Placeholder) -->
+                        <div
+                            class="w-16 h-16 bg-gray-50 rounded-md flex items-center justify-center text-gray-300 shrink-0">
+                            <i class="ri-file-text-line text-2xl"></i>
+                        </div>
+
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-bold text-[#012e40] text-base mb-1">Cuaderno Universitario Norma 100
+                                        Hojas</h3>
+                                    <p class="text-sm text-gray-500 mb-2">Azul - 100 hojas</p>
+
+                                    <!-- Quantity Controls -->
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-500 mr-2">Cantidad:</span>
+                                        <div class="flex items-center border border-gray-200 rounded">
+                                            <button
+                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">-</button>
+                                            <span class="px-2 text-sm font-medium text-[#012e40]">2</span>
+                                            <button
+                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-right flex flex-col items-end">
+                                    <button
+                                        class="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 mb-2 transition-colors">
+                                        <i class="ri-close-line text-sm"></i>
+                                    </button>
+                                    <p class="font-bold text-[#012e40] text-lg">$ 5.00</p>
+                                    <p class="text-xs text-gray-400">$ 2.50 c/u</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="flex flex-col sm:flex-row gap-4 border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                        <!-- Thumbnail (Placeholder) -->
+                        <div
+                            class="w-16 h-16 bg-gray-50 rounded-md flex items-center justify-center text-gray-300 shrink-0">
+                            <i class="ri-file-text-line text-2xl"></i>
+                        </div>
+
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="font-bold text-[#012e40] text-base mb-1">Bolígrafo BIC Cristal Azul (Caja
+                                        50 unidades)</h3>
+                                    <p class="text-sm text-gray-500 mb-2">Azul</p>
+
+                                    <!-- Quantity Controls -->
+                                    <div class="flex items-center">
+                                        <span class="text-sm text-gray-500 mr-2">Cantidad:</span>
+                                        <div class="flex items-center border border-gray-200 rounded">
+                                            <button
+                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">-</button>
+                                            <span class="px-2 text-sm font-medium text-[#012e40]">1</span>
+                                            <button
+                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-right flex flex-col items-end">
+                                    <button
+                                        class="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 mb-2 transition-colors">
+                                        <i class="ri-close-line text-sm"></i>
+                                    </button>
+                                    <p class="font-bold text-[#012e40] text-lg">$ 25.00</p>
+                                    <p class="text-xs text-gray-400">$ 25.00 c/u</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method Section -->
+            <div>
+                <h2 class="text-xl font-bold text-[#012e40] mb-4">Método de Pago</h2>
+
+                <div class="space-y-4">
+                    <!-- Bank Transfer Option -->
+                    <label
+                        class="block relative border border-gray-200 rounded-lg p-5 cursor-pointer bg-white transition-all hover:border-brand-blue has-[:checked]:border-brand-blue has-[:checked]:ring-1 has-[:checked]:ring-brand-blue">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-[#012e40] flex items-center justify-center text-white shrink-0">
+                                    <i class="ri-bank-line text-xl"></i>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-[#012e40] block text-base">Transferencia Bancaria</span>
+                                    <span class="text-sm text-gray-500 block mb-2">Transfiere a nuestras cuentas
+                                        bancarias</span>
+                                    <div class="flex gap-2">
+                                        <span class="text-xs bg-[#012e40] text-white px-2 py-0.5 rounded">Banco
+                                            Pichincha</span>
+                                        <span class="text-xs bg-[#012e40] text-white px-2 py-0.5 rounded">Banco
+                                            Guayaquil</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="radio" name="payment_method"
+                                class="w-5 h-5 text-brand-blue border-gray-300 focus:ring-brand-blue" checked>
+                        </div>
+                    </label>
+
+                    <!-- Cash on Delivery Option -->
+                    <label
+                        class="block relative border border-gray-200 rounded-lg p-5 cursor-pointer bg-white transition-all hover:border-brand-blue has-[:checked]:border-brand-blue has-[:checked]:ring-1 has-[:checked]:ring-brand-blue">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-[#012e40] flex items-center justify-center text-white shrink-0">
+                                    <i class="ri-hand-coin-line text-xl"></i>
+                                </div>
+                                <div>
+                                    <span class="font-bold text-[#012e40] block text-base">Pago Contraentrega</span>
+                                    <span class="text-sm text-gray-500 block mb-2">Paga en efectivo al recibir tu
+                                        pedido</span>
+                                    <div class="flex gap-2">
+                                        <span
+                                            class="text-xs bg-[#012e40] text-white px-2 py-0.5 rounded">Efectivo</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="radio" name="payment_method"
+                                class="w-5 h-5 text-brand-blue border-gray-300 focus:ring-brand-blue">
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Purchase Summary -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 sticky top-24">
+                <h2 class="text-xl font-bold text-[#012e40] mb-6">Resumen de Compra</h2>
+
+                <div class="space-y-4 mb-6">
+                    <div class="flex justify-between text-[#374151]">
+                        <span>Subtotal:</span>
+                        <span class="font-bold">$ 30.00</span>
+                    </div>
+                    <div class="flex justify-between text-[#10B981]">
+                        <span>Envío:</span>
+                        <span class="font-bold">GRATIS</span>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-4 mb-6">
+                    <div class="flex justify-between text-[#012e40] text-xl font-bold">
+                        <span>Total:</span>
+                        <span>$ 30.00</span>
+                    </div>
+                </div>
+
+                <button
+                    class="w-full bg-[#f2cb07] text-[#012e40] font-bold py-3 rounded-lg hover:bg-[#e0bc06] transition-colors flex items-center justify-center gap-2 mb-4">
+                    <i class="ri-secure-payment-line"></i> Confirmar Pedido
+                </button>
+
+                <div class="text-center">
+                    <p class="text-xs text-green-600 flex items-center justify-center gap-1">
+                        <i class="ri-shield-check-line"></i> Compra 100% Segura
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

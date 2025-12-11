@@ -1,0 +1,135 @@
+<div class="bg-gray-50 min-h-screen pb-12">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <!-- Sidebar (Reused) -->
+            <div class="lg:col-span-1">
+                <div
+                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center">
+                    <div
+                        class="w-24 h-24 rounded-full bg-[#012e40] text-white flex items-center justify-center text-3xl font-bold mb-4">
+                        <span *ngIf="authService.user()?.nombres as name; else fallback">{{ name.charAt(0) | uppercase
+                            }}</span>
+                        <ng-template #fallback>L</ng-template>
+                    </div>
+                    <h2 class="text-xl font-bold text-[#012e40] mb-1">{{ authService.user()?.nombres }}</h2>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-6">{{ authService.user()?.tipo_cliente ||
+                        'Minorista' }}</p>
+
+                    <nav class="w-full flex flex-col gap-2">
+                        <a routerLink="/profile" routerLinkActive="bg-[#0f4c75] text-white"
+                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                            <i class="ri-user-line text-lg"></i> Mi Perfil
+                        </a>
+                        <a routerLink="/orders" routerLinkActive="bg-[#0f4c75] text-white"
+                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                            <i class="ri-shopping-bag-3-line text-lg"></i> Mis Pedidos
+                        </a>
+                        <a routerLink="/favorites" routerLinkActive="bg-[#0f4c75] text-white"
+                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-white bg-[#0f4c75] transition-colors">
+                            <i class="ri-heart-line text-lg"></i> Favoritos
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-6">
+
+                <!-- Header -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-[#012e40] mb-1">Mis Favoritos</h1>
+                        <p class="text-sm text-gray-500">Productos que te encantan</p>
+                    </div>
+                    <div class="text-center">
+                        <span class="block text-2xl font-bold text-[#012e40]">{{ products.length }}</span>
+                        <span class="text-xs text-gray-500 font-medium">Productos</span>
+                    </div>
+                </div>
+
+                <!-- Filters / Tabs -->
+                <div class="flex flex-wrap gap-2">
+                    <button *ngFor="let filter of filters" (click)="setFilter(filter.value)" [class]="activeFilter === filter.value 
+                    ? 'bg-[#012e40] text-white shadow-md' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-transparent'"
+                        class="px-5 py-2 rounded-md text-sm font-bold transition-all flex items-center gap-2">
+                        {{ filter.label }}
+                        <span class="text-xs opacity-80" [class.bg-white]="activeFilter === filter.value"
+                            [class.text-[#012e40]]="activeFilter === filter.value"
+                            [class.bg-gray-300]="activeFilter !== filter.value"
+                            class="px-1.5 py-0.5 rounded-full inline-block">{{ filter.count }}</span>
+                    </button>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div *ngFor="let product of filteredProducts"
+                        class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 transition-all hover:shadow-md group relative">
+
+                        <!-- Favorite Icon (Top Right) -->
+                        <button (click)="toggleFavorite(product.id)"
+                            class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm text-red-500 hover:scale-110 transition-transform">
+                            <i class="ri-heart-fill text-lg"></i>
+                        </button>
+
+                        <!-- Image -->
+                        <div class="bg-gray-50 rounded-lg p-6 mb-4 relative overflow-hidden">
+                            <!-- Placeholder Image if asset loading fails or for mock -->
+                            <div class="w-full h-40 flex items-center justify-center text-gray-300">
+                                <img *ngIf="product.image" [src]="product.image" alt="Product"
+                                    class="max-h-full object-contain mix-blend-multiply"
+                                    onerror="this.style.display='none'">
+                                <i class="ri-image-line text-4xl" onclick="this.style.display='block'"></i>
+                            </div>
+                            <!-- Maped Logo Mock (Optional overlay) -->
+                            <!-- <img src="assets/maped-logo.png" class="absolute top-2 left-2 h-4 opacity-50"> -->
+                        </div>
+
+                        <!-- Category -->
+                        <p class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">{{ product.category
+                            }}</p>
+
+                        <!-- Title -->
+                        <h3 class="text-[#0f4c75] font-bold text-sm leading-tight mb-3 h-10 line-clamp-2 uppercase">
+                            {{ product.name }}
+                        </h3>
+
+                        <!-- Price -->
+                        <div class="text-3xl font-bold text-[#0f4c75] mb-3">
+                            ${{ product.price | number:'1.2-2' }}
+                        </div>
+
+                        <!-- Stock Badge -->
+                        <div class="mb-4">
+                            <span *ngIf="product.inStock"
+                                class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded inline-flex items-center gap-1">
+                                <i class="ri-checkbox-circle-fill"></i> En Stock
+                            </span>
+                            <span *ngIf="!product.inStock"
+                                class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded inline-flex items-center gap-1">
+                                <i class="ri-close-circle-fill"></i> Agotado
+                            </span>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex gap-2">
+                            <button
+                                class="flex-1 bg-white border border-gray-300 text-[#012e40] font-bold text-sm py-2 rounded-md hover:bg-gray-50 transition-colors">
+                                Ver Detalles
+                            </button>
+                            <button
+                                class="flex-1 bg-[#f2cb07] text-[#012e40] font-bold text-sm py-2 rounded-md hover:bg-[#e0bc06] transition-colors shadow-sm">
+                                Agregar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
