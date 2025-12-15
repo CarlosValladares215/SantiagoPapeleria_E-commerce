@@ -58,6 +58,9 @@ export class Usuario {
   @Prop({ required: true, unique: true })
   email: string;
 
+  @Prop({ required: true, default: 'customer' })
+  role: string; // admin, customer, warehouse
+
   @Prop({ required: true })
   password_hash: string; // Almacenará el hash de la contraseña
 

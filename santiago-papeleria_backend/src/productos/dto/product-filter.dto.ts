@@ -39,6 +39,18 @@ export class ProductFilterDto {
 
   @IsOptional()
   @IsString()
+  status?: string; // 'pending' | 'draft' | 'complete'
+
+  @IsOptional()
+  @IsNumberString()
+  page?: string;
+
+  @IsOptional()
+  @IsNumberString()
+  limit?: string;
+
+  @IsOptional()
+  @IsString()
   // Validamos que el valor de ordenación sea uno de los permitidos
   @IsIn(['name', '-name', 'price', '-price', 'stock', '-stock'])
   sortBy?: string; // Mapea a 'sortBy'

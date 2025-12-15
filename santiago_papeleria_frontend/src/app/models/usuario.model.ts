@@ -24,6 +24,7 @@ export interface Usuario {
     cedula?: string;
     telefono?: string;
     tipo_cliente: 'MINORISTA' | 'MAYORISTA';
+    role?: 'admin' | 'customer' | 'warehouse';
     estado?: 'ACTIVO' | 'INACTIVO';
     datos_fiscales?: DatosFiscales;
     direcciones_entrega?: DireccionEntrega[];

@@ -20,7 +20,6 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -29,15 +28,9 @@
                 "input": "public"
               }
             ],
-
             "styles": [
               "src/styles.scss"
-            ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            ]
           },
           "configurations": {
             "production": {
@@ -63,7 +56,6 @@
           },
           "defaultConfiguration": "production"
         },
-
         "serve": {
           "builder": "@angular/build:dev-server",
           "configurations": {
@@ -76,17 +68,14 @@
           },
           "defaultConfiguration": "development"
         },
-
         "extract-i18n": {
           "builder": "@angular/build:extract-i18n"
         },
-
         "test": {
           "builder": "@angular/build:karma",
           "options": {
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
-
             "assets": [
               "src/favicon.ico",
               "src/assets",
@@ -95,7 +84,6 @@
                 "input": "public"
               }
             ],
-
             "styles": [
               "src/styles.scss"
             ]

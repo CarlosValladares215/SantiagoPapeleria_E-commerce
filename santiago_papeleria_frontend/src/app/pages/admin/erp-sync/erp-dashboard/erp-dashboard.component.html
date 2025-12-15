@@ -1,0 +1,253 @@
+<div *ngIf="loading" class="flex justify-center items-center h-64">
+    <i class="ri-loader-4-line animate-spin text-4xl text-[#104D73]"></i>
+</div>
+
+<div *ngIf="error" class="flex flex-col justify-center items-center h-64 text-center">
+    <div class="bg-red-50 p-4 rounded-full mb-4">
+        <i class="ri-error-warning-line text-4xl text-red-500"></i>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Error de conexión</h3>
+    <p class="text-gray-600 mb-6 max-w-md">{{ error }}</p>
+    <button (click)="loadData()"
+        class="bg-[#104D73] text-white px-6 py-2 rounded-lg hover:bg-[#012E40] transition-colors cursor-pointer flex items-center">
+        <i class="ri-refresh-line mr-2"></i>
+        Intentar nuevamente
+    </button>
+</div>
+
+<div *ngIf="!loading && !error && dashboardData" class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard de Conexión ERP</h1>
+            <p class="text-gray-600 mt-1">Monitoreo y control de sincronización con DobraNet</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button (click)="handleManualSync()" [disabled]="isSyncing"
+                class="flex items-center space-x-2 bg-[#104D73] text-white px-4 py-2 rounded-lg hover:bg-[#012E40] transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap">
+                <i [class]="isSyncing ? 'ri-loader-4-line animate-spin' : 'ri-refresh-line'"></i>
+                <span>{{ isSyncing ? 'Sincronizando...' : 'Sincronizar Ahora' }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-[#104D73] to-[#012E40] rounded-2xl p-8 text-white">
+        <div class="flex items-center justify-between">
+            <div class="space-y-4">
+                <div class="flex items-center space-x-4">
+                    <!-- Status Badge -->
+                    <div [ngClass]="getStatusBadgeClass(dashboardData.status)"
+                        class="flex items-center space-x-2 px-4 py-2 rounded-full">
+                        <div [class]="dashboardData.status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-red-500'"
+                            class="w-2 h-2 rounded-full"></div>
+                        <span class="font-medium">
+                            {{ dashboardData.status === 'connected' ? 'Conectado' : 'Desconectado' }}
+                        </span>
+                    </div>
+                    <div class="text-2xl font-bold">{{ dashboardData.erpName }}</div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-blue-100">
+                    <div class="flex items-center space-x-3">
+                        <i class="ri-time-line text-xl"></i>
+                        <div>
+                            <p class="text-sm opacity-75">Última sincronización</p>
+                            <p class="font-medium">{{ formatDate(dashboardData.lastSync) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <i class="ri-calendar-line text-xl"></i>
+                        <div>
+                            <p class="text-sm opacity-75">Próxima sincronización</p>
+                            <p class="font-medium">{{ getNextSyncTime(dashboardData.nextSync) }} (02:00 AM)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden md:block">
+                <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
+                    <i class="ri-database-2-line text-6xl text-white/70"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Products Synced -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Products Synced</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ dashboardData.metrics.totalProducts | number }}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">productos sincronizados</p>
+                </div>
+                <div class="p-3 bg-blue-100 rounded-full">
+                    <i class="ri-shopping-bag-line text-blue-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="text-green-600 text-sm font-medium">+{{ dashboardData.metrics.todayNewProducts }}
+                    hoy</span>
+                <i class="ri-arrow-up-line text-green-600 ml-1"></i>
+            </div>
+        </div>
+
+        <!-- Sync Success Rate -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Sync Success Rate</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ dashboardData.metrics.successRate }}%</p>
+                    <p class="text-sm text-gray-500 mt-1">tasa de éxito (últimos 30 días)</p>
+                </div>
+                <div class="p-3 bg-green-100 rounded-full">
+                    <i class="ri-check-line text-green-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full transition-all duration-300"
+                        [style.width.%]="dashboardData.metrics.successRate"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Last Sync Duration -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Last Sync Duration</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ dashboardData.metrics.lastSyncDuration }}</p>
+                    <p class="text-sm text-gray-500 mt-1">duración última sincronización</p>
+                </div>
+                <div class="p-3 bg-purple-100 rounded-full">
+                    <i class="ri-timer-line text-purple-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center">
+                <span class="text-green-600 text-sm font-medium">↓ 12% más rápido</span>
+            </div>
+        </div>
+
+        <!-- Pending Errors -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pending Errors</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ dashboardData.metrics.pendingErrors }}</p>
+                    <p class="text-sm text-gray-500 mt-1">productos con errores</p>
+                </div>
+                <div class="p-3 bg-red-100 rounded-full">
+                    <i class="ri-error-warning-line text-red-600 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button class="text-[#104D73] text-sm font-medium hover:underline cursor-pointer">
+                    Ver detalles →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Timeline and Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Activity Timeline -->
+        <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Recent Activity Timeline</h3>
+
+            <div class="space-y-6">
+                <div *ngFor="let sync of dashboardData.recentSyncs" class="flex items-start space-x-4">
+                    <div class="flex-shrink-0">
+                        <div [ngClass]="sync.status === 'success' ? 'bg-green-100' : 'bg-red-100'"
+                            class="w-10 h-10 rounded-full flex items-center justify-center">
+                            <i
+                                [class]="sync.status === 'success' ? 'ri-check-line text-green-600' : 'ri-error-warning-line text-red-600'"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-gray-900">
+                                {{ formatDate(sync.timestamp) }} - Sincronización {{ sync.type }} completada
+                            </p>
+                            <span class="text-xs text-gray-500">{{ sync.duration }}</span>
+                        </div>
+
+                        <div class="mt-2 space-y-1">
+                            <div class="flex items-center text-sm text-green-600">
+                                <i class="ri-check-line mr-2"></i>
+                                <span>{{ sync.productsUpdated | number }} productos actualizados</span>
+                            </div>
+
+                            <div *ngIf="sync.productsNew > 0" class="flex items-center text-sm text-green-600">
+                                <i class="ri-check-line mr-2"></i>
+                                <span>{{ sync.productsNew }} nuevos productos agregados</span>
+                            </div>
+
+                            <div *ngIf="sync.errors > 0" class="flex items-center text-sm text-yellow-600">
+                                <i class="ri-error-warning-line mr-2"></i>
+                                <span>{{ sync.errors }} productos con errores de validación</span>
+                            </div>
+
+                            <p class="text-xs text-gray-500 mt-1">
+                                Iniciado por: {{ sync.initiator }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
+
+            <div class="space-y-4">
+                <button (click)="handleManualSync()" [disabled]="isSyncing"
+                    class="w-full flex items-center justify-center space-x-3 bg-[#104D73] text-white p-4 rounded-lg hover:bg-[#012E40] transition-colors disabled:opacity-50 cursor-pointer whitespace-nowrap">
+                    <i [class]="isSyncing ? 'ri-loader-4-line animate-spin' : 'ri-refresh-line'" class="text-xl"></i>
+                    <span class="font-medium">Sincronizar Ahora</span>
+                </button>
+
+                <button (click)="handleViewLogs()"
+                    class="w-full flex items-center justify-center space-x-3 bg-white text-[#104D73] p-4 rounded-lg border-2 border-[#104D73] hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
+                    <i class="ri-file-list-3-line text-xl"></i>
+                    <span class="font-medium">Ver Logs Completos</span>
+                </button>
+
+                <button (click)="handleConfigureAPI()"
+                    class="w-full flex items-center justify-center space-x-3 bg-white text-[#104D73] p-4 rounded-lg border-2 border-[#104D73] hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
+                    <i class="ri-settings-3-line text-xl"></i>
+                    <span class="font-medium">Configurar API</span>
+                </button>
+            </div>
+
+            <!-- Connection Info -->
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h4 class="font-medium text-gray-900 mb-3">Estado de Conexión</h4>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Sistema ERP:</span>
+                        <span class="font-medium text-gray-900">{{ dashboardData.erpName }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Estado:</span>
+                        <span [class]="dashboardData.status === 'connected' ? 'text-green-600' : 'text-red-600'"
+                            class="font-medium">
+                            {{ dashboardData.status === 'connected' ? 'Conectado' : 'Desconectado' }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Última verificación:</span>
+                        <span class="font-medium text-gray-900">Hace 2 min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

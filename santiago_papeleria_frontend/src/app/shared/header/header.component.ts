@@ -7,7 +7,7 @@ import { UiService } from '../../services/ui.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { MegaMenuComponent } from './mega-menu/mega-menu.component';
 import { MobileMenuComponent } from './mobile-menu/mobile-menu.component';
-import { CartSidebarComponent } from './cart-sidebar/cart-sidebar.component';
+// import { CartSidebarComponent } from './cart-sidebar/cart-sidebar.component';
 import { Observable, of } from 'rxjs';
 
 @Component({
@@ -21,7 +21,7 @@ import { Observable, of } from 'rxjs';
     ReactiveFormsModule,
     MegaMenuComponent,
     MobileMenuComponent,
-    CartSidebarComponent
+    // CartSidebarComponent
   ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],

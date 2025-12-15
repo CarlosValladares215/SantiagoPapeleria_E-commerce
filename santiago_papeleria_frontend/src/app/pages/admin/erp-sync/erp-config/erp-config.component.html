@@ -1,0 +1,359 @@
+<div class="space-y-6 max-w-5xl">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Configuración API</h1>
+        <p class="text-gray-600 mt-1">Gestiona la conexión con DobraNet ERP</p>
+    </div>
+
+    <!-- Security Notice -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
+        <i class="ri-lock-line text-blue-600 text-xl mt-0.5"></i>
+        <div>
+            <h3 class="font-semibold text-blue-900 text-sm">Información Sensible</h3>
+            <p className="text-blue-800 text-sm mt-1">
+                Las credenciales API se almacenan cifradas. Solo usuarios con rol de Administrador pueden ver y
+                modificar esta configuración.
+            </p>
+        </div>
+    </div>
+
+    <!-- Configuration Form -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="p-6 space-y-8">
+            <!-- Section 1: Connection Settings -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">DobraNet API Configuration</h2>
+
+                <div class="space-y-4">
+                    <!-- Base URL -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            URL Base API <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" [ngModel]="config().baseUrl"
+                            (ngModelChange)="updateConfig('baseUrl', $event)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                        <p class="text-xs text-gray-500 mt-1">URL del servidor DobraNet</p>
+                    </div>
+
+                    <!-- Auth Token -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Token de Autenticación <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex space-x-2">
+                            <div class="flex-1 relative">
+                                <input [type]="showAuthToken() ? 'text' : 'password'" [ngModel]="config().authToken"
+                                    (ngModelChange)="updateConfig('authToken', $event)"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                            </div>
+                            <button (click)="showAuthToken.set(!showAuthToken())"
+                                class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
+                                [title]="showAuthToken() ? 'Ocultar' : 'Mostrar'">
+                                <i [class]="showAuthToken() ? 'ri-eye-off-line' : 'ri-eye-line'"
+                                    class="text-gray-600"></i>
+                            </button>
+                            <button (click)="regenerateToken()"
+                                class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
+                                title="Regenerar">
+                                <i class="ri-refresh-line text-gray-600"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Token de acceso proporcionado por DobraNet</p>
+                    </div>
+
+                    <!-- Webhook Secret -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Webhook Secret <span class="text-red-500">*</span>
+                        </label>
+                        <div class="flex space-x-2">
+                            <div class="flex-1 relative">
+                                <input [type]="showWebhookSecret() ? 'text' : 'password'"
+                                    [ngModel]="config().webhookSecret"
+                                    (ngModelChange)="updateConfig('webhookSecret', $event)"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                            </div>
+                            <button (click)="showWebhookSecret.set(!showWebhookSecret())"
+                                class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
+                                [title]="showWebhookSecret() ? 'Ocultar' : 'Mostrar'">
+                                <i [class]="showWebhookSecret() ? 'ri-eye-off-line' : 'ri-eye-line'"
+                                    class="text-gray-600"></i>
+                            </button>
+                            <button (click)="copyToClipboard(config().webhookSecret)"
+                                class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
+                                title="Copiar">
+                                <i class="ri-file-copy-line text-gray-600"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Secret para validar webhooks entrantes</p>
+                    </div>
+
+                    <!-- Webhook URL -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Webhook URL (Solo lectura)
+                        </label>
+                        <div class="flex space-x-2">
+                            <input type="text" [value]="config().webhookUrl" readonly
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-600">
+                            <button (click)="copyToClipboard(config().webhookUrl)"
+                                class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
+                                title="Copiar URL">
+                                <i class="ri-file-copy-line text-gray-600"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Proporciona esta URL a DobraNet para recibir
+                            actualizaciones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Section 2: Sync Schedule Settings -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Programación de Sincronización</h2>
+
+                <div class="space-y-4">
+                    <!-- Auto Sync Toggle -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Sincronización Automática</label>
+                            <p class="text-xs text-gray-500">Ejecutar sincronización diaria automáticamente</p>
+                        </div>
+                        <button (click)="updateConfig('autoSync', !config().autoSync)"
+                            [class]="config().autoSync ? 'bg-[#104D73]' : 'bg-gray-300'"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer">
+                            <span [class]="config().autoSync ? 'translate-x-6' : 'translate-x-1'"
+                                class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform">
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Sync Time -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Hora de Sincronización Diaria
+                        </label>
+                        <input type="time" [ngModel]="config().dailySyncTime"
+                            (ngModelChange)="updateConfig('dailySyncTime', $event)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                        <p class="text-xs text-gray-500 mt-1">La sincronización se ejecutará todos los días a esta hora
+                        </p>
+                    </div>
+
+                    <!-- Timezone -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Zona Horaria
+                        </label>
+                        <select [ngModel]="config().timezone" (ngModelChange)="updateConfig('timezone', $event)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                            <option value="GMT-5">(GMT-5) Ecuador Time</option>
+                            <option value="GMT-6">(GMT-6) Central Time</option>
+                            <option value="GMT-4">(GMT-4) Atlantic Time</option>
+                            <option value="GMT-3">(GMT-3) Argentina Time</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Section 3: Notification Settings -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Configuración de Notificaciones</h2>
+
+                <div class="space-y-4">
+                    <!-- Notify Success -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Notificar éxito de sincronización</label>
+                            <p class="text-xs text-gray-500">Recibir email cuando la sincronización sea exitosa</p>
+                        </div>
+                        <button (click)="updateConfig('notifySuccess', !config().notifySuccess)"
+                            [class]="config().notifySuccess ? 'bg-[#104D73]' : 'bg-gray-300'"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer">
+                            <span [class]="config().notifySuccess ? 'translate-x-6' : 'translate-x-1'"
+                                class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform">
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Notify Errors -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">Notificar errores de sincronización</label>
+                            <p class="text-xs text-gray-500">Recibir email cuando ocurran errores</p>
+                        </div>
+                        <button (click)="updateConfig('notifyErrors', !config().notifyErrors)"
+                            [class]="config().notifyErrors ? 'bg-[#104D73]' : 'bg-gray-300'"
+                            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer">
+                            <span [class]="config().notifyErrors ? 'translate-x-6' : 'translate-x-1'"
+                                class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform">
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Alert Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Email para Alertas
+                        </label>
+                        <input type="email" [ngModel]="config().alertEmail"
+                            (ngModelChange)="updateConfig('alertEmail', $event)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                        <p class="text-xs text-gray-500 mt-1">Recibirás notificaciones de errores críticos</p>
+                    </div>
+
+                    <!-- Email Options -->
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" [ngModel]="config().includeDetailedLogs"
+                                (ngModelChange)="updateConfig('includeDetailedLogs', $event)"
+                                class="w-4 h-4 text-[#104D73] border-gray-300 rounded focus:ring-[#104D73] cursor-pointer">
+                            <span class="text-sm text-gray-700">Incluir logs detallados en email</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" [ngModel]="config().sendDailySummary"
+                                (ngModelChange)="updateConfig('sendDailySummary', $event)"
+                                class="w-4 h-4 text-[#104D73] border-gray-300 rounded focus:ring-[#104D73] cursor-pointer">
+                            <span class="text-sm text-gray-700">Enviar resumen diario</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Section 4: Advanced Settings -->
+            <div>
+                <button (click)="isAdvancedOpen.set(!isAdvancedOpen())"
+                    class="flex items-center justify-between w-full text-left cursor-pointer">
+                    <h2 class="text-lg font-semibold text-gray-900">Configuración Avanzada</h2>
+                    <i [class]="'ri-arrow-' + (isAdvancedOpen() ? 'up' : 'down') + '-s-line text-gray-600 text-xl'"></i>
+                </button>
+
+                <div *ngIf="isAdvancedOpen()" class="mt-4 space-y-4">
+                    <!-- Timeout -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Timeout de Conexión (segundos)
+                        </label>
+                        <input type="number" [ngModel]="config().timeout"
+                            (ngModelChange)="updateConfig('timeout', $event)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                    </div>
+
+                    <!-- Retries -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Reintentos en caso de fallo
+                        </label>
+                        <input type="number" [ngModel]="config().retries"
+                            (ngModelChange)="updateConfig('retries', $event)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                    </div>
+
+                    <!-- Advanced Options -->
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" [ngModel]="config().validateSSL"
+                                (ngModelChange)="updateConfig('validateSSL', $event)"
+                                class="w-4 h-4 text-[#104D73] border-gray-300 rounded focus:ring-[#104D73] cursor-pointer">
+                            <span class="text-sm text-gray-700">Validar certificados SSL</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" [ngModel]="config().logRequestsResponses"
+                                (ngModelChange)="updateConfig('logRequestsResponses', $event)"
+                                class="w-4 h-4 text-[#104D73] border-gray-300 rounded focus:ring-[#104D73] cursor-pointer">
+                            <span class="text-sm text-gray-700">Registrar requests/responses en log</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Test Connection Section -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Probar Conexión</h2>
+
+                <button (click)="handleTestConnection()" [disabled]="isTesting()"
+                    class="px-4 py-2 bg-[#104D73] text-white rounded-lg hover:bg-[#0d3d59] transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span *ngIf="isTesting()">
+                        <i class="ri-loader-line animate-spin mr-2"></i>
+                        Probando conexión...
+                    </span>
+                    <span *ngIf="!isTesting()">
+                        <i class="ri-wifi-line mr-2"></i>
+                        Probar Conexión Ahora
+                    </span>
+                </button>
+
+                <div *ngIf="testResult()"
+                    [ngClass]="testResult().status === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'"
+                    class="mt-4 p-4 rounded-lg border">
+                    <div class="flex items-start space-x-3">
+                        <i
+                            [class]="(testResult().status === 'success' ? 'ri-check-line text-green-600' : 'ri-close-line text-red-600') + ' text-xl mt-0.5'"></i>
+                        <div class="flex-1">
+                            <h3 [class]="testResult().status === 'success' ? 'text-green-900' : 'text-red-900'"
+                                class="font-semibold text-sm">
+                                {{ testResult().status === 'success' ? 'Conexión exitosa - Hace 5 minutos' : 'Error de
+                                conexión' }}
+                            </h3>
+                            <ul *ngIf="testResult().status === 'success'" class="mt-2 space-y-1 text-sm text-green-800">
+                                <li>• Latencia: {{ testResult().latencyMs }}ms</li>
+                                <li>• API Version: {{ testResult().apiVersion }}</li>
+                                <li>• Productos disponibles: {{ testResult().productsAvailable | number }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <button (click)="handleReset()"
+                class="text-red-600 hover:text-red-700 text-sm font-medium cursor-pointer whitespace-nowrap">
+                Restablecer Valores Predeterminados
+            </button>
+            <div class="flex space-x-3">
+                <button
+                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-colors cursor-pointer whitespace-nowrap">
+                    Cancelar
+                </button>
+                <button (click)="handleSave()" [disabled]="isSaving()"
+                    class="px-4 py-2 bg-[#104D73] text-white rounded-lg hover:bg-[#0d3d59] transition-colors cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span *ngIf="isSaving()">
+                        <i class="ri-loader-line animate-spin mr-2"></i>
+                        Guardando...
+                    </span>
+                    <span *ngIf="!isSaving()">
+                        Guardar Configuración
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Log -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Historial de Cambios de Configuración</h2>
+        <div class="space-y-2">
+            <div *ngFor="let log of auditLog" class="flex items-start space-x-2 text-sm text-gray-600">
+                <i class="ri-time-line text-gray-400 mt-0.5"></i>
+                <span>
+                    <span class="font-medium text-gray-900">{{ log.date }}</span> - {{ log.user }} {{ log.action }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>

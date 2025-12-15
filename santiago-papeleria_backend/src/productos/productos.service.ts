@@ -1,82 +1,180 @@
-// src/productos/productos.service.ts (ACTUALIZADO)
-
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Producto, ProductoDocument } from './schemas/producto.schema';
-import { ProductFilterDto } from './dto/product-filter.dto'; // <-- Importar el DTO
+import { ProductFilterDto } from './dto/product-filter.dto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ProductosService {
   constructor(
     @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,
-  ) {}
+    private readonly httpService: HttpService
+  ) { }
 
-  // --- Método de Filtrado y Ordenación ---
-  async findAll(filterDto: ProductFilterDto): Promise<Producto[]> {
-    const { searchTerm, category, brand, minPrice, maxPrice, inStock, sortBy } =
-      filterDto;
+  // --- Método de Filtrado y Fusión (External Source of Truth) ---
+  async getMergedProducts(filterDto: ProductFilterDto): Promise<any> {
+    const { searchTerm, status, category, brand, minPrice, maxPrice, inStock, sortBy, page = 1, limit = 50 } = filterDto;
 
-    // 1. Crear el objeto de filtro (query) de MongoDB
-    const query: any = {};
-
-    // Filtrar por activos (casi siempre necesario en un catálogo)
-    query.activo = true;
-
-    // Búsqueda por término (searchTerm)
-    if (searchTerm) {
-      // Búsqueda case-insensitive en nombre y palabras clave
-      const regex = new RegExp(searchTerm, 'i');
-      query.$or = [{ nombre: regex }, { palabras_clave: regex }];
+    // 1. Obtener datos RAW del ERP Simulator (Source of Truth)
+    const erpUrl = 'http://localhost:4000/matrix/ports/acme/af58yz?CMD=STO_MTX_CAT_PRO';
+    try {
+      const response = await firstValueFrom(this.httpService.get(erpUrl));
+      var products: any[] = response.data;
+    } catch (error) {
+      console.error("Error fetching ERP data", error);
+      products = [];
     }
 
-    // Filtrar por Categoría (grupo) y Marca
+    // 2. Obtener TODOS los documentos de enriquecimiento de Mongo
+    const enrichedDocs = await this.productoModel.find().lean().exec();
+
+    // 3. Crear Hash Map para O(1) lookup
+    // Clave: codigo_interno (SKU), Valor: Documento Mongo
+    const enrichmentMap = new Map(enrichedDocs.map(doc => [doc.codigo_interno, doc]));
+
+    // 4. Fusionar datos (Iteración única O(N))
+    let mergedProducts = products.map(erpItem => {
+      // Normalizar SKU para evitar nulos
+      const sku = erpItem.COD || 'UNKNOWN';
+      const enrichedData: any = enrichmentMap.get(sku);
+
+      // ESTADO: Si existe en mongo, usar su estado, si no, 'pending'
+      const enrichmentStatus = enrichedData?.enrichment_status || 'pending';
+      const isVisible = enrichedData?.es_publico || false;
+
+      // Combinar
+      return {
+        // Datos Base ERP (Read-only source)
+        sku: sku,
+        erpName: erpItem.NOM,
+        brand: erpItem.MRK,
+        price: erpItem.PVP,
+        wholesalePrice: erpItem.PVM,
+        stock: erpItem.STK,
+
+        // Datos Enriquecidos (Mongo Overlay)
+        webName: enrichedData?.nombre_web || '', // Default empty
+        enrichmentStatus: enrichmentStatus,
+        isVisible: isVisible,
+
+        // Metadatos para filtrado facil
+        category: erpItem.G2,
+
+        // Mantener acceso a todo si se necesita
+        _enrichedData: enrichedData
+      };
+    });
+
+    // 5. Aplicar Filtros en Memoria
+
+    // Filtro por Texto (Search)
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      mergedProducts = mergedProducts.filter(p =>
+        p.sku.toLowerCase().includes(lowerTerm) ||
+        p.erpName.toLowerCase().includes(lowerTerm) ||
+        (p.webName && p.webName.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    // Filtro por Estado de Enriquecimiento
+    if (status && status !== 'all') {
+      mergedProducts = mergedProducts.filter(p => p.enrichmentStatus === status);
+    }
+
+    // Filtro por Stock
+    if (inStock === 'true') {
+      mergedProducts = mergedProducts.filter(p => p.stock > 0);
+    }
+
+    // Filtros de Precio
+    if (minPrice) {
+      mergedProducts = mergedProducts.filter(p => p.price >= parseFloat(minPrice));
+    }
+    if (maxPrice) {
+      mergedProducts = mergedProducts.filter(p => p.price <= parseFloat(maxPrice));
+    }
+
+    // Filtros de Categoria/Marca
     if (category) {
-      query['clasificacion.grupo'] = category;
+      mergedProducts = mergedProducts.filter(p => p.category === category);
     }
     if (brand) {
-      query['clasificacion.marca'] = brand;
+      mergedProducts = mergedProducts.filter(p => p.brand === brand);
     }
 
-    // Filtrar por Rango de Precio (priceRange)
-    if (minPrice || maxPrice) {
-      query['precios.pvp'] = {};
-      if (minPrice) {
-        query['precios.pvp'].$gte = parseFloat(minPrice);
-      }
-      if (maxPrice) {
-        query['precios.pvp'].$lte = parseFloat(maxPrice);
-      }
-    }
-
-    // Filtrar por Stock (inStock)
-    if (inStock === 'true') {
-      query['stock.total_disponible'] = { $gt: 0 };
-    }
-
-    // 2. Definir opciones de ordenación (sort)
-    let sortOptions: any = {};
+    // 6. Ordenación
     if (sortBy) {
-      // Mapeo de campos de Angular a campos de MongoDB
-      const [field, direction] = sortBy.startsWith('-')
-        ? [sortBy.substring(1), -1]
-        : [sortBy, 1];
-
-      if (field === 'price') {
-        sortOptions['precios.pvp'] = direction;
-      } else if (field === 'stock') {
-        sortOptions['stock.total_disponible'] = direction;
-      } else {
-        sortOptions[field] = direction; // Para 'name'
-      }
-    } else {
-      // Ordenación por defecto
-      sortOptions = { nombre: 1 };
+      mergedProducts.sort((a, b) => {
+        if (sortBy === 'price') return a.price - b.price;
+        if (sortBy === '-price') return b.price - a.price;
+        if (sortBy === 'stock') return a.stock - b.stock;
+        // Default name
+        return a.erpName.localeCompare(b.erpName);
+      });
     }
 
-    // 3. Ejecutar la consulta
-    // USAMOS .lean() PARA RETORNAR POJOS Y QUE CLASS-TRANSFORMER FUNCIONE CORRECTAMENTE
-    return this.productoModel.find(query).sort(sortOptions).lean().exec();
+    // 7. Paginación
+    const total = mergedProducts.length;
+    const startIndex = (Number(page) - 1) * Number(limit);
+    const endIndex = startIndex + Number(limit);
+    const paginatedProducts = mergedProducts.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedProducts,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit))
+      }
+    };
+  }
+
+  // --- Método Publico para Catalogo (Usa Fusión pero retorna estructura compatible) ---
+  async findAll(filterDto: ProductFilterDto): Promise<any[]> {
+    // 1. Obtener fusionados (Forzamos stock > 0 si se requiere, etc)
+    const mergedResult = await this.getMergedProducts({
+      ...filterDto,
+      // inStock: 'true', // Opcional, dependiendo de logica de negocio
+      status: 'all',
+      limit: '1000' // Traer suficientes para catalogo
+    });
+
+    const mergedProducts = mergedResult.data;
+
+    // 2. Filtrar solo visibles
+    const visibleProducts = mergedProducts.filter(p => p.isVisible);
+
+    // 3. Mapear a estructura Producto (para que el DTO existente funcione)
+    return visibleProducts.map(p => ({
+      _id: p._enrichedData?._id || null,
+      codigo_interno: p.sku,
+      nombre: p.webName || p.erpName, // Preferir nombre web
+      slug: p._enrichedData?.slug || p.sku,
+      activo: true,
+      clasificacion: {
+        marca: p.brand,
+        grupo: p.category,
+        linea: ''
+      },
+      precios: {
+        pvp: p.price,
+        pvm: p.price,
+        incluye_iva: p._enrichedData?.precios?.incluye_iva || false
+      },
+      stock: {
+        total_disponible: p.stock
+      },
+      multimedia: p._enrichedData?.multimedia || { principal: '', galeria: [] },
+      priceTiers: p._enrichedData?.priceTiers || [], // Importante para Tiered Pricing
+
+      // Flags
+      es_publico: true,
+      enriquecido: p.enrichmentStatus === 'complete'
+    }));
   }
 
   // 2. Método para buscar un producto por ID o Código Interno
@@ -95,16 +193,17 @@ export class ProductosService {
 
   // --- Método para CategoryCount (Estadísticas) ---
   async getCategoryCounts(): Promise<{ name: string; count: number }[]> {
+    // Nota: Esto solo cuenta en Mongo. Si queremos contar ERP, necesitariamos iterar ERP.
+    // Asumimos que para filtros iniciales Mongo esta bien, o idealmente deberiamos hacer count sobre mergedProducts.
+    // Por rendimiento, mantenemos Mongo count por ahora.
     return this.productoModel
       .aggregate([
-        // 1. Agrupar por el campo de la categoría
         {
           $group: {
             _id: '$clasificacion.grupo',
-            count: { $sum: 1 }, // Contar documentos en cada grupo
+            count: { $sum: 1 },
           },
         },
-        // 2. Proyectar el resultado para que coincida con CategoryCount {name, count}
         {
           $project: {
             _id: 0,
@@ -114,5 +213,51 @@ export class ProductosService {
         },
       ])
       .exec();
+  }
+
+  // --- Métodos de Enriquecimiento (ADMIN) ---
+
+  async searchAdmin(term: string): Promise<Producto[]> {
+    // Deprecado por getMergedProducts, pero mantenido por compatibilidad si es necesario
+    const regex = new RegExp(term, 'i');
+    return this.productoModel.find({ nombre: regex }).lean().exec();
+  }
+
+  async enrichProduct(id: string, updateData: any): Promise<Producto> {
+    const { Types } = require('mongoose');
+    let filter = {};
+
+    if (Types.ObjectId.isValid(id)) {
+      filter = { _id: id };
+    } else {
+      filter = { codigo_interno: id };
+    }
+
+    // Asegurarse de que enriched sea true si se está actualizando
+    updateData.enriquecido = true;
+    updateData.enrichment_status = 'complete'; // Default to complete on manual enrich save
+
+    // Agregar entrada al historial de cambios
+    const auditEntry = {
+      date: new Date(),
+      admin: 'admin@santiagopapeleria.com',
+      action: 'Actualización de producto'
+    };
+
+    // Upsert logic: Si no existe, crea. 
+    // Mongoose findOneAndUpdate con upsert: true maneja esto? 
+    // Necesitamos asegurarnos de que codigo_interno este en updateData si es nuevo.
+    if (!updateData.codigo_interno && typeof id === 'string' && !Types.ObjectId.isValid(id)) {
+      updateData.codigo_interno = id;
+    }
+
+    return this.productoModel.findOneAndUpdate(
+      filter,
+      {
+        $set: updateData,
+        $push: { 'auditoria.historial_cambios': auditEntry }
+      },
+      { new: true, upsert: true } // UPSERT TRUE IMPORTANTE
+    ).lean().exec() as unknown as Producto;
   }
 }

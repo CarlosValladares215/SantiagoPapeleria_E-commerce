@@ -7,8 +7,8 @@ import { Document } from 'mongoose';
 export type ProductoDocument = Producto & Document;
 
 // 1. Clasificación
-@Schema() // <--- ¡CORRECCIÓN CLAVE!
-class Clasificacion {
+@Schema()
+export class Clasificacion {
   @Prop({ required: true })
   linea: string;
 
@@ -20,8 +20,8 @@ class Clasificacion {
 }
 
 // 2. Precios
-@Schema() // <--- ¡CORRECCIÓN CLAVE!
-class Precios {
+@Schema()
+export class Precios {
   @Prop({ required: true })
   pvp: number;
 
@@ -36,8 +36,8 @@ class Precios {
 }
 
 // 3. Bodegas (parte del Stock)
-@Schema() // <--- ¡CORRECCIÓN CLAVE!
-class Bodega {
+@Schema()
+export class Bodega {
   @Prop({ required: true })
   id_externo: string;
 
@@ -52,8 +52,8 @@ class Bodega {
 }
 
 // 4. Stock
-@Schema() // <--- ¡CORRECCIÓN CLAVE!
-class Stock {
+@Schema()
+export class Stock {
   @Prop({ required: true })
   total_disponible: number;
 
@@ -65,8 +65,8 @@ class Stock {
 }
 
 // 5. Multimedia
-@Schema() // <--- ¡CORRECCIÓN CLAVE!
-class Multimedia {
+@Schema()
+export class Multimedia {
   @Prop()
   principal: string;
 
@@ -74,19 +74,34 @@ class Multimedia {
   galeria: string[];
 }
 
-// 6. Auditoria
+// 6. Auditoria (Historial de Cambios)
 @Schema()
-class Auditoria {
+export class AuditoriaItem {
+  @Prop({ default: Date.now })
+  date: Date;
+
+  @Prop()
+  admin: string;
+
+  @Prop()
+  action: string;
+}
+
+@Schema()
+export class Auditoria {
   @Prop()
   fecha_creacion: Date;
 
   @Prop()
   ultima_sincronizacion_dobranet: Date;
+
+  @Prop({ type: [AuditoriaItem], default: [] })
+  historial_cambios: AuditoriaItem[];
 }
 
 // 7. Precios por Volumen (Tiered Pricing)
 @Schema()
-class PriceTier {
+export class PriceTier {
   @Prop({ required: true })
   min: number;
 
@@ -101,6 +116,58 @@ class PriceTier {
 
   @Prop()
   badge: string;
+}
+
+// 8. Nuevos Schemas para Enriquecimiento
+@Schema()
+export class Dimensiones {
+  @Prop({ default: 0 })
+  largo: number;
+
+  @Prop({ default: 0 })
+  ancho: number;
+
+  @Prop({ default: 0 })
+  alto: number;
+}
+
+@Schema()
+export class GrupoVariante {
+  @Prop({ required: true })
+  id: string; // Timestamp o ID único
+
+  @Prop({ required: true })
+  nombre: string; // "Color", "Talla"
+
+  @Prop({ enum: ['color', 'size', 'material', 'custom'], default: 'custom' })
+  tipo: string;
+
+  @Prop({ type: [String], default: [] })
+  opciones: string[];
+}
+
+@Schema()
+export class Variante {
+  @Prop({ required: true })
+  id: string;
+
+  @Prop({ type: Object, required: true })
+  combinacion: Record<string, string>; // { "Color": "Rojo", "Talla": "S" }
+
+  @Prop({ required: true, unique: true })
+  sku: string;
+
+  @Prop()
+  precio_especifico: number; // Override del precio base
+
+  @Prop({ default: 0 })
+  stock: number;
+
+  @Prop({ default: true })
+  activo: boolean;
+
+  @Prop({ type: [String], default: [] })
+  imagenes: string[];
 }
 
 // Definición principal del Schema
@@ -141,6 +208,41 @@ export class Producto {
 
   @Prop({ type: [PriceTier] })
   priceTiers: PriceTier[];
+
+  // --- NUEVOS CAMPOS DE ENRIQUECIMIENTO ---
+
+  @Prop({ default: 0 })
+  peso_kg: number;
+
+  @Prop({ type: Dimensiones, default: {} })
+  dimensiones: Dimensiones;
+
+  @Prop({ default: false })
+  permite_mensaje_personalizado: boolean;
+
+  @Prop({ default: false })
+  tiene_variantes: boolean;
+
+  @Prop({ type: [GrupoVariante], default: [] })
+  grupos_variantes: GrupoVariante[];
+
+  @Prop({ type: [Variante], default: [] })
+  variantes: Variante[];
+
+  @Prop()
+  descripcion_extendida: string;
+
+  @Prop({ default: false })
+  enriquecido: boolean;
+
+  @Prop({ enum: ['pending', 'draft', 'complete'], default: 'pending' })
+  enrichment_status: string;
+
+  @Prop({ default: false })
+  es_publico: boolean;
+
+  @Prop()
+  nombre_web: string; // Título H1 optimizado
 }
 
 export const ProductoSchema = SchemaFactory.createForClass(Producto);

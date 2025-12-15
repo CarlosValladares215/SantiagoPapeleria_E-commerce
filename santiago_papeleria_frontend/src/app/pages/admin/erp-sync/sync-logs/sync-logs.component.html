@@ -1,0 +1,257 @@
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Registros de Sincronización</h1>
+        <p class="text-gray-600 mt-1">Historial completo de sincronizaciones con DobraNet ERP</p>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Date Range -->
+            <div class="lg:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rango de Fechas</label>
+                <div class="flex space-x-2">
+                    <input type="date" [ngModel]="dateFrom()" (ngModelChange)="dateFrom.set($event); applyFilters()"
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                    <input type="date" [ngModel]="dateTo()" (ngModelChange)="dateTo.set($event); applyFilters()"
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                </div>
+            </div>
+
+            <!-- Status Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); applyFilters()"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                    <option value="all">Todos</option>
+                    <option value="success">Éxito</option>
+                    <option value="warning">Con errores</option>
+                    <option value="error">Fallido</option>
+                    <option value="in_progress">En Progreso</option>
+                </select>
+            </div>
+
+            <!-- Type Filter -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                <select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event); applyFilters()"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                    <option value="all">Todos</option>
+                    <option value="automatic">Automática</option>
+                    <option value="manual">Manual</option>
+                </select>
+            </div>
+
+            <!-- Search -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                <div class="relative">
+                    <input type="text" placeholder="Buscar en logs..." [ngModel]="searchTerm()"
+                        (ngModelChange)="searchTerm.set($event); applyFilters()"
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-[#104D73] focus:border-[#104D73] text-sm">
+                    <i class="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Button -->
+        <div class="mt-4 flex justify-end">
+            <button
+                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
+                <i class="ri-download-line mr-2"></i>
+                Exportar Logs
+            </button>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Fecha/Hora
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tipo
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Iniciado Por
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Duración
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Productos
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Estado
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr *ngFor="let log of filteredLogs()" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ log.timestamp }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <span
+                                [ngClass]="log.type === 'automatic' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'"
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium">
+                                <i [class]="(log.type === 'automatic' ? 'ri-time-line' : 'ri-user-line') + ' mr-1'"></i>
+                                {{ getTypeLabel(log.type) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ log.initiator }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ log.duration }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div *ngIf="log.productsUpdated > 0">
+                                {{ log.productsUpdated }} actualizados
+                                <div *ngIf="log.productsNew > 0" class="text-xs text-gray-500">{{ log.productsNew }}
+                                    nuevos</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span [class]="getStatusBadgeClass(log.status)"
+                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium">
+                                <i [class]="getStatusIcon(log.status) + ' mr-1'"></i>
+                                <span *ngIf="log.status === 'success'">Éxito</span>
+                                <span *ngIf="log.status === 'warning'">Con errores ({{log.errors}})</span>
+                                <span *ngIf="log.status === 'error'">Fallido</span>
+                                <span *ngIf="$any(log.status) === 'in_progress'">En Progreso</span>
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <button (click)="openModal(log)"
+                                class="text-[#104D73] hover:text-[#0d3d59] cursor-pointer whitespace-nowrap">
+                                Ver
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Log Detail Modal -->
+    <div *ngIf="selectedLog()" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Detalles de Sincronización - {{ selectedLog()?.id }}
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                        {{ selectedLog()?.timestamp }} • {{ getTypeLabel(selectedLog()?.type || '') }}
+                    </p>
+                </div>
+                <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div class="space-y-6">
+                    <!-- Overview Stats -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Resumen</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <div class="text-gray-500">Duración</div>
+                                <div class="font-medium">{{ selectedLog()?.duration }}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500">Productos procesados</div>
+                                <div class="font-medium">{{ selectedLog()?.productsUpdated }}</div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500">Exitosos</div>
+                                <div class="font-medium text-green-600">
+                                    {{ (selectedLog()?.productsUpdated || 0) - (selectedLog()?.errors || 0) }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-gray-500">Con errores</div>
+                                <div class="font-medium text-red-600">{{ selectedLog()?.errors }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Log -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Log Detallado</h4>
+                        <div class="bg-gray-900 text-gray-300 p-4 rounded-lg overflow-x-auto">
+                            <pre class="text-sm font-mono whitespace-pre-wrap">{{ selectedLog()?.detailLog }}</pre>
+                        </div>
+                    </div>
+
+                    <!-- Error Details -->
+                    <div *ngIf="selectedLog()?.errorDetails && selectedLog()?.errorDetails!.length > 0">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Detalles de Errores</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full border border-gray-200 rounded-lg">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 border-b">
+                                            Código Producto
+                                        </th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 border-b">
+                                            Nombre
+                                        </th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 border-b">
+                                            Error
+                                        </th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 border-b">
+                                            Acción Tomada
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let error of selectedLog()?.errorDetails"
+                                        class="border-b border-gray-200">
+                                        <td class="px-4 py-2 text-sm text-gray-900 font-mono">
+                                            {{ error.productCode }}
+                                        </td>
+                                        <td class="px-4 py-2 text-sm text-gray-900">
+                                            {{ error.productName }}
+                                        </td>
+                                        <td class="px-4 py-2 text-sm text-red-600">
+                                            {{ error.error }}
+                                        </td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">
+                                            {{ error.actionTaken }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Actions -->
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-between">
+                <button (click)="selectedLog() && downloadLog(selectedLog()!)"
+                    class="px-4 py-2 bg-[#104D73] text-white rounded-lg hover:bg-[#0d3d59] transition-colors cursor-pointer whitespace-nowrap">
+                    <i class="ri-download-line mr-2"></i>
+                    Descargar Log Completo
+                </button>
+                <button (click)="closeModal()"
+                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

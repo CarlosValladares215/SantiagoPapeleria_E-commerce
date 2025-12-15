@@ -6,8 +6,11 @@ import { ProductosService } from './productos.service';
 import { ProductosController } from './productos.controller';
 import { Producto, ProductoSchema } from './schemas/producto.schema';
 
+import { HttpModule } from '@nestjs/axios';
+
 @Module({
   imports: [
+    HttpModule,
     MongooseModule.forFeature([
       // 'Producto' es el nombre que Mongoose y NestJS usarán para inyectar el modelo.
       {
@@ -19,4 +22,4 @@ import { Producto, ProductoSchema } from './schemas/producto.schema';
   controllers: [ProductosController],
   providers: [ProductosService],
 })
-export class ProductosModule {}
+export class ProductosModule { }

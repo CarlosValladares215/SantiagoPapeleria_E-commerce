@@ -1,0 +1,195 @@
+<div *ngIf="syncStatus === 'syncing'" class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Sincronización Manual</h1>
+        <p class="text-gray-600 mt-1">Sincronización en progreso...</p>
+    </div>
+
+    <!-- Progress Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="space-y-6">
+            <!-- Progress Bar -->
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700">Progreso</span>
+                    <span class="text-sm text-gray-500">{{ progress }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-[#104D73] h-3 rounded-full transition-all duration-500" [style.width.%]="progress">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div class="space-y-3">
+                <div *ngFor="let step of steps; let i = index" class="flex items-center space-x-3">
+                    <div [ngClass]="{
+                'bg-green-100 text-green-600': step.status === 'completed',
+                'bg-blue-100 text-blue-600': step.status === 'processing',
+                'bg-gray-100 text-gray-400': step.status === 'pending'
+            }" class="w-5 h-5 rounded-full flex items-center justify-center">
+                        <i *ngIf="step.status === 'completed'" class="ri-check-line text-xs"></i>
+                        <i *ngIf="step.status === 'processing'" class="ri-time-line text-xs animate-spin"></i>
+                        <div *ngIf="step.status === 'pending'" class="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <span [ngClass]="step.status === 'processing' ? 'text-gray-900 font-medium' : 'text-gray-600'"
+                        class="text-sm">
+                        {{ step.label }}
+                        <span *ngIf="step.status === 'processing' && i === 2"> (487/1247)</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Elapsed Time -->
+            <div class="pt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-600">
+                    Tiempo transcurrido: <span class="font-medium">{{ formatTime(elapsedTime) }}</span>
+                </div>
+            </div>
+
+            <!-- Cancel Button -->
+            <div class="pt-4">
+                <button (click)="cancelSync()"
+                    class="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors cursor-pointer whitespace-nowrap">
+                    <i class="ri-close-line mr-2"></i>
+                    Cancelar Sincronización
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="syncStatus === 'completed'" class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Sincronización Manual</h1>
+        <p class="text-gray-600 mt-1">Sincronización completada exitosamente</p>
+    </div>
+
+    <!-- Results Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="space-y-6">
+            <!-- Success Icon -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-check-line text-2xl text-green-600"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-900">Sincronización Completada Exitosamente</h2>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center p-4 bg-blue-50 rounded-lg">
+                    <div class="text-2xl font-bold text-blue-600">{{ syncResults?.productsUpdated }}</div>
+                    <div class="text-sm text-blue-600">Productos actualizados</div>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">{{ syncResults?.productsNew }}</div>
+                    <div class="text-sm text-green-600">Productos nuevos</div>
+                </div>
+                <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                    <div class="text-2xl font-bold text-yellow-600">{{ syncResults?.productsInactive }}</div>
+                    <div class="text-sm text-yellow-600">Productos inactivos</div>
+                </div>
+                <div class="text-center p-4 bg-red-50 rounded-lg">
+                    <div class="text-2xl font-bold text-red-600">{{ syncResults?.errors }}</div>
+                    <div class="text-sm text-red-600">Errores encontrados</div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                        <span class="font-medium">Duración total:</span> {{ syncResults?.duration }}
+                    </div>
+                    <div>
+                        <span class="font-medium">Fecha:</span> {{ syncResults?.timestamp }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button
+                    class="flex-1 bg-[#104D73] text-white px-6 py-3 rounded-lg hover:bg-[#0d3d59] transition-colors cursor-pointer whitespace-nowrap">
+                    <i class="ri-file-text-line mr-2"></i>
+                    Ver Reporte Detallado
+                </button>
+                <button (click)="resetSync()"
+                    class="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
+                    <i class="ri-refresh-line mr-2"></i>
+                    Nueva Sincronización
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div *ngIf="syncStatus === 'idle'" class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900">Sincronización Manual</h1>
+        <p class="text-gray-600 mt-1">Ejecutar sincronización inmediata del catálogo de productos</p>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div class="space-y-6">
+            <!-- Sync Type Selector -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Tipo de Sincronización</h3>
+                <div class="space-y-3">
+                    <label *ngFor="let option of syncTypeOptions"
+                        class="flex items-start space-x-3 cursor-pointer group">
+                        <input type="radio" name="syncType" [value]="option.id" [(ngModel)]="selectedSyncType"
+                            class="mt-1 w-4 h-4 text-[#104D73] border-gray-300 focus:ring-[#104D73]">
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900 group-hover:text-[#104D73] transition-colors">
+                                {{ option.label }}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-0.5">
+                                {{ option.description }}
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Confirmation Panel -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-start space-x-3">
+                    <div
+                        class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i class="ri-alert-line text-yellow-600 text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-yellow-800 mb-2">⚠️ Advertencia</h4>
+                        <p class="text-sm text-yellow-700 mb-3">
+                            Esta acción sincronizará datos desde DobraNet ERP y sobrescribirá
+                            la información local. Los datos enriquecidos manualmente (descripciones,
+                            imágenes adicionales, variantes) se mantendrán intactos.
+                        </p>
+                        <div class="text-xs text-yellow-600 space-y-1">
+                            <div><strong>Última sincronización:</strong> Hace 2 horas</div>
+                            <div><strong>Tiempo estimado:</strong> ~3 minutos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                <button (click)="startSync()"
+                    class="flex-1 bg-[#104D73] text-white px-6 py-3 rounded-lg hover:bg-[#0d3d59] transition-colors cursor-pointer whitespace-nowrap font-medium">
+                    <i class="ri-refresh-line mr-2"></i>
+                    Iniciar Sincronización
+                </button>
+                <button
+                    class="flex-1 border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -34,7 +34,14 @@ export class Login {
         this.isLoading = false;
         console.log('Login exitoso:', user);
         this.authService.setSession(user);
-        this.router.navigate(['/']);
+
+        if (this.authService.isAdmin()) {
+          this.router.navigate(['/admin/dashboard']);
+        } else if (this.authService.isWarehouse()) {
+          this.router.navigate(['/warehouse/dashboard']);
+        } else {
+          this.router.navigate(['/']);
+        }
       },
       error: (err) => {
         this.isLoading = false;

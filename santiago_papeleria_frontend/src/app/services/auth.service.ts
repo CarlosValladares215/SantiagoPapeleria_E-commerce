@@ -8,11 +8,14 @@ import { Usuario } from '../models/usuario.model';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/usuarios';
+  private apiUrl = 'http://localhost:3000/api/usuarios';
 
   user = signal<Usuario | null>(null);
 
   isAuthenticated = computed(() => this.user() !== null);
+  isAdmin = computed(() => this.user()?.role === 'admin');
+  isWarehouse = computed(() => this.user()?.role === 'warehouse');
+
 
   constructor(private router: Router, private http: HttpClient) {
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
