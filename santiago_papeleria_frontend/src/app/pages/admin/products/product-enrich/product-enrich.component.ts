@@ -19,15 +19,10 @@ interface Product {
     weight_kg: number;
     dimensions: { length: number; width: number; height: number };
     allows_custom_message: boolean;
-    has_variants: boolean;
+    attributes: { key: string; value: string }[];
     enrichmentStatus: 'pending' | 'draft' | 'complete';
     isVisible: boolean;
     audit_log: Array<{ date: string; admin: string; action: string }>;
-    variantsSummary?: {
-        totalVariants: number;
-        groups: Array<{ name: string; optionsCount: number }>;
-        lastUpdated: string;
-    };
     extendedDescription?: string;
 }
 
@@ -116,24 +111,28 @@ export class ProductEnrichComponent implements OnInit {
                 if (res.data && res.data.length > 0) {
                     const product = res.data[0];
                     // Map generic merged product to local Product interface
+                    // Map Backend snake_case to Frontend Model
+                    // We check both root level (standard) and nested (fallback)
                     this.formData.set({
                         sku: product.sku,
                         erpName: product.erpName,
-                        webName: product.webName || product.erpName, // Default to ERP name if empty
+                        webName: product.nombre_web || product.webName || product.erpName, // nombre_web is likely the DB field
                         brand: product.brand,
                         price: product.price,
                         wholesalePrice: product.wholesalePrice || 0,
                         stock: product.stock,
-                        description: product._enrichedData?.description || product.erpName,
-                        images: product._enrichedData?.images || ['https://via.placeholder.com/400'], // Default placeholder
-                        weight_kg: product._enrichedData?.weight_kg || 0,
-                        dimensions: product._enrichedData?.dimensions || { length: 0, width: 0, height: 0 },
-                        allows_custom_message: product._enrichedData?.allows_custom_message || false,
-                        has_variants: product._enrichedData?.has_variants || false,
-                        variantsSummary: product._enrichedData?.variantsSummary,
-                        enrichmentStatus: product.enrichmentStatus,
-                        isVisible: product.isVisible,
-                        audit_log: []
+                        description: product.descripcion_extendida || product.description || product.erpName,
+                        images: product.multimedia ?
+                            [product.multimedia.principal, ...(product.multimedia.galeria || [])].filter(Boolean) :
+                            (product.images || []),
+                        weight_kg: product.peso_kg || 0,
+                        dimensions: product.dimensiones || { length: 0, width: 0, height: 0 },
+                        allows_custom_message: product.permite_mensaje_personalizado || false,
+                        attributes: product.attributes || [],
+                        enrichmentStatus: product.enrichment_status || product.enrichmentStatus || 'pending',
+                        isVisible: product.es_publico !== undefined ? product.es_publico : (product.isVisible || false),
+                        audit_log: [],
+                        extendedDescription: product.descripcion_extendida // Keep reference
                     });
 
                     // Init displayed weight
@@ -254,7 +253,7 @@ export class ProductEnrichComponent implements OnInit {
                 peso_kg: 0, // set below
                 dimensiones: p.dimensions,
                 permite_mensaje_personalizado: p.allows_custom_message,
-                tiene_variantes: p.has_variants,
+                attributes: p.attributes,
                 enrichment_status: 'complete',
                 // Keep camelCase locals for logic below, but we will construct final DTO
                 // Actually, backend needs snake_case.
@@ -313,12 +312,8 @@ export class ProductEnrichComponent implements OnInit {
         setTimeout(() => this.showToast = false, 3000);
     }
 
-    navigateToVariants() {
-        const p = this.formData();
-        if (p) {
-            this.router.navigate(['/admin/products/variants'], { queryParams: { sku: p.sku } });
-        }
-    }
+    // Variant navigation removed
+
 
     // --- Input Hardening Helpers ---
 
@@ -521,5 +516,44 @@ export class ProductEnrichComponent implements OnInit {
         if (/^[0-9]$/.test(event.key)) return;
 
         event.preventDefault();
+    }
+
+    // --- Attributes / Tags Management ---
+
+    addAttribute() {
+        const p = this.formData();
+        if (p) {
+            // Check for empty attributes to prevent spamming empty rows
+            if (p.attributes.some(a => !a.key.trim() || !a.value.trim())) {
+                this.showToastNotification('⚠️ Completa los atributos existentes antes de agregar uno nuevo.', 'error');
+                return;
+            }
+
+            const newAttributes = [...p.attributes, { key: '', value: '' }];
+            this.formData.set({ ...p, attributes: newAttributes });
+            this.hasUnsavedChanges.set(true);
+        }
+    }
+
+    removeAttribute(index: number) {
+        const p = this.formData();
+        if (p) {
+            const newAttributes = [...p.attributes];
+            newAttributes.splice(index, 1);
+            this.formData.set({ ...p, attributes: newAttributes });
+            this.hasUnsavedChanges.set(true);
+        }
+    }
+
+    updateAttribute(index: number, field: 'key' | 'value', event: Event) {
+        const input = event.target as HTMLInputElement;
+        const val = input.value;
+        const p = this.formData();
+        if (p) {
+            const newAttributes = [...p.attributes];
+            newAttributes[index] = { ...newAttributes[index], [field]: val };
+            this.formData.set({ ...p, attributes: newAttributes });
+            this.hasUnsavedChanges.set(true);
+        }
     }
 }

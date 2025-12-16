@@ -1,9 +1,14 @@
-import { Component, computed, signal, WritableSignal, effect } from '@angular/core';
+import { Component, computed, signal, WritableSignal, effect, untracked, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import { ProductService } from '../../services/product.service';
-import { Product as ProductModel, PriceTier } from '../../models/product.model';
+import { CartService } from '../../services/cart.service';
+import { Product as ProductModel, PriceTier, Variant } from '../../models/product.model';
+
+// SHARED
+import { ToastContainerComponent } from '../../shared/components/toast/toast.component';
 
 // COMPONENTES
 import { ProductBreadcrumb } from './components/product-breadcrumb/product-breadcrumb';
@@ -12,7 +17,7 @@ import { ProductReviews } from './components/product-reviews/product-reviews';
 import { ProductActions } from './components/product-actions/product-actions';
 import { ProductRelated } from './components/product-related/product-related';
 import { ProductImageGallery } from './components/product-image-gallery/product-image-gallery';
-import { ProductVariants } from './components/product-variants/product-variants';
+
 import { PricingTiers } from './components/pricing-tiers/pricing-tiers';
 import { PriceSummary } from './components/price-summary/price-summary';
 import { TrustBadges } from './components/trust-badges/trust-badges';
@@ -23,13 +28,13 @@ import { ShippingInfo } from './components/shipping-info/shipping-info';
   standalone: true,
   imports: [
     CommonModule,
+    ToastContainerComponent,
     ProductBreadcrumb,
     ProductSpecs,
     ProductReviews,
     ProductActions,
     ProductRelated,
     ProductImageGallery,
-    ProductVariants,
     PricingTiers,
     PriceSummary,
     TrustBadges,
@@ -40,72 +45,162 @@ import { ShippingInfo } from './components/shipping-info/shipping-info';
 })
 export class Product {
 
-  // ✅ TIPADO CORRECTO: Es un SIGNAL, no un Product
+  // Signals
   product!: WritableSignal<ProductModel | null>;
   error!: WritableSignal<string | null>;
+
+  // Toast Ref
+  @ViewChild(ToastContainerComponent) toast!: ToastContainerComponent;
+
+  relatedProducts = signal<ProductModel[]>([]);
 
   // Expose Math to template
   Math = Math;
 
-  // NEW: Variant selections
+  // Selections
   selectedImage = signal<number>(0);
-  selectedColor = signal<string>('');
-  selectedSize = signal<string>('');
   quantity = signal<number>(1);
   customMessage = signal<string>('');
+  selections = signal<Record<string, string>>({}); // { "Color": "Rojo" }
 
   constructor(
     private route: ActivatedRoute,
-    private productService: ProductService
+    private productService: ProductService,
+    private cartService: CartService
   ) {
-    // Subscribe to route parameters to handle navigation between products
+    // 1. Init Base Signals
+    this.product = this.productService.selectedProduct;
+    this.error = this.productService.error;
+
+    // 2. Handle Route Changes
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       console.log('Product Component: Route param changed, ID:', id);
       if (id) {
         this.productService.fetchProductById(id);
-        // Reset quantity and selections when product changes
+
+        // Reset Local State
         this.quantity.set(1);
         this.selectedImage.set(0);
-        this.selectedColor.set('');
-        this.selectedSize.set('');
+        this.customMessage.set('');
+        this.selections.set({});
       }
     });
 
-    // ✅ Asignación correcta
-    this.product = this.productService.selectedProduct;
-    this.error = this.productService.error;
-
+    // 3. Effect: When Product Loads, fetch related and set defaults
     effect(() => {
-      console.log('Product Component: Product signal updated:', this.product());
+      const p = this.product();
+      if (p) {
+        // Fetch Related
+        untracked(() => {
+          this.productService.fetchRelatedProducts(p.category, p._id).subscribe(related => {
+            this.relatedProducts.set(related);
+          });
+        });
+
+        // Set Default Variant Options if not set
+        if (p.has_variants && p.variant_groups?.length) {
+          const current = untracked(this.selections);
+          const newSelections = { ...current };
+          let changed = false;
+
+          p.variant_groups.forEach(group => {
+            if (!newSelections[group.nombre] && group.opciones.length > 0) {
+              newSelections[group.nombre] = group.opciones[0];
+              changed = true;
+            }
+          });
+
+          if (changed) {
+            this.selections.set(newSelections);
+          }
+        }
+      }
     });
   }
 
-  // Computed property to ensure arrays exist (Fallback Logic)
+  // --- COMPUTED STATE ---
+
+  // All Product Data (Safe Access)
   productData = computed(() => {
     const p = this.product();
     if (!p) return null;
+
+    // Merge enriched data into Specs for display
+    const mergedSpecs = [...(p.specs || [])];
+
+    if (p.weight_kg) {
+      mergedSpecs.push({ label: 'Peso', value: `${p.weight_kg} kg` });
+    }
+
+    if (p.dimensions) {
+      const { largo, ancho, alto, unidad } = p.dimensions;
+      if (largo || ancho || alto) {
+        mergedSpecs.push({
+          label: 'Dimensiones',
+          value: `${largo || 0}x${ancho || 0}x${alto || 0} ${unidad || 'cm'}`
+        });
+      }
+    }
+
+    // Also include dynamic attributes in specs if desired, or keep them separate.
+    // Let's include them for completeness if not already present.
+    if (p.attributes) {
+      p.attributes.forEach(attr => {
+        // Avoid duplicates if already in specs (simple check)
+        if (!mergedSpecs.find(s => s.label === attr.key)) {
+          mergedSpecs.push({ label: attr.key, value: attr.value });
+        }
+      });
+    }
+
     return {
       ...p,
-      colors: p.colors || [],
-      sizes: p.sizes || [],
-      specs: p.specs || [],
+      specs: mergedSpecs,
       reviews: p.reviews || [],
       priceTiers: p.priceTiers || [],
-      features: p.features || []
+      features: p.features || [],
+      attributes: p.attributes || []
     };
   });
 
-  related = computed(() => {
-    const p = this.product();
-    if (!p) return [];
+  // Selected Variant (if any matches selections)
+  selectedVariant = computed(() => {
+    const p = this.productData();
+    if (!p || !p.has_variants || !p.variants) return null;
 
-    return this.productService
-      .products()
-      .filter(x => x.category === p.category && x._id !== p._id);
+    const currentSelections = this.selections();
+
+    return p.variants.find(v => {
+      // Check if every key in variant.combinacion matches currentSelections
+      return Object.entries(v.combinacion).every(([key, val]) => currentSelections[key] === val);
+    }) || null;
   });
 
-  // NEW: Get current pricing tier based on quantity
+  // Effective Stock (Variant vs Global)
+  currentStock = computed(() => {
+    const p = this.productData();
+    if (!p) return 0;
+
+    const v = this.selectedVariant();
+    if (v) return v.stock;
+
+    return p.stock;
+  });
+
+  // Effective Base Price
+  basePrice = computed(() => {
+    const p = this.productData();
+    if (!p) return 0;
+
+    const v = this.selectedVariant();
+    // If variant has specific price, use it. Otherwise use product price.
+    if (v && v.precio_especifico) return v.precio_especifico;
+
+    return p.basePrice || p.price;
+  });
+
+  // Current Wholesale Tier
   currentTier = computed(() => {
     const p = this.productData();
     if (!p || !p.priceTiers || p.priceTiers.length === 0) {
@@ -113,78 +208,43 @@ export class Product {
     }
 
     const qty = this.quantity();
+    // Validate we have enough stock for this tier? logic usually is "if you buy X amount", stock check is separate
     return p.priceTiers.find(tier => qty >= tier.min && qty <= tier.max) || p.priceTiers[0];
   });
 
-  // NEW: Get size multiplier
-  sizeMultiplier = computed(() => {
-    const p = this.productData();
-    if (!p || !p.sizes || p.sizes.length === 0) return 1;
-
-    const selectedSizeName = this.selectedSize();
-    const size = p.sizes.find(s => s.name === selectedSizeName);
-    return size?.priceMultiplier || 1;
-  });
-
-  // NEW: Calculate current price per unit
+  // Final Price Per Unit (Base * Discount)
   currentPrice = computed(() => {
-    const p = this.product();
-    if (!p) return 0;
-
-    const basePrice = p.basePrice || p.price;
+    const base = this.basePrice();
     const tier = this.currentTier();
-    const multiplier = this.sizeMultiplier();
-
-    return basePrice * multiplier * (1 - tier.discount);
+    return base * (1 - tier.discount);
   });
 
-  // NEW: Calculate total price
+  // Total Price
   totalPrice = computed(() => {
     return this.currentPrice() * this.quantity();
   });
 
-  // NEW: Calculate savings
+  // Savings
   savings = computed(() => {
-    const p = this.product();
-    if (!p) return 0;
-
-    const basePrice = p.basePrice || p.price;
+    const base = this.basePrice();
     const tier = this.currentTier();
-    return basePrice * this.quantity() * tier.discount;
+    return base * this.quantity() * tier.discount;
   });
 
+  // --- ACTIONS ---
+
   categoryPath(category: string): string {
-    const paths: Record<string, string> = {
-      'bazar': '/bazar',
-      'papeleria': '/papeleria',
-      'oficina': '/oficina',
-      'hogar': '/bazar/hogar',
-      'navidad': '/bazar/navidad',
-      'bisuteria': '/bazar/bisuteria',
-      'bolsos': '/bazar/bolsos',
-      'comida': '/bazar/comida',
-      'carton': '/papeleria/carton',
-      'cartulina': '/papeleria/cartulina',
-      'papel': '/papeleria/papel',
-      'arquitectura': '/papeleria/arquitectura',
-      'manualidades': '/papeleria/manualidades',
-      'pinturas': '/papeleria/pinturas',
-      'utiles-escolares': '/papeleria/utiles-escolares',
-    };
-    return paths[category.toLowerCase()] || '/';
+    // Simplified path logic or same map
+    return `/products?category=${category}`;
   }
 
-  // NEW: Event handlers
   onImageSelect(index: number): void {
     this.selectedImage.set(index);
   }
 
-  onColorSelect(color: string): void {
-    this.selectedColor.set(color);
-  }
-
-  onSizeSelect(size: string): void {
-    this.selectedSize.set(size);
+  onOptionSelect(groupName: string, value: string): void {
+    const current = this.selections();
+    this.selections.set({ ...current, [groupName]: value });
   }
 
   onQuantityChange(qty: number): void {
@@ -195,22 +255,58 @@ export class Product {
     this.customMessage.set(message);
   }
 
-  onAddToCart(event: { id: string; quantity: number; customMessage?: string }): void {
-    console.log('Add to cart:', event);
-    // TODO: Implement cart service integration
-  }
-
-  onBuyNow(event: { id: string; quantity: number; customMessage?: string }): void {
-    console.log('Buy now:', event);
-    // TODO: Implement buy now navigation to checkout
-  }
-
-  onNotify(message: string): void {
-    console.log('Notification:', message);
-    // TODO: Implement toast/notification service
-  }
-
   onTierSelect(minQuantity: number): void {
     this.quantity.set(minQuantity);
+  }
+
+  onAddToCart(event: any): void {
+    const p = this.productData();
+    if (!p) return;
+
+    const stock = this.currentStock();
+    const qty = this.quantity();
+
+    if (stock < qty) {
+      this.onNotify('Stock insuficiente para la cantidad seleccionada.', 'error');
+      return;
+    }
+
+    // Format for Cart
+    const variant = this.selectedVariant();
+    const options = {
+      customMessage: this.customMessage(),
+      priceTier: this.currentTier(),
+      ...this.selections(), // Include raw selection map (Color: Rojo)
+      variantId: variant?.id
+    };
+
+    // Override price in cart item if variant/tier affects it?
+    // CartService usually recalculates or takes snapshot. 
+    // We send a snapshot object if CartService allows.
+
+    // Construct a "Cart Product" snapshot
+    const cartProduct = {
+      ...p,
+      price: this.currentPrice(), // Price per unit PAID
+      stock: stock
+    };
+
+    this.cartService.addToCart(cartProduct, qty, options);
+    this.onNotify('Producto agregado al carrito', 'success');
+  }
+
+  onBuyNow(event: any): void {
+    this.onAddToCart(event);
+    // Navigate to checkout
+    // this.router.navigate(['/checkout']);
+  }
+
+  onNotify(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    if (this.toast) {
+      this.toast.add(message, type);
+    } else {
+      // Fallback mainly for unit test environments or before view Init
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
   }
 }

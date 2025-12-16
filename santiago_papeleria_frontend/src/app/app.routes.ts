@@ -31,7 +31,7 @@ export const routes: Routes = [
 
       // Products Management
       { path: 'products/enrich/:sku', loadComponent: () => import('./pages/admin/products/product-enrich/product-enrich.component').then(m => m.ProductEnrichComponent) },
-      { path: 'products/variants', loadComponent: () => import('./pages/admin/products/product-variants/product-variants.component').then(m => m.ProductVariantsComponent) },
+
       { path: 'products', loadComponent: () => import('./pages/admin/products/products-list/admin-products-list.component').then(m => m.AdminProductsListComponent), pathMatch: 'full' },
       { path: 'settings', loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
     ]

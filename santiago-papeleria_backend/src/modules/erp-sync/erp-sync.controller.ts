@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Post, Query, Body } from '@nestjs/common';
 import { ErpSyncService } from './erp-sync.service';
 
-@Controller('api/erp-sync')
+@Controller('erp-sync')
 export class ErpSyncController {
     constructor(private readonly erpSyncService: ErpSyncService) { }
 
@@ -38,5 +38,19 @@ export class ErpSyncController {
     @Get('enriched-product')
     async getEnrichedProduct(@Query('codigo') codigo: string) {
         return this.erpSyncService.getEnrichedProduct(codigo);
+    }
+
+    @Get('raw-data')
+    async getRawData() {
+        return this.erpSyncService.fetchRawErpData();
+    }
+    @Get('config')
+    async getConfig() {
+        return this.erpSyncService.getConfig();
+    }
+
+    @Post('config')
+    async updateConfig(@Body() config: any) {
+        return this.erpSyncService.updateConfig(config);
     }
 }

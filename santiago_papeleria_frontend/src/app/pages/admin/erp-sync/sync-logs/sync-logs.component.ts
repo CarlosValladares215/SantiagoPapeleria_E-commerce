@@ -75,6 +75,41 @@ export class SyncLogsComponent implements OnInit {
         URL.revokeObjectURL(url);
     }
 
+    exportLogs() {
+        const logs = this.filteredLogs();
+        if (logs.length === 0) return;
+
+        // CSV Header
+        const headers = ['ID', 'Fecha', 'Tipo', 'Iniciado Por', 'Duración', 'Estado', 'Productos Actualizados', 'Errores'];
+
+        // CSV Rows
+        const rows = logs.map(log => [
+            log.id,
+            log.timestamp,
+            log.type === 'automatic' ? 'Automática' : 'Manual',
+            log.initiator,
+            log.duration,
+            log.status,
+            log.productsUpdated.toString(),
+            log.errors.toString()
+        ]);
+
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'santiago_papeleria_sync_logs.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     getStatusBadgeClass(status: string): string {
         switch (status) {
             case 'success': return 'bg-green-100 text-green-800';

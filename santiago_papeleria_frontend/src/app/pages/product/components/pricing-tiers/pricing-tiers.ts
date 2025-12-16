@@ -13,13 +13,12 @@ export class PricingTiers {
     @Input() basePrice: number = 0;
     @Input() tiers: PriceTier[] = [];
     @Input() quantity: number = 1;
-    @Input() sizeMultiplier: number = 1;
     @Input() stock: number = 0;
 
     @Output() selectTier = new EventEmitter<number>();
 
     getTierPrice(tier: PriceTier): number {
-        return this.basePrice * this.sizeMultiplier * (1 - tier.discount);
+        return this.basePrice * (1 - tier.discount);
     }
 
     isTierActive(tier: PriceTier): boolean {
@@ -37,7 +36,7 @@ export class PricingTiers {
     }
 
     getSavings(tier: PriceTier): number {
-        const originalPrice = this.basePrice * this.sizeMultiplier;
+        const originalPrice = this.basePrice;
         const tierPrice = this.getTierPrice(tier);
         return originalPrice - tierPrice;
     }

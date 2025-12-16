@@ -33,6 +33,19 @@ export class ErpService {
         return this.http.post(`${this.apiUrl}/erp-sync/sync-now`, {});
     }
 
+    getRawData(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/erp-sync/raw-data`);
+    }
+
+    getConfig(): Observable<any> {
+        return this.http.get(`${this.apiUrl}/erp-sync/config`);
+    }
+
+    saveConfig(config: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/erp-sync/config`, config);
+    }
+
+
     getDashboardMetrics(): Observable<any> {
         return forkJoin({
             metrics: this.http.get<any>(`${this.apiUrl}/erp-sync/dashboard-metrics`),

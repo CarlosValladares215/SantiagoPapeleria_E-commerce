@@ -44,51 +44,7 @@ class DimensionsDto {
     height: number;
 }
 
-class VariantGroupDto {
-    @IsString()
-    @IsNotEmpty()
-    id: string;
-
-    @IsString()
-    @IsNotEmpty()
-    nombre: string;
-
-    @IsString()
-    @IsNotEmpty()
-    tipo: string;
-
-    @IsArray()
-    @IsString({ each: true })
-    opciones: string[];
-}
-
-class VariantDto {
-    @IsString()
-    id: string;
-
-    @IsNotEmpty()
-    combinacion: Record<string, string>;
-
-    @IsString()
-    @IsNotEmpty()
-    sku: string;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    precio_especifico: number | null;
-
-    @IsNumber()
-    @Min(0)
-    stock: number;
-
-    @IsBoolean()
-    activo: boolean;
-
-    @IsArray()
-    @IsString({ each: true })
-    imagenes: string[];
-}
+// Variant classes removed as part of attribute refactoring
 
 export class EnrichProductDto {
     @IsOptional()
@@ -107,29 +63,14 @@ export class EnrichProductDto {
     permite_mensaje_personalizado?: boolean;
 
     @IsOptional()
-    @IsBoolean()
-    tiene_variantes?: boolean;
-
-    @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => VariantGroupDto)
-    grupos_variantes?: VariantGroupDto[];
-
-    @IsOptional()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => VariantDto)
-    variantes?: VariantDto[];
+    @Type(() => AttributeDto)
+    attributes?: AttributeDto[];
 
     @IsOptional()
     @IsString()
     descripcion_extendida?: string;
-
-    // Also allowing variantsSummary for convenience as requested in previous steps
-    @IsOptional()
-    @IsOptional()
-    variantsSummary?: any;
 
     @IsOptional()
     @IsString()
@@ -147,4 +88,14 @@ export class EnrichProductDto {
     @ValidateNested()
     @Type(() => MultimediaDto)
     multimedia?: MultimediaDto;
+}
+
+export class AttributeDto {
+    @IsString()
+    @IsNotEmpty()
+    key: string;
+
+    @IsString()
+    @IsNotEmpty()
+    value: string;
 }

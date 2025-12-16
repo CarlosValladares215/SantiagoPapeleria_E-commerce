@@ -68,7 +68,6 @@ export class AdminLayoutComponent {
             label: 'Sincronización ERP',
             path: '/admin/erp-sync',
             children: [
-                { label: 'Dashboard', path: '/admin/erp-sync/dashboard' },
                 { label: 'Manual', path: '/admin/erp-sync/manual' },
                 { label: 'Logs', path: '/admin/erp-sync/logs' },
                 { label: 'Configuración', path: '/admin/erp-sync/config' }

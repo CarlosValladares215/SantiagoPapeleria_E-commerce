@@ -115,4 +115,8 @@ export class ProductResponseDto {
   @Expose()
   @Transform(({ obj }) => obj.priceTiers || [])
   priceTiers: any[];
+
+  @Expose()
+  @Transform(({ obj }) => obj.attributes || [])
+  attributes: any[];
 }

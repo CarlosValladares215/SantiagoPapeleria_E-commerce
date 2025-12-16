@@ -1,14 +1,52 @@
 <div class="space-y-4">
     <!-- Main Image -->
-    <div class="bg-white rounded-xl p-6 shadow-lg">
-        <img [src]="images[selectedIndex]" [alt]="productName" class="w-full h-96 object-cover rounded-lg" />
+    <div class="bg-white rounded-2xl overflow-hidden border border-gray-100 relative group cursor-zoom-in"
+        (click)="openLightbox(selectedIndex)">
+        <img [src]="images[selectedIndex]" [alt]="productName"
+            class="w-full h-96 lg:h-[32rem] object-contain p-4 transition-transform duration-300 group-hover:scale-105" />
+        <div
+            class="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+            <i
+                class="ri-zoom-in-line text-3xl text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 p-3 rounded-full shadow-sm"></i>
+        </div>
     </div>
 
     <!-- Thumbnail Images -->
-    <div class="grid grid-cols-4 gap-3">
-        <button *ngFor="let image of images; let i = index" (click)="selectImage(i)" [class]="'bg-white rounded-lg p-2 shadow-md transition-all ' + 
-        (selectedIndex === i ? 'ring-2 ring-[#104D73]' : 'hover:shadow-lg')">
-            <img [src]="image" [alt]="productName + ' ' + (i + 1)" class="w-full h-16 object-cover rounded" />
+    <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+        <button *ngFor="let image of images; let i = index" (click)="selectImage(i)"
+            [class]="'relative rounded-lg overflow-hidden border-2 w-20 h-20 flex-shrink-0 transition-all focus:outline-none ' + 
+                (selectedIndex === i ? 'border-[#104D73] opacity-100' : 'border-transparent opacity-60 hover:opacity-100')">
+            <img [src]="image" [alt]="productName + ' ' + (i + 1)" loading="lazy" class="w-full h-full object-cover" />
         </button>
+    </div>
+</div>
+
+<!-- Lightbox Overlay -->
+<div *ngIf="isLightboxOpen"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 transition-opacity"
+    (click)="closeLightbox()">
+
+    <!-- Close Button -->
+    <button class="absolute top-4 right-4 text-white hover:text-gray-300 z-50" (click)="closeLightbox()">
+        <i class="ri-close-line text-4xl"></i>
+    </button>
+
+    <!-- Navigation Left -->
+    <button class="absolute left-4 text-white hover:text-gray-300 z-50 p-2" (click)="$event.stopPropagation(); prev()">
+        <i class="ri-arrow-left-s-line text-4xl"></i>
+    </button>
+
+    <!-- Main Zoomed Image -->
+    <img [src]="images[lightboxIndex]" [alt]="productName" class="max-h-[90vh] max-w-[90vw] object-contain select-none"
+        (click)="$event.stopPropagation()">
+
+    <!-- Navigation Right -->
+    <button class="absolute right-4 text-white hover:text-gray-300 z-50 p-2" (click)="$event.stopPropagation(); next()">
+        <i class="ri-arrow-right-s-line text-4xl"></i>
+    </button>
+
+    <!-- Counter -->
+    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm">
+        {{ lightboxIndex + 1 }} / {{ images.length }}
     </div>
 </div>
