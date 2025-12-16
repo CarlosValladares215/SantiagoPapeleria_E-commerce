@@ -1,16 +1,17 @@
-import { Component, computed, signal, OnInit, effect } from '@angular/core';
+import { Component, computed, signal, OnInit, effect, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Product } from '../../models/product.model';
 import { FilterState, CategoryCount } from '../../models/filter.model';
 import { ProductService } from '../../services/product.service';
+import { CartService } from '../../services/cart.service';
 
 // Components
 import { ProductsFilterSidebar } from './components/products-filter-sidebar/products-filter-sidebar';
 import { ProductsHeader } from './components/products-header/products-header';
 import { ProductCard } from './components/product-card/product-card';
 import { ProductsPagination } from './components/products-pagination/products-pagination';
-import { NotificationToast } from '../../shared/components/notification-toast/notification-toast';
+import { ToastContainerComponent } from '../../shared/components/toast/toast.component';
 
 @Component({
     selector: 'app-products',
@@ -21,7 +22,7 @@ import { NotificationToast } from '../../shared/components/notification-toast/no
         ProductsHeader,
         ProductCard,
         ProductsPagination,
-        NotificationToast
+        ToastContainerComponent
     ],
     templateUrl: './products.component.html',
     styleUrls: ['./products.component.scss']
@@ -45,9 +46,9 @@ export class ProductsComponent implements OnInit {
     currentPage = signal<number>(1);
     itemsPerPage = signal<number>(12);
     showFilters = signal<boolean>(false);
-    cart = signal<{ [key: string]: number }>({});
-    showNotification = signal<boolean>(false);
-    notificationMessage = signal<string>('');
+
+    // Toast
+    @ViewChild(ToastContainerComponent) toast!: ToastContainerComponent;
 
     // Computed values
     totalPages = computed(() =>
@@ -62,7 +63,8 @@ export class ProductsComponent implements OnInit {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
-        public productService: ProductService
+        public productService: ProductService,
+        private cartService: CartService
     ) {
         // Handle query params for search
         this.route.queryParams.subscribe(params => {
@@ -119,25 +121,24 @@ export class ProductsComponent implements OnInit {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    handleAddToCart(event: { id: string, name: string }): void {
-        this.cart.update(c => ({
-            ...c,
-            [event.id]: (c[event.id] || 0) + 1
-        }));
+    handleAddToCart(product: Product): void {
+        if (!product || product.stock <= 0) {
+            this.showToast('Producto agotado', 'error');
+            return;
+        }
 
-        this.showSuccessNotification(`${event.name} agregado al carrito`);
+        this.cartService.addToCart(product, 1);
+        this.showToast(`${product.name} agregado al carrito`, 'success');
     }
 
     navigateToProduct(id: string): void {
         this.router.navigate(['/product', id]);
     }
 
-    showSuccessNotification(message: string): void {
-        this.notificationMessage.set(message);
-        this.showNotification.set(true);
-        setTimeout(() => {
-            this.showNotification.set(false);
-        }, 3000);
+    showToast(message: string, type: 'success' | 'error' | 'info' = 'success'): void {
+        if (this.toast) {
+            this.toast.add(message, type);
+        }
     }
 
     toggleFilters(): void {

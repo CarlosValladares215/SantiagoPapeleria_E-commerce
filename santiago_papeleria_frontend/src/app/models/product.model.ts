@@ -10,16 +10,35 @@ export interface ProductReview {
   date: Date;
 }
 
-export interface ProductColor {
-  name: string;
-  label: string;
-  hex: string;
+export interface BranchStock {
+  id_externo: string;
+  nombre: string;
+  cantidad: number;
+  ubicacion?: string;
 }
 
-export interface ProductSize {
-  name: string;
-  label: string;
-  priceMultiplier: number;
+export interface Dimensions {
+  largo: number;
+  ancho: number;
+  alto: number;
+  unidad?: string;
+}
+
+export interface VariantGroup {
+  id: string;
+  nombre: string; // e.g., "Color", "Talla"
+  tipo: string;   // 'color', 'size', 'material', 'custom'
+  opciones: string[];
+}
+
+export interface Variant {
+  id: string;
+  combinacion: Record<string, string>; // { "Color": "Rojo", "Talla": "S" }
+  sku: string;
+  precio_especifico?: number;
+  stock: number;
+  activo: boolean;
+  imagenes: string[];
 }
 
 export interface PriceTier {
@@ -52,13 +71,23 @@ export interface Product {
   // WHOLESALE PRICING
   priceTiers?: PriceTier[]; // descuentos por cantidad
 
-  // PRODUCT VARIANTS
-  colors?: ProductColor[];  // variantes de color
-  sizes?: ProductSize[];    // variantes de tamaño
+  // PRODUCT VARIANTS / ATTRIBUTES
+  attributes?: { key: string; value: string }[]; // Simple attributes
+
+  // LOGIC VARIANTS
+  has_variants?: boolean;
+  variant_groups?: VariantGroup[];
+  variants?: Variant[];
 
   // STOCK
   stock: number;
+  branches?: BranchStock[]; // Stock availability per branch
   isLowStock?: boolean;   // indicador de stock bajo
+
+  // ENRICHMENT
+  weight_kg?: number;
+  dimensions?: Dimensions;
+  allow_custom_message?: boolean;
 
   // MEDIA
   images: string[];       // principal + galeria

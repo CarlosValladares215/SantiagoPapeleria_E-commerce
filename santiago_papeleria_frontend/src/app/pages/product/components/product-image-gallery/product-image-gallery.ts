@@ -15,7 +15,38 @@ export class ProductImageGallery {
 
     @Output() imageSelect = new EventEmitter<number>();
 
+    // Lightbox State
+    isLightboxOpen = false;
+    lightboxIndex = 0;
+
     selectImage(index: number): void {
         this.imageSelect.emit(index);
+    }
+
+    openLightbox(index: number): void {
+        this.lightboxIndex = index;
+        this.isLightboxOpen = true;
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
+
+    closeLightbox(): void {
+        this.isLightboxOpen = false;
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+
+    next(): void {
+        if (this.lightboxIndex < this.images.length - 1) {
+            this.lightboxIndex++;
+        } else {
+            this.lightboxIndex = 0; // Loop
+        }
+    }
+
+    prev(): void {
+        if (this.lightboxIndex > 0) {
+            this.lightboxIndex--;
+        } else {
+            this.lightboxIndex = this.images.length - 1; // Loop
+        }
     }
 }

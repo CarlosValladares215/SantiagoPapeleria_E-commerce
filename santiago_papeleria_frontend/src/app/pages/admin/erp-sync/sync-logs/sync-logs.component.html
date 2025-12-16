@@ -57,7 +57,7 @@
 
         <!-- Export Button -->
         <div class="mt-4 flex justify-end">
-            <button
+            <button (click)="exportLogs()"
                 class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap">
                 <i class="ri-download-line mr-2"></i>
                 Exportar Logs
@@ -95,7 +95,8 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    <tr *ngFor="let log of filteredLogs()" class="hover:bg-gray-50">
+                    @for (log of filteredLogs(); track log.id) {
+                    <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ log.timestamp }}
                         </td>
@@ -114,20 +115,24 @@
                             {{ log.duration }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div *ngIf="log.productsUpdated > 0">
+                            @if (log.productsUpdated > 0) {
+                            <div>
                                 {{ log.productsUpdated }} actualizados
-                                <div *ngIf="log.productsNew > 0" class="text-xs text-gray-500">{{ log.productsNew }}
+                                @if (log.productsNew > 0) {
+                                <div class="text-xs text-gray-500">{{ log.productsNew }}
                                     nuevos</div>
+                                }
                             </div>
+                            }
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span [class]="getStatusBadgeClass(log.status)"
                                 class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium">
                                 <i [class]="getStatusIcon(log.status) + ' mr-1'"></i>
-                                <span *ngIf="log.status === 'success'">Éxito</span>
-                                <span *ngIf="log.status === 'warning'">Con errores ({{log.errors}})</span>
-                                <span *ngIf="log.status === 'error'">Fallido</span>
-                                <span *ngIf="$any(log.status) === 'in_progress'">En Progreso</span>
+                                @if (log.status === 'success') { <span>Éxito</span> }
+                                @if (log.status === 'warning') { <span>Con errores ({{log.errors}})</span> }
+                                @if (log.status === 'error') { <span>Fallido</span> }
+                                @if ($any(log.status) === 'in_progress') { <span>En Progreso</span> }
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -137,13 +142,15 @@
                             </button>
                         </td>
                     </tr>
+                    }
                 </tbody>
             </table>
         </div>
     </div>
 
     <!-- Log Detail Modal -->
-    <div *ngIf="selectedLog()" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    @if (selectedLog()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <!-- Modal Header -->
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
@@ -197,7 +204,8 @@
                     </div>
 
                     <!-- Error Details -->
-                    <div *ngIf="selectedLog()?.errorDetails && selectedLog()?.errorDetails!.length > 0">
+                    @if (selectedLog()?.errorDetails && selectedLog()?.errorDetails!.length > 0) {
+                    <div>
                         <h4 class="text-sm font-medium text-gray-900 mb-3">Detalles de Errores</h4>
                         <div class="overflow-x-auto">
                             <table class="min-w-full border border-gray-200 rounded-lg">
@@ -218,8 +226,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr *ngFor="let error of selectedLog()?.errorDetails"
-                                        class="border-b border-gray-200">
+                                    @for (error of selectedLog()?.errorDetails; track $index) {
+                                    <tr class="border-b border-gray-200">
                                         <td class="px-4 py-2 text-sm text-gray-900 font-mono">
                                             {{ error.productCode }}
                                         </td>
@@ -233,10 +241,12 @@
                                             {{ error.actionTaken }}
                                         </td>
                                     </tr>
+                                    }
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                    }
                 </div>
             </div>
 
@@ -254,4 +264,5 @@
             </div>
         </div>
     </div>
+    }
 </div>

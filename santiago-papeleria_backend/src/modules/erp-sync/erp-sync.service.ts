@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { ProductERP } from '../../schemas/product-erp.schema';
 import { Producto } from '../../productos/schemas/producto.schema';
 import { SyncLog } from './schemas/sync-log.schema';
+import { ErpConfig } from './schemas/erp-config.schema';
 
 @Injectable()
 export class ErpSyncService {
@@ -18,6 +19,7 @@ export class ErpSyncService {
         @InjectModel(ProductERP.name) private productERPModel: Model<ProductERP>,
         @InjectModel(Producto.name) private productoModel: Model<Producto>,
         @InjectModel(SyncLog.name) private syncLogModel: Model<SyncLog>,
+        @InjectModel(ErpConfig.name) private erpConfigModel: Model<ErpConfig>,
         private readonly httpService: HttpService,
     ) { }
 
@@ -412,4 +414,37 @@ export class ErpSyncService {
 
         return weight;
     }
+
+    /**
+     * Get raw ERP data for frontend simulation/manual sync
+     */
+    async fetchRawErpData(): Promise<any[]> {
+        const url = `${this.erpUrl}?CMD=STO_MTX_CAT_PRO`;
+        try {
+            const response = await firstValueFrom(this.httpService.get(url));
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Error fetching raw ERP data: ${error.message}`);
+            throw error;
+        }
+    }
+
+    // --- Configuration Methods ---
+
+    async getConfig(): Promise<any> {
+        // Ensure one config doc exists
+        let config = await this.erpConfigModel.findOne().exec();
+        if (!config) {
+            config = await this.erpConfigModel.create({});
+        }
+        return config;
+    }
+
+    async updateConfig(configData: any): Promise<any> {
+        // Update the singleton config
+        // upsert: true ensures it creates if it doesn't exist
+        return this.erpConfigModel.findOneAndUpdate({}, configData, { new: true, upsert: true }).exec();
+    }
 }
+
+

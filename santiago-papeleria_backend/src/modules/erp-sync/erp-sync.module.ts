@@ -7,6 +7,7 @@ import { ErpSyncController } from './erp-sync.controller';
 import { ProductERP, ProductERPSchema } from '../../schemas/product-erp.schema';
 import { Producto, ProductoSchema } from '../../productos/schemas/producto.schema';
 import { SyncLog, SyncLogSchema } from './schemas/sync-log.schema';
+import { ErpConfig, ErpConfigSchema } from './schemas/erp-config.schema';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SyncLog, SyncLogSchema } from './schemas/sync-log.schema';
       { name: ProductERP.name, schema: ProductERPSchema },
       { name: Producto.name, schema: ProductoSchema },
       { name: SyncLog.name, schema: SyncLogSchema },
+      { name: ErpConfig.name, schema: ErpConfigSchema },
     ]),
   ],
   controllers: [ErpSyncController],

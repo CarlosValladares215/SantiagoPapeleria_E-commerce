@@ -1,2 +1,22 @@
-// Product Image Gallery Styles
-// Styles are handled via Tailwind classes in the template
+/* Product Image Gallery Styles */
+
+/* Ensure lightbox is above everything */
+.fixed.z-50 {
+    z-index: 9999 !important;
+    /* Force high z-index for lightbox overlay */
+}
+
+/* Base fade transition */
+.transition-opacity {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Ensure clean cursor for main image */
+.cursor-zoom-in {
+    cursor: zoom-in;
+}
+
+/* Hide scrollbar when lightbox open (handled in TS but good to have helper class) */
+.overflow-hidden {
+    overflow: hidden;
+}

@@ -13,7 +13,7 @@ export class ProductCard {
     @Input() product!: Product;
 
     @Output() viewDetails = new EventEmitter<string>();
-    @Output() addToCart = new EventEmitter<{ id: string, name: string }>();
+    @Output() addToCart = new EventEmitter<Product>();
 
     onViewDetails(): void {
         this.viewDetails.emit(this.product._id);
@@ -21,10 +21,7 @@ export class ProductCard {
 
     onAddToCart(): void {
         if (this.product.stock > 0) {
-            this.addToCart.emit({
-                id: this.product._id,
-                name: this.product.name
-            });
+            this.addToCart.emit(this.product);
         }
     }
 

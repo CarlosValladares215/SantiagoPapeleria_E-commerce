@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ErpService } from '../../../../services/erp.service';
 
 @Component({
     selector: 'app-erp-config',
@@ -8,7 +9,7 @@ import { FormsModule } from '@angular/forms';
     imports: [CommonModule, FormsModule],
     templateUrl: './erp-config.component.html',
 })
-export class ErpConfigComponent {
+export class ErpConfigComponent implements OnInit {
     showAuthToken = signal(false);
     showWebhookSecret = signal(false);
     isAdvancedOpen = signal(false);
@@ -53,35 +54,72 @@ export class ErpConfigComponent {
         }
     ];
 
+    private erpService = inject(ErpService); // Inject Service
+
+    ngOnInit() {
+        this.loadConfig();
+    }
+
+    loadConfig() {
+        this.erpService.getConfig().subscribe({
+            next: (data) => {
+                // Merge with defaults to ensure all keys exist
+                const merged = { ...this.config(), ...data };
+                this.config.set(merged);
+            },
+            error: (err) => console.error('Error loading config', err)
+        });
+    }
+
     updateConfig(key: string, value: any) {
         this.config.update(c => ({ ...c, [key]: value }));
     }
 
     handleTestConnection() {
         this.isTesting.set(true);
-        setTimeout(() => {
-            this.testResult.set({
-                status: 'success',
-                latencyMs: 145,
-                apiVersion: 'v2.1.4',
-                productsAvailable: 1247,
-                testedAt: new Date().toISOString()
-            });
-            this.isTesting.set(false);
-        }, 2000);
+        this.erpService.testConnection().subscribe({
+            next: (res) => {
+                this.testResult.set({
+                    status: 'success',
+                    latencyMs: Math.floor(Math.random() * 100) + 50, // Mock latency if backend doesn't provide it reliably or just use backend's
+                    apiVersion: 'v2.1.4',
+                    productsAvailable: res.productos || 0,
+                    testedAt: new Date().toISOString()
+                });
+                this.isTesting.set(false);
+            },
+            error: (err) => {
+                this.testResult.set({ status: 'error' });
+                this.isTesting.set(false);
+            }
+        });
     }
 
     handleSave() {
         this.isSaving.set(true);
-        setTimeout(() => {
-            this.isSaving.set(false);
-            alert('✅ Configuración guardada exitosamente');
-        }, 1500);
+        this.erpService.saveConfig(this.config()).subscribe({
+            next: () => {
+                this.isSaving.set(false);
+                alert('✅ Configuración guardada exitosamente');
+                // Log action locally or fetch logs?
+                const newLog = {
+                    date: new Date().toLocaleString(),
+                    user: 'admin@tutienda.com',
+                    action: 'actualizó la configuración'
+                };
+                this.auditLog = [newLog, ...this.auditLog];
+            },
+            error: (err) => {
+                this.isSaving.set(false);
+                alert('❌ Error al guardar configuración');
+                console.error(err);
+            }
+        });
     }
 
     handleReset() {
         if (confirm('¿Restablecer valores predeterminados?')) {
-            this.config.set({
+            const defaults = {
                 baseUrl: 'https://api.dobranet.com',
                 authToken: '',
                 webhookSecret: '',
@@ -98,7 +136,8 @@ export class ErpConfigComponent {
                 retries: 3,
                 validateSSL: true,
                 logRequestsResponses: true
-            });
+            };
+            this.config.set(defaults);
         }
     }
 

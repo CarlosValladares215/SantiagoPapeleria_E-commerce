@@ -176,6 +176,7 @@ export class ProductosService {
       },
       multimedia: p._enrichedData?.multimedia || { principal: '', galeria: [] },
       priceTiers: p._enrichedData?.priceTiers || [], // Importante para Tiered Pricing
+      attributes: p._enrichedData?.attributes || [], // Mapear atributos
 
       // Flags
       es_publico: true,
