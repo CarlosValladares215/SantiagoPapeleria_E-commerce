@@ -1,0 +1,11 @@
+# Node / Angular / Nest
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Angular
+.angular/
+
+# Env
+.env
+.env.local
