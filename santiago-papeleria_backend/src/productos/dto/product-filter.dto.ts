@@ -42,6 +42,10 @@ export class ProductFilterDto {
   status?: string; // 'pending' | 'draft' | 'complete'
 
   @IsOptional()
+  @IsBooleanString()
+  isVisible?: string; // 'true' | 'false'
+
+  @IsOptional()
   @IsNumberString()
   page?: string;
 

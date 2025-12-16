@@ -1,0 +1,46 @@
+
+> santiago-papeleria-frontend@0.0.0 build
+> ng build
+
+[33m❯[39m Building...
+[32m✔[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m                        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-EM5AAEHA.js[39m  [2m | [22m[2m-[22m                            [2m | [22m[36m217.25 kB[39m[2m | [22m               [36m63.00 kB[39m
+[32mmain-KBOFDJPS.js[39m   [2m | [22m[2mmain[22m                         [2m | [22m[36m127.96 kB[39m[2m | [22m               [36m27.35 kB[39m
+[32mchunk-LHP65WP3.js[39m  [2m | [22m[2m-[22m                            [2m | [22m [36m91.90 kB[39m[2m | [22m               [36m23.22 kB[39m
+[32mchunk-ANSS5FCJ.js[39m  [2m | [22m[2m-[22m                            [2m | [22m [36m50.70 kB[39m[2m | [22m               [36m10.00 kB[39m
+[32mstyles-PWFFFWRD.css[39m[2m | [22m[2mstyles[22m                       [2m | [22m [36m45.63 kB[39m[2m | [22m                [36m6.38 kB[39m
+[32mchunk-7CXQUHFA.js[39m  [2m | [22m[2m-[22m                            [2m | [22m [36m22.14 kB[39m[2m | [22m                [36m6.69 kB[39m
+[32mchunk-E2MD6O6H.js[39m  [2m | [22m[2m-[22m                            [2m | [22m  [36m1.56 kB[39m[2m | [22m              [36m625 bytes[39m
+[32mchunk-CLQ74F42.js[39m  [2m | [22m[2m-[22m                            [2m | [22m  [36m1.35 kB[39m[2m | [22m              [36m576 bytes[39m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m                [2m | [22m[1m[93m558.51 kB[39m[22m[2m | [22m              [1m137.84 kB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m                        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-G6BFO6N5.js[39m  [2m | [22m[2mmain-layout-component[22m        [2m | [22m [36m57.30 kB[39m[2m | [22m               [36m10.79 kB[39m
+[32mchunk-UCP2ZBWZ.js[39m  [2m | [22m[2mproduct-variants-component[22m   [2m | [22m [36m33.77 kB[39m[2m | [22m                [36m7.97 kB[39m
+[32mchunk-23VROM2S.js[39m  [2m | [22m[2mproduct-enrich-component[22m     [2m | [22m [36m25.76 kB[39m[2m | [22m                [36m6.91 kB[39m
+[32mchunk-XWULPAQU.js[39m  [2m | [22m[2mproducts-component[22m           [2m | [22m [36m20.34 kB[39m[2m | [22m                [36m5.39 kB[39m
+[32mchunk-RI4MNCVC.js[39m  [2m | [22m[2merp-config-component[22m         [2m | [22m [36m16.18 kB[39m[2m | [22m                [36m4.16 kB[39m
+[32mchunk-PNRTWS3V.js[39m  [2m | [22m[2mtecnologia[22m                   [2m | [22m [36m16.06 kB[39m[2m | [22m                [36m4.38 kB[39m
+[32mchunk-TFQHGHM5.js[39m  [2m | [22m[2msuministros-oficina[22m          [2m | [22m [36m14.52 kB[39m[2m | [22m                [36m3.94 kB[39m
+[32mchunk-EIZSKJGQ.js[39m  [2m | [22m[2marte-manualidades[22m            [2m | [22m [36m14.35 kB[39m[2m | [22m                [36m4.13 kB[39m
+[32mchunk-MGGY5IV4.js[39m  [2m | [22m[2mutiles-escolares[22m             [2m | [22m [36m13.52 kB[39m[2m | [22m                [36m3.72 kB[39m
+[32mchunk-MFH6VPJS.js[39m  [2m | [22m[2mmobiliario[22m                   [2m | [22m [36m12.93 kB[39m[2m | [22m                [36m3.72 kB[39m
+[32mchunk-7IS5VIBO.js[39m  [2m | [22m[2morders[22m                       [2m | [22m [36m12.88 kB[39m[2m | [22m                [36m3.58 kB[39m
+[32mchunk-HHV4N5BT.js[39m  [2m | [22m[2mprofile[22m                      [2m | [22m [36m12.41 kB[39m[2m | [22m                [36m3.38 kB[39m
+[32mchunk-E6535QIJ.js[39m  [2m | [22m[2msync-logs-component[22m          [2m | [22m [36m12.05 kB[39m[2m | [22m                [36m3.43 kB[39m
+[32mchunk-4JW563V2.js[39m  [2m | [22m[2merp-dashboard-component[22m      [2m | [22m [36m11.85 kB[39m[2m | [22m                [36m3.37 kB[39m
+[32mchunk-S2NYTCYJ.js[39m  [2m | [22m[2madmin-products-list-component[22m[2m | [22m [36m11.48 kB[39m[2m | [22m                [36m3.63 kB[39m
+[2m...and 7 more lazy chunks files. Use "--verbose" to show all the files.[22m
+
+Application bundle generation complete. [49.494 seconds] - 2025-12-16T04:51:40.619Z
+
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mbundle initial exceeded maximum budget. Budget 500.00 kB was not met by 58.51 kB with a total of 558.51 kB.[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1msrc/app/shared/header/header.component.scss exceeded maximum budget. Budget 20.00 kB was not met by 3.19 kB with a total of 23.19 kB.[0m
+
+[39m[22m
+Output location: C:\Users\vcarl\Documents\E-Commerce Santiago Papeleria\santiago_papeleria_frontend\dist\santiago_papeleria_frontend
+

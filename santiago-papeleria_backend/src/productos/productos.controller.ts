@@ -75,6 +75,13 @@ export class ProductosController {
     if (!producto) {
       throw new NotFoundException(`Producto con ID ${id} no encontrado.`);
     }
+
+    // NEW: Enforce visibility check for public endpoint
+    // If product is not public, return 404 (don't reveal it exists but is hidden)
+    if (!producto.es_publico) {
+      throw new NotFoundException(`Producto con ID ${id} no encontrado.`);
+    }
+
     return plainToInstance(ProductResponseDto, producto, {
       excludeExtraneousValues: false,
     });

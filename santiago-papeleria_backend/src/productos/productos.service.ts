@@ -84,6 +84,12 @@ export class ProductosService {
       mergedProducts = mergedProducts.filter(p => p.enrichmentStatus === status);
     }
 
+    // Filtro por Visibilidad
+    if (filterDto.isVisible) {
+      const isVisibleBool = filterDto.isVisible === 'true';
+      mergedProducts = mergedProducts.filter(p => p.isVisible === isVisibleBool);
+    }
+
     // Filtro por Stock
     if (inStock === 'true') {
       mergedProducts = mergedProducts.filter(p => p.stock > 0);

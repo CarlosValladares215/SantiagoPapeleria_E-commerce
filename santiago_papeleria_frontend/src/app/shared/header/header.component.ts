@@ -1,14 +1,9 @@
-import { Component, signal, inject, HostListener } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { UiService } from '../../services/ui.service';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { MegaMenuComponent } from './mega-menu/mega-menu.component';
-import { MobileMenuComponent } from './mobile-menu/mobile-menu.component';
-// import { CartSidebarComponent } from './cart-sidebar/cart-sidebar.component';
-import { Observable, of } from 'rxjs';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -16,89 +11,73 @@ import { Observable, of } from 'rxjs';
   imports: [
     CommonModule,
     RouterLink,
-    RouterLinkActive,
-    FormsModule,
-    ReactiveFormsModule,
-    MegaMenuComponent,
-    MobileMenuComponent,
-    // CartSidebarComponent
+    FormsModule
   ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
 export class Header {
 
-  // Dependencies
-  private uiService = inject(UiService);
-  public auth = inject(AuthService);
-  private router = inject(Router);
-
-  // Signals synced with UiService for template usage if needed, or simply for logic
-  // We can convert the observable to a signal for easier usage in template [class.hidden]="!isMobileMenuOpen()"
-  isMobileMenuOpen = toSignal(this.uiService.isMobileMenuOpen$, { initialValue: false });
-  isCartOpen = toSignal(this.uiService.isCartOpen$, { initialValue: false });
-
-  // Missing properties from template
-  isHidden = false;
-  isScrolled = false;
-  searchControl = new FormControl('');
-  showSuggestions = false;
-  searchSuggestions$: Observable<any[]> = of([]);
-  // searchSuggestions$ = of([]); // Need RxJS import
-
-  // Local state
+  isMobileMenuOpen = signal(false);
   isProfileMenuOpen = signal(false);
   isCategoriesOpen = signal(false);
 
+  megaMenu = signal<'none' | 'papeleria' | 'hogar' | 'creatividad'>('none');
   private megaHideTimeout: any;
 
   searchQuery: string = '';
-  cartCount: number = 3;
-  // cartItemCount$ property to match template
-  cartItemCount$ = this.uiService.cartItemCount$;
+  mobileCatOpen: string = ''; // Track open mobile category
 
-  @HostListener('window:scroll')
-  onWindowScroll() {
-    this.isScrolled = window.scrollY > 0;
-  }
-
-  onSearchFocus() {
-    this.showSuggestions = true;
-  }
-
-  onSearchBlur() {
-    setTimeout(() => {
-      this.showSuggestions = false;
-    }, 200);
-  }
-
-  // CATEGORÍAS
+  // CATEGORÍAS CON TODO LO QUE PIDE TU TEMPLATE
   categories = [
-    { name: 'Bazar', path: '/bazar', icon: 'ri-shopping-bag-line', count: 245 },
-    { name: 'Papelería', path: '/papeleria', icon: 'ri-pencil-line', count: 189 },
-    { name: 'Oficina', path: '/oficina', icon: 'ri-briefcase-line', count: 156 },
-    { name: 'Promociones', path: '/offers', icon: 'ri-price-tag-3-line', count: 42 },
-    { name: 'Contacto', path: '/contact', icon: 'ri-mail-line', count: 0 }
+    {
+      name: 'Bazar',
+      path: '/bazar',
+      icon: 'ri-shopping-bag-line',
+      count: 245
+    },
+    {
+      name: 'Papelería',
+      path: '/papeleria',
+      icon: 'ri-pencil-line',
+      count: 189
+    },
+    {
+      name: 'Oficina',
+      path: '/oficina',
+      icon: 'ri-briefcase-line',
+      count: 156
+    },
+    {
+      name: 'Promociones',
+      path: '/offers',
+      icon: 'ri-price-tag-3-line',
+      count: 42
+    },
+    {
+      name: 'Contacto',
+      path: '/contact',
+      icon: 'ri-mail-line',
+      count: 0
+    }
   ];
 
-  constructor() { }
+  constructor(
+    public auth: AuthService,
+    private router: Router,
+    public cartService: CartService
+  ) { }
 
   toggleMobileMenu() {
-    this.uiService.toggleMobileMenu();
-    // When toggling, if we are opening, maybe we want to close other things?
-    // The service handles body overflow.
+    this.isMobileMenuOpen.update(v => !v);
     if (!this.isMobileMenuOpen()) {
-      this.uiService.setActiveMegaMenu(null);
+      this.megaMenu.set('none');
     }
   }
 
   closeMobileMenu() {
-    this.uiService.closeMobileMenu();
-    this.uiService.setActiveMegaMenu(null);
-  }
-
-  toggleCart() {
-    this.uiService.toggleCart();
+    this.isMobileMenuOpen.set(false);
+    this.megaMenu.set('none');
   }
 
   onNavLinkClick() {
@@ -123,6 +102,10 @@ export class Header {
     this.isProfileMenuOpen.set(false);
   }
 
+  isProfileMenuOpenValue() {
+    return this.isProfileMenuOpen();
+  }
+
   logout() {
     this.auth.logout();
     this.closeProfileMenu();
@@ -135,21 +118,22 @@ export class Header {
     this.closeMobileMenu();
   }
 
-  onMegaMenuEnter(menuId: string) {
-    if (window.innerWidth <= 992) return;
+  openMega(menu: 'papeleria' | 'hogar' | 'creatividad') {
+    if (typeof window !== 'undefined' && window.innerWidth <= 992) return;
     clearTimeout(this.megaHideTimeout);
-    this.uiService.setActiveMegaMenu(menuId);
+    this.megaMenu.set(menu);
   }
 
-  onMegaMenuHover() {
-    clearTimeout(this.megaHideTimeout);
-  }
-
-  onMegaMenuLeave() {
-    if (window.innerWidth <= 992) return;
+  scheduleCloseMega() {
+    if (typeof window !== 'undefined' && window.innerWidth <= 992) return;
     this.megaHideTimeout = setTimeout(() => {
-      this.uiService.setActiveMegaMenu(null);
+      this.megaMenu.set('none');
     }, 250);
+  }
+
+  cancelCloseMega() {
+    if (typeof window !== 'undefined' && window.innerWidth <= 992) return;
+    clearTimeout(this.megaHideTimeout);
   }
 
   performSearch() {
@@ -161,5 +145,11 @@ export class Header {
     });
 
     this.closeMobileMenu();
+  }
+
+  toggleCartWrapper() {
+    console.log('Cart button clicked in Header');
+    this.cartService.toggleCart();
+    console.log('Cart Service isOpen:', this.cartService.isOpen());
   }
 }

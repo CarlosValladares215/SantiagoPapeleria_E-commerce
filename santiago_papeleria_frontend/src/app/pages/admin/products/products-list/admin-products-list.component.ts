@@ -28,41 +28,34 @@ export class AdminProductsListComponent implements OnInit {
     products = signal<MergedProduct[]>([]);
     isLoading = signal(true);
 
+    // Toast State
+    showToast = false;
+    toastMessage = '';
+    toastType: 'success' | 'error' = 'success';
+
+    // Pagination & Meta
+    page = signal(1);
+    limit = signal(20); // Smaller page size for better UX
+    totalItems = signal(0);
+    totalPages = signal(1);
+
     // Filters
     searchTerm = signal('');
     statusFilter = signal('all');
     visibilityFilter = signal('all');
+    inStockOnly = signal(true); // Default: Prioritize stock
 
-    // Computed filtered products
-    filteredProducts = computed(() => {
-        const list = this.products();
-        const search = this.searchTerm().toLowerCase();
-        const status = this.statusFilter();
-        const visibility = this.visibilityFilter();
-
-        return list.filter(p => {
-            const matchesSearch = !search ||
-                p.sku.toLowerCase().includes(search) ||
-                p.erpName.toLowerCase().includes(search) ||
-                p.webName.toLowerCase().includes(search);
-
-            const matchesStatus = status === 'all' || p.enrichmentStatus === status;
-
-            const matchesVisibility = visibility === 'all' ||
-                (visibility === 'visible' && p.isVisible) ||
-                (visibility === 'hidden' && !p.isVisible);
-
-            return matchesSearch && matchesStatus && matchesVisibility;
-        });
-    });
+    // Computed filtered products - NOW PASS-THROUGH (Server side does the work)
+    filteredProducts = computed(() => this.products());
 
     stats = computed(() => {
-        const list = this.products();
+        // Stats might be inaccurate if we only have one page.
+        // Ideally backend returns global stats.
+        // For now, we can show "Displaying X-Y of Z".
+        const start = (this.page() - 1) * this.limit() + 1;
+        const end = Math.min(this.page() * this.limit(), this.totalItems());
         return {
-            total: list.length,
-            visible: list.filter(p => p.isVisible).length,
-            pending: list.filter(p => p.enrichmentStatus === 'pending').length,
-            draft: list.filter(p => p.enrichmentStatus === 'draft').length,
+            start, end, total: this.totalItems()
         };
     });
 
@@ -74,24 +67,73 @@ export class AdminProductsListComponent implements OnInit {
 
     loadProducts() {
         this.isLoading.set(true);
-        // Call the new Search Endpoint which calls getMergedProducts
-        // We pass empty search to get all (paginated limit handled in backend default 50, need to increase or implement server pagination UI)
-        // For now we assume backend returns a reasonable list or we implement pagination later.
-        // The previous React mock had pagination. 
-        this.erpService.getAdminProducts({ limit: '1000' }) // Get a large chunk for client processing or implement server pagination
+
+        const params: any = {
+            page: this.page().toString(),
+            limit: this.limit().toString(),
+            searchTerm: this.searchTerm(),
+            status: this.statusFilter(),
+        };
+
+        if (this.visibilityFilter() !== 'all') {
+            params.isVisible = this.visibilityFilter() === 'visible' ? 'true' : 'false';
+        }
+
+        if (this.inStockOnly()) {
+            params.inStock = 'true';
+        }
+
+        this.erpService.getAdminProducts(params)
             .pipe(
                 finalize(() => this.isLoading.set(false)),
                 catchError(err => {
                     console.error('Error loading products', err);
-                    return of({ data: [] });
+                    return of({ data: [], meta: { total: 0, totalPages: 0 } });
                 })
             )
             .subscribe((res: any) => {
-                // Backend returns { data: [...], meta: ... }
                 if (res && res.data) {
                     this.products.set(res.data);
+                    // Update Meta
+                    if (res.meta) {
+                        this.totalItems.set(res.meta.total);
+                        this.totalPages.set(res.meta.totalPages);
+                    }
                 }
             });
+    }
+
+    // New Filter Handlers
+    updateSearch(term: string) {
+        this.searchTerm.set(term);
+        this.page.set(1);
+        this.loadProducts();
+    }
+
+    updateStatus(status: string) {
+        this.statusFilter.set(status);
+        this.page.set(1);
+        this.loadProducts();
+    }
+
+    updateVisibility(vis: string) {
+        this.visibilityFilter.set(vis);
+        this.page.set(1);
+        this.loadProducts();
+    }
+
+    toggleStock() {
+        this.inStockOnly.update(v => !v);
+        this.page.set(1);
+        this.loadProducts();
+    }
+
+    changePage(newPage: number) {
+        if (newPage >= 1 && newPage <= this.totalPages()) {
+            this.page.set(newPage);
+            this.loadProducts();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     getStatusBadgeClass(status: string): string {
@@ -122,14 +164,25 @@ export class AdminProductsListComponent implements OnInit {
         // Call API patch
         this.erpService.patchProduct(product.sku, { es_publico: !product.isVisible })
             .subscribe({
+                next: () => {
+                    this.showToastNotification('✅ Visibilidad actualizada correctamente', 'success');
+                },
                 error: (err) => {
                     console.error('Error updating visibility', err);
                     // Revert on error
                     this.products.update(list => list.map(p =>
                         p.sku === product.sku ? { ...p, isVisible: originalState } : p
                     ));
+                    this.showToastNotification('❌ Error al actualizar visibilidad', 'error');
                 }
             });
+    }
+
+    showToastNotification(msg: string, type: 'success' | 'error' = 'success') {
+        this.toastMessage = msg;
+        this.toastType = type;
+        this.showToast = true;
+        setTimeout(() => this.showToast = false, 3000);
     }
 
     editProduct(sku: string) {

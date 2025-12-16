@@ -209,6 +209,7 @@ export class ErpSyncService {
                         },
 
                         priceTiers: [],
+                        peso_kg: this.calculateWeightInKg((erpProduct as any).weight_erp),
                     });
                     created++;
                 } catch (err) {
@@ -226,6 +227,9 @@ export class ErpSyncService {
                     'clasificacion.grupo': erpProduct.categoria_g2,
                     'clasificacion.linea': erpProduct.categoria_g1,
                     'auditoria.ultima_sincronizacion_dobranet': new Date(),
+                    // Update weight if needed (careful not to overwrite manual enrichment if we don't want to, 
+                    // but for this task we assume Sync updates base data)
+                    // 'peso_kg': this.calculateWeightInKg((erpProduct as any).weight_erp), // Uncomment if we want strict sync
                 };
 
                 await this.productoModel.updateOne(
@@ -378,5 +382,34 @@ export class ErpSyncService {
     async getEnrichedProduct(codigo: string): Promise<any> {
         // Use lean() for plain object
         return this.productoModel.findOne({ codigo_interno: codigo }).lean().exec();
+    }
+
+    /**
+     * Helper: Convert ERP weight (often in grams) to Kg
+     * Rules:
+     * 1. If > 1000, assume grams and divide by 1000.
+     * 2. Round to 2 decimal places.
+     * 3. If < 0.01, return 0 (flag for invalid/missing).
+     */
+    private calculateWeightInKg(rawWeight: any): number {
+        if (rawWeight === null || rawWeight === undefined) return 0;
+
+        let weight = Number(rawWeight);
+        if (isNaN(weight)) return 0;
+
+        // Heuristic: If weight is large (> 1000), assume grams
+        if (weight > 1000) {
+            weight = weight / 1000;
+        }
+
+        // Round to 2 decimals
+        weight = Math.round(weight * 100) / 100;
+
+        // Edge Case: Minimum valid weight
+        if (weight < 0.01) {
+            return 0; // Return 0 to indicate "invalid" or "needs enrichment"
+        }
+
+        return weight;
     }
 }
