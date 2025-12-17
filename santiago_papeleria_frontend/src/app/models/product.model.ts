@@ -58,6 +58,8 @@ export interface Product {
   brand: string;
   category: string;
   sku?: string;        // Stock Keeping Unit
+  slug?: string;       // URL amigable
+  descripcion_extendida?: string; // Enriched description
 
   // PRECIOS
   price: number;          // precio final (PVP o PVM) - for backward compatibility
@@ -72,7 +74,7 @@ export interface Product {
   priceTiers?: PriceTier[]; // descuentos por cantidad
 
   // PRODUCT VARIANTS / ATTRIBUTES
-  attributes?: { key: string; value: string }[]; // Simple attributes
+  // attributes field moved to ENRICHMENT section
 
   // LOGIC VARIANTS
   has_variants?: boolean;
@@ -85,9 +87,13 @@ export interface Product {
   isLowStock?: boolean;   // indicador de stock bajo
 
   // ENRICHMENT
-  weight_kg?: number;
+  // ENRICHMENT
+  weight?: number; // JSON: weight (Legacy)
+  weight_kg?: number; // JSON: weight_kg (Enriched Enforced)
   dimensions?: Dimensions;
-  allow_custom_message?: boolean;
+  allowCustomMessage?: boolean; // JSON: allowCustomMessage (Legacy)
+  allows_custom_message?: boolean; // JSON: allows_custom_message (Backend Enriched)
+  attributes?: { key: string; value: string }[]; // JSON: attributes
 
   // MEDIA
   images: string[];       // principal + galeria

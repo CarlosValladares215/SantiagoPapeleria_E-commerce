@@ -1,0 +1,373 @@
+<div class="space-y-6 max-w-6xl mx-auto p-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Enriquecer Producto</h1>
+            <p class="text-gray-600 mt-1">
+                @if (formData(); as p) {
+                Editando: <span class="font-mono bg-gray-100 px-2 rounded">{{p.sku}}</span> - {{p.erpName}}
+                } @else {
+                Cargando información del producto...
+                }
+            </p>
+        </div>
+        <a routerLink="/admin/products" class="text-sm text-[#104D73] hover:underline flex items-center">
+            <i class="ri-arrow-left-line mr-1"></i> Volver a la lista
+        </a>
+    </div>
+
+    @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-20 bg-white rounded-lg border border-gray-200">
+        <i class="ri-loader-4-line text-4xl animate-spin text-[#104D73] mb-3"></i>
+        <p class="text-gray-500">Cargando datos del ERP y Enriquecimiento...</p>
+    </div>
+    }
+
+    @if (hasUnsavedChanges()) {
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3 animate-fade-in">
+        <i class="ri-alert-line text-yellow-600 text-xl mt-0.5"></i>
+        <div>
+            <h3 class="font-semibold text-yellow-900 text-sm">Cambios sin guardar</h3>
+            <p class="text-yellow-800 text-sm mt-1">
+                Tienes cambios sin guardar. Asegúrate de guardar antes de salir de esta página.
+            </p>
+        </div>
+    </div>
+    }
+
+    @if (formData(); as formData) {
+    <!-- Main Content - Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left Column - Form (60%) -->
+        <div class="lg:col-span-2 space-y-4">
+            <!-- ERP Context - Read Only -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-blue-900 mb-3 flex items-center">
+                    <i class="ri-database-2-line mr-2"></i>
+                    Información del ERP (Solo lectura)
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                    <div>
+                        <span class="text-blue-700 font-medium">Código:</span>
+                        <p class="text-blue-900 font-mono">{{ formData.sku }}</p>
+                    </div>
+                    <div>
+                        <span class="text-blue-700 font-medium">Nombre ERP:</span>
+                        <p class="text-blue-900 truncate" title="{{ formData.erpName }}">{{ formData.erpName }}</p>
+                    </div>
+                    <div>
+                        <span class="text-blue-700 font-medium">Marca:</span>
+                        <p class="text-blue-900">{{ formData.brand }}</p>
+                    </div>
+                    <div>
+                        <span class="text-blue-700 font-medium">Stock:</span>
+                        <p class="text-blue-900 font-semibold">{{ formData.stock }} und.</p>
+                    </div>
+                    <div>
+                        <span class="text-blue-700 font-medium">PVP (Público):</span>
+                        <p class="text-blue-900 font-semibold">${{ formData.price | number:'1.2-2' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-blue-700 font-medium">PVM (Mayorista):</span>
+                        <p class="text-green-700 font-bold">${{ formData.wholesalePrice | number:'1.2-2' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-blue-700 font-medium">Estado:</span>
+                        <p [class]="formData.stock > 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'">
+                            {{ formData.stock > 0 ? 'Disponible' : 'Agotado' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 1: Basic Info -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div (click)="toggleSection('basic')"
+                    class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <h3 class="text-sm font-semibold text-gray-800 flex items-center">
+                        <i class="ri-edit-line mr-2 text-[#104D73]"></i>
+                        Información Básica Web
+                        <span class="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">CRÍTICO</span>
+                    </h3>
+                    <i [class]="expandedSections.basic ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+                        class="text-xl text-gray-400"></i>
+                </div>
+                @if (expandedSections.basic) {
+                <div class="p-4 border-t border-gray-200 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Nombre Web (H1) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" [ngModel]="formData.webName" (ngModelChange)="updateWebName($event)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
+                            placeholder="Nombre optimizado para web" />
+                        <p class="text-xs text-gray-500 mt-1">Este será el título principal del producto en tu tienda
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Slug (URL amigable)
+                        </label>
+                        <input type="text" [value]="slug" readonly
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-600" />
+                        <p class="text-xs text-gray-500 mt-1">Generado automáticamente desde el nombre web</p>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Section 2: Description -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div (click)="toggleSection('description')"
+                    class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <h3 class="text-sm font-semibold text-gray-800 flex items-center">
+                        <i class="ri-file-text-line mr-2 text-[#104D73]"></i>
+                        Descripción
+                    </h3>
+                    <i [class]="expandedSections.description ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+                        class="text-xl text-gray-400"></i>
+                </div>
+                @if (expandedSections.description) {
+                <div class="p-4 border-t border-gray-200 space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Descripción del Producto
+                            </label>
+                            <span class="text-xs text-gray-500">
+                                {{ formData.description.length }}/2000 caracteres
+                            </span>
+                        </div>
+                        <textarea [ngModel]="formData.description" (ngModelChange)="updateDescription($event)" rows="8"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm resize-none"
+                            placeholder="Describe las características, beneficios y usos del producto..."></textarea>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Section 3: Images (Simplified for this iteration, keeping structure) -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div (click)="toggleSection('images')"
+                    class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
+                    <h3 class="text-sm font-semibold text-gray-800 flex items-center">
+                        <i class="ri-image-line mr-2 text-[#104D73]"></i>
+                        Multimedia / Imágenes
+                    </h3>
+                    <i [class]="expandedSections.images ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+                        class="text-xl text-gray-400"></i>
+                </div>
+                @if (expandedSections.images) {
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex flex-wrap gap-4">
+                        @for (img of formData.images; track img; let i = $index) {
+                        <div
+                            class="relative w-24 h-24 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group">
+                            <img [src]="img" class="w-full h-full object-cover">
+                            <button (click)="handleDeleteImage(i)"
+                                class="absolute top-1 right-1 bg-red-500 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                        }
+                        <button (click)="handleImageUpload()"
+                            class="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#104D73] hover:border-[#104D73] transition-colors">
+                            <i class="ri-add-line text-2xl"></i>
+                        </button>
+                        <!-- Hidden File Input -->
+                        <input type="file" id="productImageUpload" accept="image/png, image/jpeg, image/jpg, image/webp"
+                            hidden (change)="onFileSelected($event)">
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Section 4: Logistics -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-t-lg border-b border-gray-100">
+                    <h3 class="text-sm font-semibold text-gray-800 flex items-center">
+                        <i class="ri-settings-3-line mr-2 text-[#104D73]"></i>
+                        Configuración de Logística y Personalización
+                    </h3>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Peso
+                            </label>
+                            <div class="flex rounded-md shadow-sm">
+                                <input type="text" [ngModel]="displayedWeight()" (input)="onWeightInput($event)"
+                                    (blur)="onWeightBlur()" (keydown)="onWeightKeydown($event)"
+                                    (paste)="onWeightPaste($event)" [maxlength]="weightInputMaxLength"
+                                    class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
+                                    placeholder="0.000" />
+                                <select [ngModel]="weightUnit()"
+                                    (ngModelChange)="weightUnit.set($event); hasUnsavedChanges.set(true)"
+                                    class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-[#104D73]">
+                                    <option value="kg">kg</option>
+                                    <option value="g">g</option>
+                                </select>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Seleccione la unidad. Internamente se guarda como kg.
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Dimensiones (cm)
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" [ngModel]="displayedDimensions().length"
+                                    (input)="onDimensionInput('length', $event)" (blur)="onDimensionBlur('length')"
+                                    (keydown)="onDimensionKeydown($event)" maxlength="6"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
+                                    placeholder="L" />
+                                <span class="text-gray-400">×</span>
+                                <input type="text" [ngModel]="displayedDimensions().width"
+                                    (input)="onDimensionInput('width', $event)" (blur)="onDimensionBlur('width')"
+                                    (keydown)="onDimensionKeydown($event)" maxlength="6"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
+                                    placeholder="A" />
+                                <span class="text-gray-400">×</span>
+                                <input type="text" [ngModel]="displayedDimensions().height"
+                                    (input)="onDimensionInput('height', $event)" (blur)="onDimensionBlur('height')"
+                                    (keydown)="onDimensionKeydown($event)" maxlength="6"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
+                                    placeholder="H" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-2">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Permite Mensaje Personalizado</label>
+                                <p class="text-xs text-gray-500">Los clientes pueden agregar un mensaje al producto</p>
+                            </div>
+                            <button (click)="toggleCustomMessage()"
+                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer"
+                                [class]="isCustomMsgActive ? 'bg-[#104D73]' : 'bg-gray-300'">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+                                    [class]="isCustomMsgActive ? 'translate-x-6' : 'translate-x-1'"></span>
+                            </button>
+                        </div>
+
+                        <!-- Attributes / Tags Section -->
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mt-3 animate-fade-in">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-semibold text-indigo-900 flex items-center">
+                                    <i class="ri-price-tag-3-line mr-2 text-indigo-600"></i>
+                                    Atributos (Etiquetas)
+                                </h3>
+                                <button (click)="addAttribute()"
+                                    class="text-xs font-medium text-white bg-indigo-600 px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors flex items-center">
+                                    <i class="ri-add-line mr-1"></i> Agregar Atributo
+                                </button>
+                            </div>
+
+                            <div class="space-y-2">
+                                @if (formData.attributes.length === 0) {
+                                <p class="text-xs text-indigo-700 italic">No hay atributos definidos. Agrega detalles
+                                    como Color, Tamaño, etc.</p>
+                                }
+
+                                @for (attr of formData.attributes; track $index) {
+                                <div class="flex items-center space-x-2 animate-fade-in-up">
+                                    <input type="text" [value]="attr.key"
+                                        (input)="updateAttribute($index, 'key', $event)" placeholder="Color"
+                                        class="flex-1 min-w-0 px-3 py-1.5 text-sm border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white placeholder-indigo-300" />
+                                    <span class="text-indigo-400">:</span>
+                                    <input type="text" [value]="attr.value"
+                                        (input)="updateAttribute($index, 'value', $event)" placeholder="Rojo"
+                                        class="flex-1 min-w-0 px-3 py-1.5 text-sm border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white placeholder-indigo-300" />
+
+                                    <button (click)="removeAttribute($index)"
+                                        class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors"
+                                        title="Eliminar atributo">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                                }
+                            </div>
+                            <p class="text-xs text-indigo-800 mt-2">
+                                <i class="ri-information-line mr-1"></i>
+                                Estos atributos se mostrarán como información adicional en la página del producto.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Live Preview (40%) -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-6">
+                <!-- Action Buttons -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+                    <button (click)="handleSave()" [disabled]="isSaving()"
+                        class="w-full py-2.5 bg-[#104D73] text-white rounded-lg hover:bg-[#0d3d5a] transition-colors text-sm font-medium whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mb-2">
+                        @if (isSaving()) {
+                        <i class="ri-loader-line animate-spin mr-2"></i> Guardando...
+                        } @else {
+                        <i class="ri-save-line mr-2"></i> Guardar Cambios
+                        }
+                    </button>
+                    <button routerLink="/admin/products"
+                        class="w-full py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer">
+                        Cancelar
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="ri-smartphone-line mr-2 text-[#104D73]"></i>
+                        Vista Previa Móvil
+                    </h3>
+
+                    <!-- Mobile Preview -->
+                    <div class="border-2 border-gray-300 rounded-3xl p-4 bg-white shadow-lg">
+                        <div class="space-y-3">
+                            <!-- Product Image -->
+                            @if (formData.images.length > 0) {
+                            <img [src]="formData.images[0]" alt="Preview" class="w-full h-48 object-cover rounded-lg" />
+                            } @else {
+                            <div class="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <i class="ri-image-line text-4xl text-gray-300"></i>
+                            </div>
+                            }
+
+                            <!-- Product Info -->
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-800 mb-1">{{ formData.webName }}</h4>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-lg font-bold text-[#104D73]">${{ formData.price | number:'1.2-2'
+                                        }}</span>
+                                    <span
+                                        [class]="formData.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                                        class="text-xs px-2 py-1 rounded">
+                                        {{ formData.stock > 0 ? formData.stock + ' disponibles' : 'Agotado' }}
+                                    </span>
+                                </div>
+                                @if (formData.description) {
+                                <div class="mt-3">
+                                    <p class="text-xs text-gray-600 line-clamp-4">{{ formData.description }}</p>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Toast Notification -->
+    @if (showToast) {
+    <div class="fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in z-50 transition-colors duration-300"
+        [class]="toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'">
+        <i [class]="toastType === 'success' ? 'ri-check-line text-xl' : 'ri-error-warning-line text-xl'"></i>
+        <span class="text-sm font-medium">{{ toastMessage }}</span>
+    </div>
+    }
+</div>

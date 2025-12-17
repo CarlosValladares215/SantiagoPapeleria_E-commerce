@@ -1,10 +1,11 @@
-import { Component, computed, signal, WritableSignal, effect, untracked, ViewChild } from '@angular/core';
+import { Component, computed, signal, WritableSignal, effect, untracked, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { Subscription, interval } from 'rxjs';
 
-import { ProductService } from '../../services/product.service';
-import { CartService } from '../../services/cart.service';
+import { ProductService } from '../../services/product/product.service';
+import { CartService } from '../../services/cart/cart.service';
 import { Product as ProductModel, PriceTier, Variant } from '../../models/product.model';
 
 // SHARED
@@ -18,8 +19,6 @@ import { ProductActions } from './components/product-actions/product-actions';
 import { ProductRelated } from './components/product-related/product-related';
 import { ProductImageGallery } from './components/product-image-gallery/product-image-gallery';
 
-import { PricingTiers } from './components/pricing-tiers/pricing-tiers';
-import { PriceSummary } from './components/price-summary/price-summary';
 import { TrustBadges } from './components/trust-badges/trust-badges';
 import { ShippingInfo } from './components/shipping-info/shipping-info';
 
@@ -35,15 +34,13 @@ import { ShippingInfo } from './components/shipping-info/shipping-info';
     ProductActions,
     ProductRelated,
     ProductImageGallery,
-    PricingTiers,
-    PriceSummary,
     TrustBadges,
     ShippingInfo
   ],
   templateUrl: './product.html',
   styleUrls: ['./product.scss'],
 })
-export class Product {
+export class Product implements OnDestroy {
 
   // Signals
   product!: WritableSignal<ProductModel | null>;
@@ -53,6 +50,7 @@ export class Product {
   @ViewChild(ToastContainerComponent) toast!: ToastContainerComponent;
 
   relatedProducts = signal<ProductModel[]>([]);
+  private pollingSub: Subscription | null = null;
 
   // Expose Math to template
   Math = Math;
@@ -74,10 +72,11 @@ export class Product {
 
     // 2. Handle Route Changes
     this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      console.log('Product Component: Route param changed, ID:', id);
-      if (id) {
-        this.productService.fetchProductById(id);
+      const slug = params.get('slug') || params.get('id'); // Support slug (primary) or id (fallback)
+      console.log('Product Component: Route param changed, Slug/ID:', slug);
+      if (slug) {
+        this.productService.fetchProductById(slug);
+        this.startPolling(slug);
 
         // Reset Local State
         this.quantity.set(1);
@@ -117,6 +116,16 @@ export class Product {
         }
       }
     });
+
+    // Dentro del constructor, después del effect:
+    effect(() => {
+      console.log('🔍 DEBUG STOCK:', {
+        product: this.product()?._id,
+        selectedVariant: this.selectedVariant(),
+        currentStock: this.currentStock(),
+        selections: this.selections()
+      });
+    });
   }
 
   // --- COMPUTED STATE ---
@@ -127,10 +136,13 @@ export class Product {
     if (!p) return null;
 
     // Merge enriched data into Specs for display
+    // Merge enriched data into Specs for display
     const mergedSpecs = [...(p.specs || [])];
 
-    if (p.weight_kg) {
-      mergedSpecs.push({ label: 'Peso', value: `${p.weight_kg} kg` });
+    // Priority to Enriched Weight_KG
+    const weight = p.weight_kg !== undefined ? p.weight_kg : p.weight;
+    if (weight && weight > 0) {
+      mergedSpecs.push({ label: 'Peso', value: `${weight} kg` });
     }
 
     if (p.dimensions) {
@@ -143,12 +155,12 @@ export class Product {
       }
     }
 
-    // Also include dynamic attributes in specs if desired, or keep them separate.
-    // Let's include them for completeness if not already present.
-    if (p.attributes) {
+    // Include dynamic attributes in specs
+    if (p.attributes && p.attributes.length > 0) {
       p.attributes.forEach(attr => {
         // Avoid duplicates if already in specs (simple check)
-        if (!mergedSpecs.find(s => s.label === attr.key)) {
+        const exists = mergedSpecs.some(s => s.label.toLowerCase() === attr.key.toLowerCase());
+        if (!exists) {
           mergedSpecs.push({ label: attr.key, value: attr.value });
         }
       });
@@ -156,6 +168,10 @@ export class Product {
 
     return {
       ...p,
+      // Ensure we expose standard accessors for template
+      weight_kg: weight,
+      description: p.descripcion_extendida || p.description, // Prefer enriched description
+      allows_custom_message: p.allows_custom_message !== undefined ? p.allows_custom_message : p.allowCustomMessage,
       specs: mergedSpecs,
       reviews: p.reviews || [],
       priceTiers: p.priceTiers || [],
@@ -307,6 +323,20 @@ export class Product {
     } else {
       // Fallback mainly for unit test environments or before view Init
       console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+  }
+
+  startPolling(id: string) {
+    if (this.pollingSub) this.pollingSub.unsubscribe();
+    // Poll every 5 seconds for real-time stock updates
+    this.pollingSub = interval(5000).subscribe(() => {
+      this.productService.fetchProductById(id, true);
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.pollingSub) {
+      this.pollingSub.unsubscribe();
     }
   }
 }

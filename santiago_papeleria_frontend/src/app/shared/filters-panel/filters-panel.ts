@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FiltersService } from '../../services/filters.service';
+import { FiltersService } from '../../services/filters/filters.service';
 
 @Component({
   selector: 'app-filters-panel',
@@ -13,7 +13,7 @@ export class FiltersPanelComponent {
 
   @Output() filtersChanged = new EventEmitter<void>();
 
-  constructor(public filters: FiltersService) {}
+  constructor(public filters: FiltersService) { }
 
   /** CATEGORY */
   setCategory(cat: string) {

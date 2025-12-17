@@ -1,0 +1,198 @@
+@use "sass:color";
+// Variables
+$admin-primary: #104D73;
+$admin-bg: #f3f4f6; // gray-50
+$sidebar-width-expanded: 16rem; // 64
+$sidebar-width-collapsed: 5rem; // 20
+$header-height: 4rem;
+$transition-speed: 300ms;
+
+// Mixins
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@mixin glass-effect {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+// Global Layout Styles
+:host {
+    display: block;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+}
+
+.admin-layout-wrapper {
+    display: flex;
+    height: 100vh;
+    background-color: $admin-bg;
+}
+
+// Sidebar Styles
+.admin-sidebar {
+    background-color: white;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: width $transition-speed cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+    z-index: 20;
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+
+    &.collapsed {
+        width: $sidebar-width-collapsed;
+
+        .sidebar-label,
+        .sidebar-sub-icon {
+            opacity: 0;
+            width: 0;
+            display: none;
+        }
+
+        .logo-text {
+            display: none;
+        }
+    }
+
+    &.expanded {
+        width: $sidebar-width-expanded;
+    }
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.25rem;
+    border-radius: 0.5rem;
+    color: #4b5563; // gray-600
+    transition: all 0.2s ease;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap; // Ensure no wrap
+
+    &:hover {
+        background-color: rgba($admin-primary, 0.05);
+        color: $admin-primary;
+    }
+
+    &.active {
+        background-color: $admin-primary;
+        color: white;
+        box-shadow: 0 4px 6px rgba($admin-primary, 0.2);
+
+        i {
+            color: white;
+        }
+
+        &:hover {
+            background-color: color.adjust($admin-primary, $lightness: 5%);
+        }
+    }
+
+    i {
+        font-size: 1.25rem;
+        min-width: 2rem; // Fixed width for alignment
+        text-align: center;
+        transition: color 0.2s;
+    }
+}
+
+// Header Styles
+.admin-header {
+    @include glass-effect;
+    height: $header-height;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+// Main Content
+.admin-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+}
+
+.admin-content-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    scroll-behavior: smooth;
+
+    // Custom Scrollbar
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+
+        &:hover {
+            background: #94a3b8;
+        }
+    }
+}
+
+// Animation Utilities
+.animation-fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Theme Utilities
+.bg-primary {
+    background-color: $admin-primary !important;
+}
+
+.text-primary {
+    color: $admin-primary !important;
+}
+
+.border-primary {
+    border-color: $admin-primary !important;
+}
+
+.hover-bg-primary:hover {
+    background-color: $admin-primary !important;
+}
+
+.hover-text-primary:hover {
+    color: $admin-primary !important;
+}
+
+.bg-primary-soft {
+    background-color: rgba($admin-primary, 0.1) !important;
+}

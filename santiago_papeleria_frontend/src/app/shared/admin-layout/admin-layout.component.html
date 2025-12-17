@@ -1,0 +1,156 @@
+<div class="admin-layout-wrapper">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar" [class.collapsed]="!isSidebarOpen()" [class.expanded]="isSidebarOpen()">
+    <!-- Logo -->
+    <div
+      class="h-[4rem] flex items-center px-4 border-b border-gray-100 flex-shrink-0 whitespace-nowrap overflow-hidden">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+          <i class="ri-admin-line text-xl"></i>
+        </div>
+        <div class="logo-text overflow-hidden transition-opacity duration-200" [class.opacity-0]="!isSidebarOpen()">
+          <h2 class="text-base font-bold text-gray-800 leading-tight">Admin Panel</h2>
+          <p
+            class="text-[10px] bg-primary-soft text-primary px-1.5 py-0.5 rounded inline-block font-semibold tracking-wide">
+            SANTIAGO
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 p-3 space-y-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <ng-container *ngFor="let item of sidebarItems">
+        <!-- Action Item (Logout) -->
+        <button *ngIf="item.action" (click)="handleClick(item)"
+          class="w-full sidebar-link text-red-600 hover:bg-red-50 hover:text-red-700">
+          <i [class]="item.icon"></i>
+          <span class="sidebar-label whitespace-nowrap">{{ item.label }}</span>
+        </button>
+
+        <!-- Link Item -->
+        <ng-container *ngIf="!item.action">
+          <a [routerLink]="item.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact: !item.children}"
+            class="sidebar-link group relative">
+            <i [class]="item.icon"></i>
+            <span class="sidebar-label whitespace-nowrap">{{ item.label }}</span>
+
+            <!-- Tooltip for collapsed state (optional enhancement) -->
+            <div *ngIf="!isSidebarOpen()"
+              class="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap">
+              {{ item.label }}
+            </div>
+          </a>
+
+          <!-- Submenu -->
+          <div *ngIf="item.children && isSidebarOpen()"
+            class="mt-1 ml-4 border-l-2 border-gray-100 pl-2 space-y-1 sidebar-sub-icon">
+            <a *ngFor="let child of item.children" [routerLink]="child.path"
+              routerLinkActive="text-primary font-semibold bg-blue-50/50"
+              class="block px-3 py-2 text-sm rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-colors">
+              {{ child.label }}
+            </a>
+          </div>
+        </ng-container>
+      </ng-container>
+    </nav>
+
+    <!-- User Info -->
+    <div class="p-3 border-t border-gray-100 mt-auto">
+      <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
+        <div
+          class="w-9 h-9 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm flex-shrink-0 group-hover:border-primary transition-colors">
+          {{ user()?.nombres?.charAt(0) || 'A' }}
+        </div>
+        <div class="sidebar-label overflow-hidden">
+          <p class="text-sm font-semibold text-gray-700 truncate w-32 group-hover:text-primary transition-colors">
+            {{ user()?.nombres }}
+          </p>
+          <p class="text-xs text-gray-400 capitalize truncate">{{ user()?.role || 'Administrator' }}</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="flex items-center gap-4">
+        <button (click)="toggleSidebar()"
+          class="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+          <i [class]="isSidebarOpen() ? 'ri-menu-fold-line' : 'ri-menu-unfold-line' " class="text-xl"></i>
+        </button>
+        <h1 class="text-lg font-semibold text-gray-800 hidden sm:block">Panel de Control</h1>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Notifications -->
+        <div class="relative">
+          <button (click)="toggleNotifications()"
+            class="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-primary transition-colors relative">
+            <i class="ri-notification-3-line text-xl"></i>
+            <span *ngIf="unreadCount() > 0" class="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-white"></span>
+            </span>
+          </button>
+
+          <!-- Dropdown -->
+          <div *ngIf="isNotificationsOpen()"
+            class="absolute right-0 mt-3 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animation-fade-in">
+            <div class="px-4 py-3 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+              <h3 class="font-semibold text-gray-700 text-sm">Notificaciones</h3>
+              <div class="flex gap-2">
+                <button (click)="markAllAsRead()" class="text-xs text-primary font-medium hover:underline"
+                  *ngIf="unreadCount() > 0">
+                  Marcar leídas
+                </button>
+                <button (click)="clearAllNotifications()" class="text-xs text-red-500 font-medium hover:underline"
+                  *ngIf="notifications().length > 0">
+                  Borrar
+                </button>
+              </div>
+            </div>
+
+            <div class="max-h-[24rem] overflow-y-auto">
+              <!-- Empty State -->
+              <div *ngIf="notifications().length === 0"
+                class="flex flex-col items-center justify-center py-8 text-gray-400">
+                <i class="ri-notification-off-line text-3xl mb-2 opacity-50"></i>
+                <p class="text-sm">No tienes notificaciones</p>
+              </div>
+
+              <!-- List -->
+              <div *ngFor="let notif of notifications()" (click)="handleNotificationClick(notif)"
+                class="px-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                [ngClass]="{'bg-blue-50/30': !notif.read}">
+                <div class="flex gap-3">
+                  <div
+                    [class]="getNotificationBg(notif.type) + ' w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0'">
+                    <i [class]="getNotificationIcon(notif.type)"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-800 truncate" [class.font-bold]="!notif.read">
+                      {{ notif.title }}
+                    </p>
+                    <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ notif.message }}</p>
+                    <p class="text-[10px] text-gray-400 mt-1.5 font-medium">{{ notif.timestamp }}</p>
+                  </div>
+                  <div *ngIf="!notif.read" class="w-2 h-2 rounded-full bg-primary mt-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content-scroll">
+      <div class="max-w-7xl mx-auto w-full">
+        <ng-content></ng-content>
+      </div>
+    </main>
+  </div>
+</div>

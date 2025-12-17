@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { UiService } from '../../../services/ui.service';
-import { CartService } from '../../../services/cart.service';
+import { UiService } from '../../../services/ui/ui.service';
+import { CartService } from '../../../services/cart/cart.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
