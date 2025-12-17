@@ -1,191 +1,279 @@
-<div class="container mx-auto px-4 py-8 max-w-6xl">
+<div class="bg-gray-50 min-h-screen pb-12">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        <!-- LEFT COLUMN: Order Summary & Payment -->
-        <div class="lg:col-span-2 space-y-8">
-
-            <!-- Order Summary Section -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-                <h2 class="text-xl font-bold text-[#012e40] mb-6">Resumen del Pedido</h2>
-
-                <div class="space-y-6">
-                    <!-- Item 1 -->
-                    <div class="flex flex-col sm:flex-row gap-4 border-b border-gray-100 pb-6 last:border-0 last:pb-0">
-                        <!-- Thumbnail (Placeholder) -->
-                        <div
-                            class="w-16 h-16 bg-gray-50 rounded-md flex items-center justify-center text-gray-300 shrink-0">
-                            <i class="ri-file-text-line text-2xl"></i>
-                        </div>
-
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="font-bold text-[#012e40] text-base mb-1">Cuaderno Universitario Norma 100
-                                        Hojas</h3>
-                                    <p class="text-sm text-gray-500 mb-2">Azul - 100 hojas</p>
-
-                                    <!-- Quantity Controls -->
-                                    <div class="flex items-center">
-                                        <span class="text-sm text-gray-500 mr-2">Cantidad:</span>
-                                        <div class="flex items-center border border-gray-200 rounded">
-                                            <button
-                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">-</button>
-                                            <span class="px-2 text-sm font-medium text-[#012e40]">2</span>
-                                            <button
-                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="text-right flex flex-col items-end">
-                                    <button
-                                        class="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 mb-2 transition-colors">
-                                        <i class="ri-close-line text-sm"></i>
-                                    </button>
-                                    <p class="font-bold text-[#012e40] text-lg">$ 5.00</p>
-                                    <p class="text-xs text-gray-400">$ 2.50 c/u</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="flex flex-col sm:flex-row gap-4 border-b border-gray-100 pb-6 last:border-0 last:pb-0">
-                        <!-- Thumbnail (Placeholder) -->
-                        <div
-                            class="w-16 h-16 bg-gray-50 rounded-md flex items-center justify-center text-gray-300 shrink-0">
-                            <i class="ri-file-text-line text-2xl"></i>
-                        </div>
-
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="font-bold text-[#012e40] text-base mb-1">Bolígrafo BIC Cristal Azul (Caja
-                                        50 unidades)</h3>
-                                    <p class="text-sm text-gray-500 mb-2">Azul</p>
-
-                                    <!-- Quantity Controls -->
-                                    <div class="flex items-center">
-                                        <span class="text-sm text-gray-500 mr-2">Cantidad:</span>
-                                        <div class="flex items-center border border-gray-200 rounded">
-                                            <button
-                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">-</button>
-                                            <span class="px-2 text-sm font-medium text-[#012e40]">1</span>
-                                            <button
-                                                class="px-2 py-0.5 text-gray-500 hover:bg-gray-50 text-sm font-bold">+</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="text-right flex flex-col items-end">
-                                    <button
-                                        class="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 mb-2 transition-colors">
-                                        <i class="ri-close-line text-sm"></i>
-                                    </button>
-                                    <p class="font-bold text-[#012e40] text-lg">$ 25.00</p>
-                                    <p class="text-xs text-gray-400">$ 25.00 c/u</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Items List -->
+        @if (cartService.cartItems().length === 0) {
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-12 text-center flex flex-col items-center">
+            <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6 text-gray-300">
+                <i class="ri-shopping-bag-3-fill text-5xl"></i>
             </div>
+            <h2 class="text-2xl font-bold text-[#012e40] mb-2">Tu carrito está vacío</h2>
+            <p class="text-gray-500 mb-8 max-w-md">No has agregado productos a tu carrito todavía. Explora nuestro
+                catálogo y encuentra lo que necesitas.</p>
+            <a routerLink="/products"
+                class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-3 px-8 rounded-md transition-colors flex items-center gap-2">
+                <i class="ri-arrow-left-line"></i> Ir a Comprar
+            </a>
+        </div>
+        } @else {
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            <!-- Payment Method Section -->
-            <div>
-                <h2 class="text-xl font-bold text-[#012e40] mb-4">Método de Pago</h2>
-
+            <!-- LEFT COLUMN -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Products List -->
                 <div class="space-y-4">
-                    <!-- Bank Transfer Option -->
-                    <label
-                        class="block relative border border-gray-200 rounded-lg p-5 cursor-pointer bg-white transition-all hover:border-brand-blue has-[:checked]:border-brand-blue has-[:checked]:ring-1 has-[:checked]:ring-brand-blue">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-start gap-4">
+                    @for (item of cartService.cartItems(); track item.id) {
+                    <div
+                        class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex gap-4 items-start sm:items-center">
+                        <!-- Image -->
+                        <div
+                            class="w-20 h-20 bg-gray-50 rounded-md overflow-hidden flex-shrink-0 border border-gray-200">
+                            <img [src]="item.image" [alt]="item.name" class="w-full h-full object-cover">
+                        </div>
+
+                        <!-- Details -->
+                        <div class="flex-grow">
+                            <h3 class="font-bold text-[#012e40] text-sm sm:text-base mb-1">{{ item.name }}</h3>
+                            <p class="text-xs text-gray-500 mb-2">SKU: {{ item.sku }}</p>
+                            <div class="text-[#f2cb07] font-bold sm:hidden">
+                                {{ item.price | currency }}
+                            </div>
+                        </div>
+
+                        <!-- Quantity Controls -->
+                        <div class="flex flex-col items-end gap-3 sm:flex-row sm:items-center sm:gap-6">
+                            <div class="flex items-center border border-gray-200 rounded-md">
+                                <button (click)="decreaseQuantity(item.id, item.quantity)"
+                                    class="px-3 py-1 hover:bg-gray-100 text-gray-600 disabled:opacity-50"
+                                    [disabled]="item.quantity <= 1">-</button>
+                                <span class="px-3 py-1 text-sm font-bold text-[#012e40] w-8 text-center">{{
+                                    item.quantity }}</span>
+                                <button (click)="increaseQuantity(item.id, item.quantity)"
+                                    class="px-3 py-1 hover:bg-gray-100 text-gray-600">+</button>
+                            </div>
+
+                            <div class="text-right hidden sm:block w-24">
+                                <div class="text-xs text-gray-400">Total</div>
+                                <div class="font-bold text-[#0f4c75]">{{ item.price * item.quantity | currency }}</div>
+                            </div>
+
+                            <button (click)="removeItem(item.id)" class="text-red-400 hover:text-red-600 p-1">
+                                <i class="ri-delete-bin-line text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <!-- Delivery Options -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-[#012e40] mb-4 flex items-center gap-2">
+                        <i class="ri-truck-line"></i> Método de Entrega
+                    </h3>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Shipping Option -->
+                        <label
+                            class="relative flex items-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50"
+                            [class.border-[#f2cb07]]="cartService.deliveryMethod() === 'shipping'"
+                            [class.bg-yellow-50]="cartService.deliveryMethod() === 'shipping'"
+                            [class.border-gray-200]="cartService.deliveryMethod() !== 'shipping'">
+                            <input type="radio" name="delivery" value="shipping"
+                                [checked]="cartService.deliveryMethod() === 'shipping'"
+                                (change)="setDelivery('shipping')" class="hidden">
+                            <div class="flex items-center gap-3">
                                 <div
-                                    class="w-10 h-10 rounded-full bg-[#012e40] flex items-center justify-center text-white shrink-0">
-                                    <i class="ri-bank-line text-xl"></i>
+                                    class="w-10 h-10 rounded-full bg-blue-100 text-[#0f4c75] flex items-center justify-center">
+                                    <i class="ri-truck-fill text-xl"></i>
                                 </div>
                                 <div>
-                                    <span class="font-bold text-[#012e40] block text-base">Transferencia Bancaria</span>
-                                    <span class="text-sm text-gray-500 block mb-2">Transfiere a nuestras cuentas
-                                        bancarias</span>
-                                    <div class="flex gap-2">
-                                        <span class="text-xs bg-[#012e40] text-white px-2 py-0.5 rounded">Banco
-                                            Pichincha</span>
-                                        <span class="text-xs bg-[#012e40] text-white px-2 py-0.5 rounded">Banco
-                                            Guayaquil</span>
-                                    </div>
+                                    <div class="font-bold text-[#012e40]">Envío a Domicilio</div>
+                                    <div class="text-xs text-gray-500">Recibe en tu dirección</div>
                                 </div>
                             </div>
-                            <input type="radio" name="payment_method"
-                                class="w-5 h-5 text-brand-blue border-gray-300 focus:ring-brand-blue" checked>
-                        </div>
-                    </label>
+                            @if(cartService.deliveryMethod() === 'shipping') {
+                            <div class="absolute top-2 right-2 text-[#f2cb07]">
+                                <i class="ri-checkbox-circle-fill text-xl"></i>
+                            </div>
+                            }
+                        </label>
 
-                    <!-- Cash on Delivery Option -->
-                    <label
-                        class="block relative border border-gray-200 rounded-lg p-5 cursor-pointer bg-white transition-all hover:border-brand-blue has-[:checked]:border-brand-blue has-[:checked]:ring-1 has-[:checked]:ring-brand-blue">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-start gap-4">
+                        <!-- Pickup Option -->
+                        <label
+                            class="relative flex items-center p-4 border rounded-lg cursor-pointer transition-all hover:bg-gray-50"
+                            [class.border-[#f2cb07]]="cartService.deliveryMethod() === 'pickup'"
+                            [class.bg-yellow-50]="cartService.deliveryMethod() === 'pickup'"
+                            [class.border-gray-200]="cartService.deliveryMethod() !== 'pickup'">
+                            <input type="radio" name="delivery" value="pickup"
+                                [checked]="cartService.deliveryMethod() === 'pickup'" (change)="setDelivery('pickup')"
+                                class="hidden">
+                            <div class="flex items-center gap-3">
                                 <div
-                                    class="w-10 h-10 rounded-full bg-[#012e40] flex items-center justify-center text-white shrink-0">
-                                    <i class="ri-hand-coin-line text-xl"></i>
+                                    class="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+                                    <i class="ri-store-2-fill text-xl"></i>
                                 </div>
                                 <div>
-                                    <span class="font-bold text-[#012e40] block text-base">Pago Contraentrega</span>
-                                    <span class="text-sm text-gray-500 block mb-2">Paga en efectivo al recibir tu
-                                        pedido</span>
-                                    <div class="flex gap-2">
-                                        <span
-                                            class="text-xs bg-[#012e40] text-white px-2 py-0.5 rounded">Efectivo</span>
-                                    </div>
+                                    <div class="font-bold text-[#012e40]">Retiro en Tienda</div>
+                                    <div class="text-xs text-gray-500">Sin costo de envío</div>
                                 </div>
                             </div>
-                            <input type="radio" name="payment_method"
-                                class="w-5 h-5 text-brand-blue border-gray-300 focus:ring-brand-blue">
+                            @if(cartService.deliveryMethod() === 'pickup') {
+                            <div class="absolute top-2 right-2 text-[#f2cb07]">
+                                <i class="ri-checkbox-circle-fill text-xl"></i>
+                            </div>
+                            }
+                        </label>
+                    </div>
+
+                    <!-- Address Selection (Only if Shipping) -->
+                    @if (cartService.deliveryMethod() === 'shipping') {
+                    <div class="mt-6 pt-6 border-t border-gray-100 animate-fadeIn">
+                        @if (addresses().length > 0) {
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-gray-600 mb-2">Selecciona tu dirección de
+                                envío:</label>
+                            <select (change)="onAddressChange($event)"
+                                class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm focus:border-[#f2cb07] outline-none">
+                                <option value="" selected>Seleccionar...</option>
+                                @for (addr of addresses(); track addr.alias; let i = $index) {
+                                <option [value]="i">{{ addr.alias }} - {{ addr.ciudad }}</option>
+                                }
+                            </select>
                         </div>
-                    </label>
+                        } @else {
+                        <p
+                            class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-100 flex items-start gap-2">
+                            <i class="ri-alert-line text-yellow-600 mt-0.5"></i>
+                            No tienes direcciones guardadas. Agrega una para calcular el envío.
+                        </p>
+                        }
+
+                        <button (click)="addNewAddress()"
+                            class="w-full border border-dashed border-gray-300 text-gray-600 hover:border-[#f2cb07] hover:text-[#012e40] font-semibold py-2 rounded-md transition-colors text-sm flex items-center justify-center gap-2">
+                            <i class="ri-add-line"></i> Agregar Nueva Dirección
+                        </button>
+                    </div>
+                    }
                 </div>
+
+                <!-- Payment Options -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-[#012e40] mb-4 flex items-center gap-2">
+                        <i class="ri-bank-card-line"></i> Método de Pago
+                    </h3>
+
+                    <div class="space-y-3">
+                        <!-- Transfer -->
+                        <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-gray-50"
+                            [class.border-[#f2cb07]]="cartService.paymentMethod() === 'transfer'"
+                            [class.bg-yellow-50]="cartService.paymentMethod() === 'transfer'">
+                            <input type="radio" name="payment" value="transfer" (change)="setPayment('transfer')"
+                                class="accent-[#f2cb07] h-4 w-4">
+                            <div class="ml-3">
+                                <div class="font-bold text-[#012e40] text-sm">Transferencia Bancaria</div>
+                                <div class="text-xs text-gray-500">Envía el comprobante para confirmar</div>
+                            </div>
+                            <i class="ri-bank-line ml-auto text-xl text-gray-400"></i>
+                        </label>
+
+                        @if(cartService.paymentMethod() === 'transfer') {
+                        <div class="ml-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm animate-fadeIn">
+                            <p class="font-bold text-[#0f4c75] mb-2">Datos para Transferencia:</p>
+                            <div class="text-gray-600 space-y-1 mb-4">
+                                <p><strong>Banco:</strong> Pichincha</p>
+                                <p><strong>Tipo Cta:</strong> Ahorros</p>
+                                <p><strong>Número:</strong> 2204567890</p>
+                                <p><strong>Beneficiario:</strong> Santiago Papelería</p>
+                                <p><strong>CI/RUC:</strong> 1104567890</p>
+                            </div>
+
+                            <div class="border-t border-blue-100 pt-3">
+                                <label class="block font-bold text-[#0f4c75] mb-2 text-xs uppercase tracking-wide">
+                                    Subir Comprobante (Imagen/PDF)
+                                </label>
+                                <input type="file" (change)="onFileSelected($event)" accept="image/*,.pdf" class="block w-full text-sm text-gray-500
+                                        file:mr-4 file:py-2 file:px-4
+                                        file:rounded-full file:border-0
+                                        file:text-xs file:font-semibold
+                                        file:bg-[#0f4c75] file:text-white
+                                        hover:file:bg-[#0b3a5a]
+                                        cursor-pointer bg-white rounded p-1 border border-blue-100
+                                        ">
+                            </div>
+                        </div>
+                        }
+
+                        <!-- Cash -->
+                        <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-gray-50"
+                            [class.border-[#f2cb07]]="cartService.paymentMethod() === 'cash'"
+                            [class.bg-yellow-50]="cartService.paymentMethod() === 'cash'">
+                            <input type="radio" name="payment" value="cash" (change)="setPayment('cash')"
+                                class="accent-[#f2cb07] h-4 w-4">
+                            <div class="ml-3">
+                                <div class="font-bold text-[#012e40] text-sm">Efectivo</div>
+                                <div class="text-xs text-gray-500">Paga al recibir o retirar</div>
+                            </div>
+                            <i class="ri-money-dollar-circle-line ml-auto text-xl text-gray-400"></i>
+                        </label>
+                    </div>
+                </div>
+
             </div>
 
-        </div>
+            <!-- RIGHT COLUMN: Summary -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 sticky top-4">
+                    <h3 class="font-bold text-[#012e40] mb-4 text-lg">Resumen de Compra</h3>
 
-        <!-- RIGHT COLUMN: Purchase Summary -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 sticky top-24">
-                <h2 class="text-xl font-bold text-[#012e40] mb-6">Resumen de Compra</h2>
-
-                <div class="space-y-4 mb-6">
-                    <div class="flex justify-between text-[#374151]">
-                        <span>Subtotal:</span>
-                        <span class="font-bold">$ 30.00</span>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-gray-600 text-sm">
+                            <span>Subtotal ({{ cartService.totalItems() }} items)</span>
+                            <span>{{ cartService.totalValue() | currency }}</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600 text-sm">
+                            <span>Envío</span>
+                            @if (cartService.deliveryMethod() === 'pickup') {
+                            <span class="text-green-600 font-bold">Gratis (Retiro)</span>
+                            } @else if (cartService.selectedAddress()) {
+                            <span>{{ cartService.shippingCost() | currency }}</span>
+                            } @else {
+                            <span class="text-xs text-gray-400 italic">Por calcular</span>
+                            }
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex justify-between items-center">
+                            <span class="font-bold text-[#012e40]">Total Final</span>
+                            <span class="font-bold text-2xl text-[#f2cb07]">{{ cartService.finalTotal() | currency
+                                }}</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-[#10B981]">
-                        <span>Envío:</span>
-                        <span class="font-bold">GRATIS</span>
+
+                    <button (click)="confirmOrder()" [disabled]="isProcessing"
+                        class="w-full bg-[#0f4c75] hover:bg-[#0b3a5a] text-white font-bold py-3.5 rounded-md transition-colors flex justify-center items-center gap-2 shadow-lg shadow-blue-900/10 disabled:opacity-70 disabled:cursor-not-allowed">
+                        @if (isProcessing) {
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        <span>Procesando...</span>
+                        } @else {
+                        <span>Confirmar Pedido</span>
+                        <i class="ri-check-double-line"></i>
+                        }
+                    </button>
+
+                    <!-- Secure Badge -->
+                    <div class="mt-4 text-center">
+                        <div class="text-xs text-green-600 flex items-center justify-center gap-1">
+                            <i class="ri-shield-check-fill"></i> Compra 100% Segura
+                        </div>
                     </div>
-                </div>
-
-                <div class="border-t border-gray-100 pt-4 mb-6">
-                    <div class="flex justify-between text-[#012e40] text-xl font-bold">
-                        <span>Total:</span>
-                        <span>$ 30.00</span>
-                    </div>
-                </div>
-
-                <button
-                    class="w-full bg-[#f2cb07] text-[#012e40] font-bold py-3 rounded-lg hover:bg-[#e0bc06] transition-colors flex items-center justify-center gap-2 mb-4">
-                    <i class="ri-secure-payment-line"></i> Confirmar Pedido
-                </button>
-
-                <div class="text-center">
-                    <p class="text-xs text-green-600 flex items-center justify-center gap-1">
-                        <i class="ri-shield-check-line"></i> Compra 100% Segura
-                    </p>
                 </div>
             </div>
         </div>
-
+        }
     </div>
 </div>

@@ -1,6 +1,6 @@
 import { Component, computed, signal, WritableSignal, effect, untracked, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subscription, interval } from 'rxjs';
 
@@ -63,6 +63,7 @@ export class Product implements OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router, // Injected Router
     private productService: ProductService,
     private cartService: CartService
   ) {
@@ -314,7 +315,7 @@ export class Product implements OnDestroy {
   onBuyNow(event: any): void {
     this.onAddToCart(event);
     // Navigate to checkout
-    // this.router.navigate(['/checkout']);
+    this.router.navigate(['/cart']);
   }
 
   onNotify(message: string, type: 'success' | 'error' | 'info' = 'info'): void {

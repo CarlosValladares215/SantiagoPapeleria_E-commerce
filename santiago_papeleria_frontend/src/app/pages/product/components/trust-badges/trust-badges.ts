@@ -13,8 +13,8 @@ export class TrustBadges {
         {
             icon: 'ri-truck-line',
             iconColor: 'text-[#104D73]',
-            title: 'Envío Gratis',
-            subtitle: 'Pedidos +$50'
+            title: 'Envío Seguro',
+            subtitle: 'Garantizado'
         },
         {
             icon: 'ri-shield-check-line',

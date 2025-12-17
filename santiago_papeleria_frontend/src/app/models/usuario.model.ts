@@ -6,10 +6,16 @@ export interface DatosFiscales {
 }
 
 export interface DireccionEntrega {
+    _id?: string;
     alias: string;
     calle_principal: string;
     ciudad: string;
+    provincia?: string;
     referencia?: string;
+    location?: {
+        lat: number;
+        lng: number;
+    };
 }
 
 export interface Preferencias {

@@ -37,149 +37,209 @@
             <!-- Main Content -->
             <div class="lg:col-span-3 space-y-6">
 
-                <!-- Header Card -->
-                <div
-                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 class="text-2xl font-bold text-[#0f4c75] mb-1">Mi Perfil</h1>
-                        <p class="text-gray-500 text-sm mb-4">Administra tu información personal</p>
-                        <span
-                            class="bg-[#f2cb07] text-[#012e40] text-sm font-bold px-4 py-1.5 rounded-full inline-flex items-center gap-2">
-                            <i class="ri-vip-crown-line"></i> Cuenta {{ authService.user()?.tipo_cliente | titlecase }}
-                        </span>
+                <!-- Header & Tabs -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                    <div class="flex border-b border-gray-200">
+                        <button (click)="switchTab('personal')"
+                            [class]="activeTab === 'personal' ? 'border-[#f2cb07] text-[#0f4c75]' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                            class="flex-1 pb-4 px-4 text-center border-b-2 font-medium text-sm transition-colors cursor-pointer">
+                            <i class="ri-user-line mr-2"></i> Información Personal
+                        </button>
+                        <button (click)="switchTab('addresses')"
+                            [class]="activeTab === 'addresses' ? 'border-[#f2cb07] text-[#0f4c75]' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                            class="flex-1 pb-4 px-4 text-center border-b-2 font-medium text-sm transition-colors cursor-pointer">
+                            <i class="ri-map-pin-line mr-2"></i> Mis Direcciones
+                        </button>
                     </div>
-                    <button (click)="toggleEdit()"
-                        class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-all flex items-center gap-2">
-                        <i class="ri-edit-line"></i> {{ isEditing ? 'Cancelar Edición' : 'Editar Perfil' }}
-                    </button>
                 </div>
 
-                <!-- Form Card -->
-                <form [formGroup]="profileForm" (ngSubmit)="onSubmit()"
-                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
+                <!-- PERSONAL INFO TAB -->
+                <div *ngIf="activeTab === 'personal'">
+                    <div
+                        class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h1 class="text-2xl font-bold text-[#0f4c75] mb-1">Información Personal</h1>
+                            <p class="text-gray-500 text-sm">Administra tus datos de cuenta y facturación</p>
+                        </div>
+                        <button (click)="toggleEdit()"
+                            class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-all flex items-center gap-2">
+                            <i class="ri-edit-line"></i> {{ isEditing ? 'Cancelar Edición' : 'Editar Información' }}
+                        </button>
+                    </div>
 
-                    <h3 class="text-lg font-bold text-[#0f4c75] mb-6 flex items-center gap-2">
-                        <i class="ri-user-line"></i> Información Personal
-                    </h3>
+                    <form [formGroup]="profileForm" (ngSubmit)="onSubmitPersonal()"
+                        class="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Nombre -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Nombre Completo</label>
+                                <input type="text" formControlName="nombres"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                            </div>
+                            <!-- Email -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Correo Electrónico</label>
+                                <input type="email" formControlName="email"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                            </div>
+                            <!-- Telefono -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono</label>
+                                <input type="tel" formControlName="telefono"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                            </div>
+                            <!-- RUC/Cedula -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">RUC / Cédula</label>
+                                <input type="text" formControlName="identificacion"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                            </div>
+                            <!-- Empresa -->
+                            <div *ngIf="isMayorista" class="md:col-span-2">
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Empresa /
+                                    Institución</label>
+                                <input type="text" formControlName="empresa"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                            </div>
+                        </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <!-- Nombre -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Nombre Completo</label>
-                            <input type="text" formControlName="nombres"
-                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                        <div class="mt-8 flex justify-end" *ngIf="isEditing">
+                            <button type="submit" [disabled]="isLoading"
+                                class="bg-[#0f4c75] text-white font-bold py-3 px-8 rounded-md hover:bg-[#0b3a5a] transition-colors flex items-center gap-2">
+                                <i class="ri-save-line"></i> {{ isLoading ? 'Guardando...' : 'Guardar Cambios' }}
+                            </button>
                         </div>
-                        <!-- Email -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Correo Electrónico</label>
-                            <input type="email" formControlName="email"
-                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                    </form>
+                </div>
+
+                <!-- ADDRESSES TAB -->
+                <div *ngIf="activeTab === 'addresses'">
+
+                    <!-- Addresses List -->
+                    <div *ngIf="!showAddressForm">
+                        <div
+                            class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                            <div>
+                                <h1 class="text-2xl font-bold text-[#0f4c75] mb-1">Mis Direcciones</h1>
+                                <p class="text-gray-500 text-sm">Gestiona tus lugares de entrega</p>
+                            </div>
+                            <button (click)="initNewAddress()"
+                                class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-all flex items-center gap-2">
+                                <i class="ri-add-line"></i> Nueva Dirección
+                            </button>
                         </div>
-                        <!-- Telefono -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono</label>
-                            <input type="tel" formControlName="telefono"
-                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
-                        </div>
-                        <!-- Empresa -->
-                        <div *ngIf="isMayorista">
-                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Empresa / Institución</label>
-                            <input type="text" formControlName="empresa" placeholder="Escuela San Francisco"
-                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
-                        </div>
-                        <!-- RUC/Cedula -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1.5">RUC / Cédula</label>
-                            <input type="text" formControlName="identificacion"
-                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div *ngFor="let addr of addresses; let i = index"
+                                class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-[#f2cb07] transition-all relative group">
+                                <div
+                                    class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button (click)="editAddress(i)"
+                                        class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><i
+                                            class="ri-pencil-line"></i></button>
+                                    <button (click)="deleteAddress(i)"
+                                        class="p-1.5 text-red-600 hover:bg-red-50 rounded"><i
+                                            class="ri-delete-bin-line"></i></button>
+                                </div>
+
+                                <span
+                                    class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded inline-block mb-3 font-bold uppercase">{{
+                                    addr.alias }}</span>
+                                <h4 class="font-bold text-[#012e40]">{{ addr.calle_principal }}</h4>
+                                <p class="text-sm text-gray-500">{{ addr.ciudad }}, {{ addr.provincia }}</p>
+                                <p *ngIf="addr.referencia" class="text-xs text-gray-400 mt-2 italic">"{{ addr.referencia
+                                    }}"</p>
+                            </div>
+
+                            <!-- Empty State -->
+                            <div *ngIf="addresses.length === 0"
+                                class="col-span-full py-12 text-center text-gray-400 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                                <i class="ri-map-pin-add-line text-4xl mb-3 block"></i>
+                                <span class="block">No tienes direcciones guardadas</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-100 my-8"></div>
-
-                    <h3 class="text-lg font-bold text-[#0f4c75] mb-6 flex items-center gap-2">
-                        <i class="ri-map-pin-line"></i> Dirección de Envío
-                    </h3>
-
-                    <div class="space-y-6">
-                        <!-- Direccion -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600 mb-1.5">Dirección/Calles</label>
-                            <input type="text" formControlName="direccion"
-                                class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                    <!-- Address Form -->
+                    <div *ngIf="showAddressForm" class="bg-white rounded-lg shadow-sm border border-gray-100">
+                        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                            <h3 class="font-bold text-[#0f4c75] text-lg">{{ editingAddressIndex !== null ? 'Editar
+                                Dirección' : 'Nueva Dirección' }}</h3>
+                            <button (click)="cancelAddressEdit()" class="text-gray-400 hover:text-gray-600"><i
+                                    class="ri-close-line text-xl"></i></button>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Ciudad -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Ciudad</label>
-                                <input type="text" formControlName="ciudad"
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
-                            </div>
-                            <!-- Provincia -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Provincia</label>
-                                <div class="relative">
+                        <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <form [formGroup]="addressForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Alias (ej. Casa,
+                                        Oficina)</label>
+                                    <input type="text" formControlName="alias"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Provincia</label>
                                     <select formControlName="provincia"
-                                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] focus:ring-1 focus:ring-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed appearance-none">
-                                        <option value="" disabled>Selecciona una provincia</option>
+                                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
                                         <option *ngFor="let p of provincias" [value]="p">{{ p }}</option>
                                     </select>
-                                    <i
-                                        class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Ciudad</label>
+                                    <input type="text" formControlName="ciudad"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Calle Principal /
+                                        dirección</label>
+                                    <input type="text" formControlName="calle_principal"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Referencia</label>
+                                    <textarea formControlName="referencia" rows="2"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm"></textarea>
+                                </div>
+
+                                <div class="pt-4">
+                                    <button type="button" (click)="saveAddress()"
+                                        [disabled]="isLoading || addressForm.invalid"
+                                        class="w-full bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-3 rounded-md transition-colors disabled:opacity-50">
+                                        {{ editingAddressIndex !== null ? 'Actualizar Dirección' : 'Guardar Dirección'
+                                        }}
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- MAP -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-600 mb-2">Ubicación en Mapa
+                                    (Requerido)</label>
+                                <div class="border border-gray-200 rounded-lg overflow-hidden h-[400px]">
+                                    <app-map
+                                        [initialLocation]="addressForm.value.lat ? { lat: addressForm.value.lat, lng: addressForm.value.lng } : null"
+                                        (locationChange)="onLocationSelected($event)">
+                                    </app-map>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2 text-center"><i class="ri-information-line"></i>
+                                    Haz click o arrastra el marcador para fijar tu ubicación exacta.</p>
+                                <div *ngIf="addressForm.get('lat')?.invalid && addressForm.get('lat')?.touched"
+                                    class="text-red-500 text-xs font-bold text-center mt-1">
+                                    Debes seleccionar una ubicación en el mapa.
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-8 flex justify-end" *ngIf="isEditing">
-                        <button type="submit" [disabled]="isLoading"
-                            class="bg-[#0f4c75] text-white font-bold py-3 px-8 rounded-md hover:bg-[#0b3a5a] transition-colors flex items-center gap-2">
-                            <i class="ri-save-line"></i> {{ isLoading ? 'Guardando...' : 'Guardar Cambios' }}
-                        </button>
-                    </div>
-
-                    <p *ngIf="successMessage"
-                        class="mt-4 text-green-600 text-sm font-bold text-center bg-green-50 p-3 rounded border border-green-100">
-                        <i class="ri-checkbox-circle-line bg-green-600 text-white rounded-full p-0.5 text-xs mr-2"></i>
-                        {{ successMessage }}
-                    </p>
-
-                </form>
-
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Card 1 -->
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <div
-                            class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-[#0f4c75] mb-3">
-                            <i class="ri-shopping-bag-3-line text-xl"></i>
-                        </div>
-                        <p class="text-3xl font-bold text-[#012e40] mb-1">{{ userStats.orders }}</p>
-                        <p class="text-sm text-gray-500">Pedidos Realizados</p>
-                    </div>
-                    <!-- Card 2 -->
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <div
-                            class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 mb-3">
-                            <i class="ri-heart-line text-xl"></i>
-                        </div>
-                        <p class="text-3xl font-bold text-[#012e40] mb-1">{{ userStats.favorites }}</p>
-                        <p class="text-sm text-gray-500">Productos Favoritos</p>
-                    </div>
-                    <!-- Card 3 -->
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                        <div
-                            class="w-12 h-12 bg-yellow-50 rounded-lg flex items-center justify-center text-yellow-600 mb-3">
-                            <i class="ri-star-line text-xl"></i>
-                        </div>
-                        <p class="text-3xl font-bold text-[#012e40] mb-1">{{ userStats.reviews }}</p>
-                        <p class="text-sm text-gray-500">Reseñas Escritas</p>
-                    </div>
                 </div>
 
-            </div>
+                <!-- Shared Feedback -->
+                <p *ngIf="successMessage"
+                    class="fixed bottom-8 right-8 z-50 bg-green-600 text-white px-6 py-4 rounded shadow-lg animate-bounce">
+                    <i class="ri-checkbox-circle-line mr-2"></i> {{ successMessage }}
+                </p>
 
+            </div>
         </div>
     </div>
 </div>

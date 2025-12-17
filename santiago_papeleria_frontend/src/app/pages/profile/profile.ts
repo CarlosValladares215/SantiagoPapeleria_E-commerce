@@ -2,21 +2,36 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, ActivatedRoute } from '@angular/router';
+import { MapComponent } from '../../shared/components/map/map.component';
+import { HttpClient } from '@angular/common/http';
+import { DireccionEntrega } from '../../models/usuario.model';
 
 @Component({
     selector: 'app-profile',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, RouterLinkActive],
+    imports: [CommonModule, ReactiveFormsModule, RouterLink, RouterLinkActive, MapComponent],
     templateUrl: './profile.html',
     styleUrls: ['./profile.scss']
 })
 export class Profile implements OnInit {
     authService = inject(AuthService);
     fb = inject(FormBuilder);
+    route = inject(ActivatedRoute);
+    http = inject(HttpClient);
 
+    activeTab: 'personal' | 'addresses' = 'personal';
+
+    // Personal Info
     profileForm: FormGroup;
     isEditing = false;
+
+    // Address Management
+    addressForm: FormGroup;
+    isAddingAddress = false;
+    editingAddressIndex: number | null = null;
+    showAddressForm = false;
+
     isLoading = false;
     successMessage = '';
 
@@ -34,22 +49,30 @@ export class Profile implements OnInit {
 
     constructor() {
         this.profileForm = this.fb.group({
-            // Personal Info
             nombres: [{ value: '', disabled: true }, [Validators.required]],
             email: [{ value: '', disabled: true }, [Validators.required, Validators.email]],
             telefono: [{ value: '', disabled: true }],
-            empresa: [{ value: '', disabled: true }], // Campo nuevo
-            identificacion: [{ value: '', disabled: true }], // RUC/Cedula
+            empresa: [{ value: '', disabled: true }],
+            identificacion: [{ value: '', disabled: true }],
+        });
 
-            // Address (Assuming single address for now based on UI)
-            direccion: [{ value: '', disabled: true }],
-            ciudad: [{ value: '', disabled: true }],
-            provincia: [{ value: '', disabled: true }]
+        this.addressForm = this.fb.group({
+            alias: ['', Validators.required],
+            calle_principal: ['', Validators.required],
+            ciudad: ['', Validators.required],
+            provincia: ['', Validators.required],
+            referencia: [''],
+            lat: [null, Validators.required],
+            lng: [null, Validators.required]
         });
     }
 
     get isMayorista(): boolean {
         return this.authService.user()?.tipo_cliente === 'MAYORISTA';
+    }
+
+    get addresses(): DireccionEntrega[] {
+        return this.authService.user()?.direcciones_entrega || [];
     }
 
     ngOnInit(): void {
@@ -59,95 +82,206 @@ export class Profile implements OnInit {
                 nombres: user.nombres,
                 email: user.email,
                 telefono: user.telefono,
-                // Map empresa to razon_social if mayorista
                 empresa: user.datos_fiscales?.razon_social || '',
-                // Map ID: Cedula for Minorista, Identificacion (RUC) for Mayorista
                 identificacion: user.cedula || user.datos_fiscales?.identificacion || '',
-
-                direccion: user.direcciones_entrega?.[0]?.calle_principal || '',
-                ciudad: user.direcciones_entrega?.[0]?.ciudad || '',
             });
         }
+
+        // Check for query params to switch tab
+        this.route.queryParams.subscribe(params => {
+            if (params['tab'] === 'addresses') {
+                this.activeTab = 'addresses';
+                if (params['action'] === 'new') {
+                    this.initNewAddress();
+                }
+            }
+        });
     }
 
+    // --- Tab Management ---
+    switchTab(tab: 'personal' | 'addresses') {
+        this.activeTab = tab;
+        this.isEditing = false;
+        this.showAddressForm = false;
+    }
+
+    // --- Personal Info Logic ---
     toggleEdit() {
         this.isEditing = !this.isEditing;
         if (this.isEditing) {
             this.profileForm.enable();
-
-            // Constraints:
-            // Email is identity, usually readonly or needs re-verification. Keeping editable as per previous thought? 
-            // User said: "allow edit personal only" for Mayorista.
-
             if (this.isMayorista) {
-                // Mayorista cannot edit Business Data
                 this.profileForm.get('empresa')?.disable();
-                this.profileForm.get('identificacion')?.disable(); // Assuming RUC is fixed
+                this.profileForm.get('identificacion')?.disable();
             }
-
-            // Optional: If email shouldn't be changed easily
-            // this.profileForm.get('email')?.disable(); 
-
+            // Email usually read-only
+            this.profileForm.get('email')?.disable();
         } else {
             this.profileForm.disable();
         }
     }
 
-    onSubmit() {
+    onSubmitPersonal() {
         if (this.profileForm.valid) {
             this.isLoading = true;
             const formValue = this.profileForm.getRawValue();
             const user = this.authService.user();
-
             if (!user?._id) return;
-
-            // Map flat form back to structured user object if needed
-            // For now we send flat and let backend/service handle it, but our backend expects specific DTO structure?
-            // actually we passed 'any' to controller update.
 
             const updateData: any = {
                 nombres: formValue.nombres,
-                email: formValue.email,
                 telefono: formValue.telefono,
-                direcciones_entrega: [{
-                    alias: 'Principal',
-                    calle_principal: formValue.direccion,
-                    ciudad: formValue.ciudad,
-                    // provincia: formValue.provincia // TODO: Add provincia to schema if needed, currently storing in Address? Schema doesn't have provincia field in DireccionEntrega! 
-                    // User asked for provincia dropdown. Where do we save it?
-                    // Schema DireccionEntrega: alias, calle_principal, ciudad, referencia. NO PROVINCIA.
-                    // I should probably append it to ciudad or reference for now or ask to add it.
-                    // For now let's save it in ciudad like "Quito, Pichincha"? Or just ignore? 
-                    // Let's assume schema needs update or we pack it.
-                    // Let's append to Ciudad for now: `${formValue.ciudad}, ${formValue.provincia}` handling?
-                    // Or better, just fix the Business Data issue first.
-                }]
             };
 
             if (this.isMayorista) {
-                updateData.datos_fiscales = {
-                    razon_social: formValue.empresa,
-                    identificacion: formValue.identificacion,
-                    tipo_identificacion: 'RUC'
-                };
-                // Don't overwrite cedula mostly?
+                // Mayorista specific restrictions if any
             } else {
                 updateData.cedula = formValue.identificacion;
             }
 
-            this.authService.updateProfile(user._id, updateData).subscribe({
-                next: (updatedUser) => {
-                    this.isLoading = false;
-                    this.isEditing = false;
-                    this.profileForm.disable();
-                    this.successMessage = 'Perfil actualizado correctamente';
-                    setTimeout(() => this.successMessage = '', 3000);
-                },
-                error: (err) => {
-                    console.error(err);
-                    this.isLoading = false;
-                }
-            });
+            this.updateUser(user._id, updateData, 'Perfil actualizado correctamente');
         }
+    }
+
+    // --- Address Logic ---
+    initNewAddress() {
+        this.addressForm.reset();
+        // Set default map location if needed? MapComponent handles default.
+        this.editingAddressIndex = null;
+        this.showAddressForm = true;
+    }
+
+    editAddress(index: number) {
+        const addr = this.addresses[index];
+        this.editingAddressIndex = index;
+        this.addressForm.patchValue({
+            alias: addr.alias,
+            calle_principal: addr.calle_principal,
+            ciudad: addr.ciudad,
+            provincia: addr.provincia,
+            referencia: addr.referencia,
+            lat: addr.location?.lat,
+            lng: addr.location?.lng
+        });
+        this.showAddressForm = true;
+    }
+
+    cancelAddressEdit() {
+        this.showAddressForm = false;
+        this.editingAddressIndex = null;
+    }
+
+    onLocationSelected(coords: { lat: number, lng: number }) {
+        this.addressForm.patchValue({
+            lat: coords.lat,
+            lng: coords.lng
+        });
+
+        // Reverse Geocoding
+        this.getAddressFromCoords(coords.lat, coords.lng);
+    }
+
+    getAddressFromCoords(lat: number, lng: number) {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+
+        this.http.get<any>(url).subscribe({
+            next: (data) => {
+                if (data && data.address) {
+                    const addr = data.address;
+
+                    // Map OSM helpers to our form
+                    // Street: road || pedestrian || suburb
+                    const road = addr.road || addr.pedestrian || addr.suburb || '';
+                    const houseNumber = addr.house_number ? ` ${addr.house_number}` : '';
+                    const calle = `${road}${houseNumber}`;
+
+                    // City: city || town || village || county
+                    const city = addr.city || addr.town || addr.village || addr.county || '';
+
+                    // Province: state || region
+                    const province = addr.state || addr.region || '';
+
+                    // Only patch if empty or user wants to overwrite? 
+                    // Usually we overwrite on explicit marker move
+                    this.addressForm.patchValue({
+                        calle_principal: calle,
+                        ciudad: city,
+                        // Try to match exact province name from our list or leave generic
+                        provincia: this.matchProvince(province)
+                    });
+                }
+            },
+            error: (err) => console.error('Geocoding error', err)
+        });
+    }
+
+    matchProvince(incoming: string): string {
+        // Simple fuzzy match or exact match from our 'provincias' list
+        const found = this.provincias.find(p => p.toLowerCase() === incoming.toLowerCase());
+        return found || incoming; // Return incoming even if not in list, or empty? Leaving as incoming.
+    }
+
+    saveAddress() {
+        if (this.addressForm.valid) {
+            this.isLoading = true;
+            const val = this.addressForm.value;
+            const newAddr: DireccionEntrega = {
+                alias: val.alias,
+                calle_principal: val.calle_principal,
+                ciudad: val.ciudad,
+                provincia: val.provincia,
+                referencia: val.referencia,
+                location: {
+                    lat: val.lat,
+                    lng: val.lng
+                }
+            };
+
+            const user = this.authService.user();
+            if (!user?._id) return;
+
+            const currentAddresses = [...(user.direcciones_entrega || [])];
+
+            if (this.editingAddressIndex !== null) {
+                currentAddresses[this.editingAddressIndex] = newAddr;
+            } else {
+                currentAddresses.push(newAddr);
+            }
+
+            this.updateUser(user._id, { direcciones_entrega: currentAddresses }, 'Dirección guardada correctamente');
+        } else {
+            this.addressForm.markAllAsTouched();
+        }
+    }
+
+    deleteAddress(index: number) {
+        if (!confirm('¿Estás seguro de eliminar esta dirección?')) return;
+
+        const user = this.authService.user();
+        if (!user?._id) return;
+
+        const currentAddresses = [...(user.direcciones_entrega || [])];
+        currentAddresses.splice(index, 1);
+
+        this.isLoading = true;
+        this.updateUser(user._id, { direcciones_entrega: currentAddresses }, 'Dirección eliminada');
+    }
+
+    // --- Shared ---
+    private updateUser(id: string, data: any, successMsg: string) {
+        this.authService.updateProfile(id, data).subscribe({
+            next: () => {
+                this.isLoading = false;
+                this.isEditing = false;
+                this.showAddressForm = false;
+                this.profileForm.disable();
+                this.successMessage = successMsg;
+                setTimeout(() => this.successMessage = '', 3000);
+            },
+            error: (err) => {
+                console.error(err);
+                this.isLoading = false;
+            }
+        });
     }
 }

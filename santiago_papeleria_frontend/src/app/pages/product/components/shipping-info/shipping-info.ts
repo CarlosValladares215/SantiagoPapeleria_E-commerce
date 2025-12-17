@@ -24,7 +24,7 @@ export class ShippingInfo {
     shippingMethods: ShippingMethod[] = [
         {
             title: 'Envío Nacional',
-            description: '1-3 días hábiles • Gratis en pedidos +$50',
+            description: '1-3 días hábiles',
             borderColor: 'border-[#104D73]'
         },
         {
@@ -34,7 +34,7 @@ export class ShippingInfo {
         },
         {
             title: 'Retiro en Tienda',
-            description: 'Disponible en 2 horas • Gratis',
+            description: 'Disponible en 2 horas',
             borderColor: 'border-yellow-500'
         }
     ];

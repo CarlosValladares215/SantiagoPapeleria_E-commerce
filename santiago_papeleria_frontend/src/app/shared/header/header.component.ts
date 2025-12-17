@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
-import { CartService } from '../../services/cart/cart.service';
+
 
 @Component({
   selector: 'app-header',
@@ -65,7 +65,7 @@ export class Header {
   constructor(
     public auth: AuthService,
     private router: Router,
-    public cartService: CartService
+
   ) { }
 
   toggleMobileMenu() {
@@ -147,9 +147,5 @@ export class Header {
     this.closeMobileMenu();
   }
 
-  toggleCartWrapper() {
-    console.log('Cart button clicked in Header');
-    this.cartService.toggleCart();
-    console.log('Cart Service isOpen:', this.cartService.isOpen());
-  }
+
 }
