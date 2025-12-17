@@ -93,6 +93,6 @@ export class CartSidebarComponent {
 
   goToCheckout() {
     this.close();
-    this.router.navigate(['/checkout']);
+    this.router.navigate(['/cart']);
   }
 }
