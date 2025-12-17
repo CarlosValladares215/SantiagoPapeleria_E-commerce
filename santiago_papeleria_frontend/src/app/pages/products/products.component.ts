@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Product } from '../../models/product.model';
 import { FilterState, CategoryCount } from '../../models/filter.model';
-import { ProductService } from '../../services/product.service';
-import { CartService } from '../../services/cart.service';
+import { ProductService } from '../../services/product/product.service';
+import { CartService } from '../../services/cart/cart.service';
 
 // Components
 import { ProductsFilterSidebar } from './components/products-filter-sidebar/products-filter-sidebar';

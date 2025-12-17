@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
-import { UiService } from '../../../services/ui.service';
+import { UiService } from '../../../services/ui/ui.service';
 
 @Component({
     selector: 'app-mega-menu',

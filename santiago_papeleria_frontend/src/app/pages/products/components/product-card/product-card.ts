@@ -16,7 +16,7 @@ export class ProductCard {
     @Output() addToCart = new EventEmitter<Product>();
 
     onViewDetails(): void {
-        this.viewDetails.emit(this.product._id);
+        this.viewDetails.emit(this.product.slug || this.product._id);
     }
 
     onAddToCart(): void {

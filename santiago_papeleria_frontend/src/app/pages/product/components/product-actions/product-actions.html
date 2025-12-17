@@ -3,50 +3,31 @@
   <div>
     <label class="block text-sm font-semibold text-gray-800 mb-2">Cantidad:</label>
     <div class="flex items-center gap-3">
-      <button (click)="decrease()"
-        class="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200 active:bg-gray-100"
-        [disabled]="quantity <= 1">
-        <i class="ri-subtract-line text-lg"></i>
-      </button>
-      <input type="number" [value]="quantity" (input)="onQuantityInput(+$any($event.target).value)"
-        class="w-24 px-3 py-3 border border-gray-300 rounded-lg text-center font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#104D73] focus:border-transparent shadow-sm"
-        min="1" [max]="stock" />
-      <button (click)="increase()"
-        class="w-12 h-12 border border-gray-300 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200 active:bg-gray-100"
-        [disabled]="quantity >= stock">
-        <i class="ri-add-line text-lg"></i>
-      </button>
-      <span class="text-sm text-gray-500 font-medium ml-2">
-        ({{ stock }} disponibles)
+      <div class="relative">
+        <!-- ✅ FIXED: Usa el @Input() quantity correctamente -->
+        <input type="number" [value]="quantity" (input)="onQuantityInput($event.target)"
+          (keydown)="preventNonNumeric($event)"
+          class="w-32 px-4 py-3 border border-gray-300 rounded-lg text-center font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#104D73] focus:border-transparent shadow-sm text-lg"
+          min="1" [max]="stock" step="1" [disabled]="!hasStock" />
+      </div>
+      <span class="text-sm font-medium ml-2" [class.text-gray-500]="hasStock" [class.text-red-500]="!hasStock">
+        {{ hasStock ? '(' + stock + ' disponibles)' : '(No disponible)' }}
       </span>
     </div>
   </div>
 
-  <!-- Custom Message -->
-  <!-- Custom Message -->
-  <div *ngIf="product?.allow_custom_message" class="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
-    <label class="block text-sm font-semibold text-gray-800 mb-3 flex items-center justify-between">
-      <span>Mensaje personalizado (opcional):</span>
-      <span class="text-xs text-gray-400 font-normal bg-white px-2 py-1 rounded-md border border-gray-100">{{
-        customMessage.length }}/200</span>
-    </label>
-    <textarea [value]="customMessage" (input)="onMessageChange($any($event.target).value)"
-      placeholder="Ej: Para regalo de graduación, dedicatoria especial..."
-      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#104D73] focus:border-transparent resize-none bg-white text-sm shadow-sm transition-shadow hover:border-gray-400 placeholder-gray-400"
-      rows="3" maxlength="200"></textarea>
-  </div>
-
   <!-- Action Buttons -->
   <div class="space-y-4 pt-2">
-    <button (click)="handleAddToCart()" [disabled]="stock === 0"
-      class="w-full bg-[#F2CB07] text-[#012E40] py-4 rounded-xl font-bold text-lg hover:bg-yellow-400 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none">
+    <button (click)="handleAddToCart()" [disabled]="!hasStock"
+      class="w-full bg-[#F2CB07] text-[#012E40] py-4 rounded-xl font-bold text-lg hover:bg-yellow-400 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none">
       <i class="ri-shopping-cart-line mr-2"></i>
-      {{ stock === 0 ? 'Agotado' : 'Agregar al Carrito' }}
+      {{ !hasStock ? 'Agotado' : 'Agregar al Carrito' }}
     </button>
-    <button (click)="handleBuyNow()" [disabled]="stock === 0"
-      class="w-full bg-[#104D73] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#012E40] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none">
+
+    <button (click)="handleBuyNow()" [disabled]="!hasStock"
+      class="w-full bg-[#104D73] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#012E40] transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:shadow-none disabled:transform-none">
       <i class="ri-flashlight-line mr-2"></i>
-      {{ stock === 0 ? 'Agotado' : 'Comprar Ahora' }}
+      {{ !hasStock ? 'Agotado' : 'Comprar Ahora' }}
     </button>
   </div>
 </div>

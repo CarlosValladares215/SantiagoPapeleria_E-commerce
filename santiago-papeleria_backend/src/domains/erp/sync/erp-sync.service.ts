@@ -1,0 +1,450 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { HttpService } from '@nestjs/axios';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { firstValueFrom } from 'rxjs';
+import { ProductERP } from '../../products/schemas/product-erp.schema';
+import { Producto } from '../../products/schemas/producto.schema';
+import { SyncLog } from './schemas/sync-log.schema';
+import { ErpConfig } from './schemas/erp-config.schema';
+
+@Injectable()
+export class ErpSyncService {
+    private readonly logger = new Logger(ErpSyncService.name);
+    // Default to localhost, will be overridden by env in module or constructor (simplified here)
+    private erpUrl = process.env.ERP_URL || 'http://localhost:4000/matrix/ports/acme/af58yz';
+
+    constructor(
+        @InjectModel(ProductERP.name) private productERPModel: Model<ProductERP>,
+        @InjectModel(Producto.name) private productoModel: Model<Producto>,
+        @InjectModel(SyncLog.name) private syncLogModel: Model<SyncLog>,
+        @InjectModel(ErpConfig.name) private erpConfigModel: Model<ErpConfig>,
+        private readonly httpService: HttpService,
+    ) { }
+
+    /**
+     * Test connection to ERP
+     */
+    async testConnection(): Promise<any> {
+        try {
+            const url = `${this.erpUrl}?CMD=STO_MTX_CAT_PRO&TOP=5`;
+            this.logger.debug(`Testing connection to: ${url}`);
+            const response = await firstValueFrom(
+                this.httpService.get(url)
+            );
+
+            return {
+                status: 'connected',
+                message: 'Conexión exitosa con DobraNet',
+                productos: response.data.length,
+                timestamp: new Date(),
+            };
+        } catch (error) {
+            this.logger.error('Error testing ERP connection:', error.message);
+            return {
+                status: 'disconnected',
+                message: error.message,
+                timestamp: new Date(),
+            };
+        }
+    }
+
+    /**
+     * Main synchronization method
+     */
+    async syncProducts(triggeredBy = 'manual'): Promise<any> {
+        const startTime = new Date();
+        this.logger.log('🔄 Iniciando sincronización con DobraNet...');
+
+        const logEntry = new this.syncLogModel({
+            status: 'partial',
+            startTime,
+            triggeredBy,
+            productsProcessed: 0,
+            productsCreated: 0,
+            productsUpdated: 0,
+            errors: []
+        });
+        await logEntry.save();
+
+        try {
+            // STEP 1: Fetch products from ERP
+            const response = await firstValueFrom(
+                this.httpService.get(`${this.erpUrl}?CMD=STO_MTX_CAT_PRO`)
+            );
+
+            const erpProducts = response.data;
+            this.logger.log(`📥 Recibidos ${erpProducts.length} productos del ERP`);
+
+            logEntry.productsProcessed = erpProducts.length;
+
+            // STEP 2: Sync to productos_erp collection (raw ERP data)
+            await this.syncToERPCollection(erpProducts);
+
+            // STEP 3: Sync to productos collection (enriched data)
+            const enrichedResult = await this.syncToEnrichedCollection();
+
+            const endTime = new Date();
+            const durationMs = endTime.getTime() - startTime.getTime();
+            const durationSec = (durationMs / 1000).toFixed(2);
+
+            // Update success log
+            logEntry.status = 'success';
+            logEntry.endTime = endTime;
+            logEntry.duration = `${durationSec}s`;
+            logEntry.productsCreated = enrichedResult.created;
+            logEntry.productsUpdated = enrichedResult.updated;
+
+            await logEntry.save();
+
+            const result = {
+                status: 'success',
+                ...enrichedResult,
+                duration: `${durationSec}s`,
+                timestamp: endTime,
+            };
+
+            this.logger.log(`✅ Sincronización completada en ${durationSec}s`);
+            return result;
+
+        } catch (error) {
+            this.logger.error('❌ Error en sincronización:', error.message);
+
+            // Update error log
+            logEntry.status = 'error';
+            logEntry.endTime = new Date();
+            logEntry.errors.push(error.message);
+            await logEntry.save();
+
+            throw error;
+        }
+    }
+
+    /**
+     * Sync raw ERP data to productos_erp collection
+     */
+    private async syncToERPCollection(erpProducts: any[]): Promise<void> {
+        if (erpProducts.length === 0) return;
+
+        const bulkOps = erpProducts.map(product => ({
+            updateOne: {
+                filter: { codigo: product.COD },
+                update: {
+                    $set: {
+                        nombre: product.NOM,
+                        marca: product.MRK || '',
+                        categoria_g1: product.G1 || '',
+                        categoria_g2: product.G2 || '',
+                        categoria_g3: product.G3 || '',
+                        precio_pvp: product.PVP || 0,
+                        precio_pvm: product.PVM || 0,
+                        stock: product.STK || 0,
+                        iva: product.IVA === 15 || product.IVA === true,
+                        codigo_barras: product.BAR || '',
+                        ultima_sync: new Date(),
+                        activo: true,
+                    },
+                },
+                upsert: true,
+            },
+        }));
+
+        const result = await this.productERPModel.bulkWrite(bulkOps);
+        this.logger.log(`📦 ERP Collection: ${result.upsertedCount} nuevos, ${result.modifiedCount} actualizados`);
+    }
+
+    /**
+     * Sync from productos_erp to productos (enriched)
+     */
+    private async syncToEnrichedCollection(): Promise<any> {
+        // Only fetch active ERP products
+        const erpProducts = await this.productERPModel.find({ activo: true });
+
+        let created = 0;
+        let updated = 0;
+        let skipped = 0;
+
+        for (const erpProduct of erpProducts) {
+            const existingProduct = await this.productoModel.findOne({
+                codigo_interno: erpProduct.codigo,
+            });
+
+            if (!existingProduct) {
+                // CREATE new enriched product
+                try {
+                    await this.productoModel.create({
+                        codigo_interno: erpProduct.codigo,
+                        sku_barras: erpProduct.codigo_barras || 'S/N',
+                        nombre: erpProduct.nombre,
+                        slug: this.generateSlug(erpProduct.nombre) + '-' + erpProduct.codigo,
+                        activo: true,
+                        palabras_clave: [],
+
+                        clasificacion: {
+                            linea: erpProduct.categoria_g1 || 'SIN_LINEA',
+                            grupo: erpProduct.categoria_g2 || 'SIN_GRUPO',
+                            marca: erpProduct.marca || 'GENERICO',
+                        },
+
+                        precios: {
+                            pvp: erpProduct.precio_pvp,
+                            pvm: erpProduct.precio_pvm,
+                            moneda: 'USD',
+                            incluye_iva: erpProduct.iva,
+                        },
+
+                        stock: {
+                            total_disponible: erpProduct.stock,
+                            controlar_stock: true,
+                            bodegas: [],
+                        },
+
+                        multimedia: {
+                            principal: '',
+                            galeria: [],
+                        },
+
+                        auditoria: {
+                            fecha_creacion: new Date(),
+                            ultima_sincronizacion_dobranet: new Date(),
+                        },
+
+                        priceTiers: [],
+                        peso_kg: this.calculateWeightInKg((erpProduct as any).weight_erp),
+                    });
+                    created++;
+                } catch (err) {
+                    this.logger.error(`Error creating enriched product ${erpProduct.codigo}: ${err.message}`);
+                }
+            } else {
+                // UPDATE only prices, stock, and sync date
+                const updateDoc = {
+                    'precios.pvp': erpProduct.precio_pvp,
+                    'precios.pvm': erpProduct.precio_pvm,
+                    'precios.incluye_iva': erpProduct.iva,
+                    'stock.total_disponible': erpProduct.stock,
+                    // We can update classification if we want, or lets keep it in sync
+                    'clasificacion.marca': erpProduct.marca,
+                    'clasificacion.grupo': erpProduct.categoria_g2,
+                    'clasificacion.linea': erpProduct.categoria_g1,
+                    'auditoria.ultima_sincronizacion_dobranet': new Date(),
+                    // Update weight if needed (careful not to overwrite manual enrichment if we don't want to, 
+                    // but for this task we assume Sync updates base data)
+                    // 'peso_kg': this.calculateWeightInKg((erpProduct as any).weight_erp), // Uncomment if we want strict sync
+                };
+
+                await this.productoModel.updateOne(
+                    { codigo_interno: erpProduct.codigo },
+                    { $set: updateDoc }
+                );
+                updated++;
+            }
+        }
+
+        this.logger.log(`📝 Productos Enriquecidos: ${created} creados, ${updated} actualizados`);
+
+        return { created, updated, total: erpProducts.length };
+    }
+
+    /**
+     * Generate URL-friendly slug from product name
+     */
+    private generateSlug(name: string): string {
+        return name
+            .toLowerCase()
+            .normalize('NFD') // Decompose combined characters
+            .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+            .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphen
+            .replace(/^-+|-+$/g, ''); // Trim hyphens
+    }
+
+    /**
+     * Cron job - daily at 2 AM
+     * Uses CronExpression or string pattern
+     */
+    @Cron('0 2 * * *', {
+        name: 'erp-sync',
+        timeZone: 'America/Guayaquil',
+    })
+    async handleCron() {
+        this.logger.log('⏰ Ejecutando sincronización automática programada...');
+        await this.syncProducts('cron');
+    }
+
+    /**
+     * Get dashboard metrics
+     */
+    async getDashboardMetrics(): Promise<any> {
+        const totalProducts = await this.productoModel.countDocuments();
+        const lastSync = await this.syncLogModel.findOne().sort({ startTime: -1 });
+
+        // Calculate success rate (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const totalLogs = await this.syncLogModel.countDocuments({ startTime: { $gte: thirtyDaysAgo } });
+        const successLogs = await this.syncLogModel.countDocuments({
+            startTime: { $gte: thirtyDaysAgo },
+            status: 'success'
+        });
+
+        const successRate = totalLogs > 0 ? Math.round((successLogs / totalLogs) * 100) : 100;
+
+        return {
+            totalProducts,
+            lastSync: lastSync ? {
+                date: lastSync.startTime,
+                status: lastSync.status,
+                duration: lastSync.duration
+            } : null,
+            successRate: `${successRate}%`,
+            nextSync: this.getNextCronTime()
+        };
+    }
+
+    /**
+     * Get sync logs
+     */
+    async getSyncLogs(limit = 50): Promise<any[]> {
+        return this.syncLogModel.find().sort({ startTime: -1 }).limit(limit).exec();
+    }
+
+    private getNextCronTime(): Date {
+        // Simple calculation for "tomorrow at 2 AM"
+        const now = new Date();
+        const next = new Date();
+        next.setHours(2, 0, 0, 0);
+        if (now > next) {
+            next.setDate(next.getDate() + 1);
+        }
+        return next;
+    }
+
+    /**
+     * Get product from ERP by code
+     */
+    async getProductFromERP(codigo: string): Promise<any> {
+        try {
+            const response = await firstValueFrom(
+                this.httpService.get(`${this.erpUrl}?CMD=STO_MTX_FIC_PRO&COD=${codigo}`)
+            );
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Error fetching product ${codigo}:`, error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Send order to ERP
+     */
+    async sendOrderToERP(orderData: any): Promise<any> {
+        try {
+            const response = await firstValueFrom(
+                this.httpService.post(`${this.erpUrl}?CMD=STO_MTX_ORD_VEN`, orderData)
+            );
+
+            if (response.data.STA === 'OK') {
+                this.logger.log(`✅ Orden enviada: ${response.data['ORDVEN-NUM']}`);
+            }
+
+            return response.data;
+        } catch (error) {
+            this.logger.error('Error sending order:', error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Simulate Admin enrichment
+     */
+    async simulateEnrichment(codigo: string): Promise<any> {
+        const update = {
+            'multimedia.principal': 'https://example.com/demo-image.jpg',
+            'multimedia.galeria': ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
+            'priceTiers': [
+                { min: 10, max: 50, discount: 5, label: 'Mayorista', badge: '5% OFF' }
+            ]
+        };
+
+        const result = await this.productoModel.updateOne(
+            { codigo_interno: codigo },
+            { $set: update }
+        );
+
+        return {
+            status: 'enriched',
+            codigo,
+            modified: result.modifiedCount,
+            data: update
+        };
+    }
+
+    async getEnrichedProduct(codigo: string): Promise<any> {
+        // Use lean() for plain object
+        return this.productoModel.findOne({ codigo_interno: codigo }).lean().exec();
+    }
+
+    /**
+     * Helper: Convert ERP weight (often in grams) to Kg
+     * Rules:
+     * 1. If > 1000, assume grams and divide by 1000.
+     * 2. Round to 2 decimal places.
+     * 3. If < 0.01, return 0 (flag for invalid/missing).
+     */
+    private calculateWeightInKg(rawWeight: any): number {
+        if (rawWeight === null || rawWeight === undefined) return 0;
+
+        let weight = Number(rawWeight);
+        if (isNaN(weight)) return 0;
+
+        // Heuristic: If weight is large (> 1000), assume grams
+        if (weight > 1000) {
+            weight = weight / 1000;
+        }
+
+        // Round to 2 decimals
+        weight = Math.round(weight * 100) / 100;
+
+        // Edge Case: Minimum valid weight
+        if (weight < 0.01) {
+            return 0; // Return 0 to indicate "invalid" or "needs enrichment"
+        }
+
+        return weight;
+    }
+
+    /**
+     * Get raw ERP data for frontend simulation/manual sync
+     */
+    async fetchRawErpData(): Promise<any[]> {
+        const url = `${this.erpUrl}?CMD=STO_MTX_CAT_PRO`;
+        try {
+            const response = await firstValueFrom(this.httpService.get(url));
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Error fetching raw ERP data: ${error.message}`);
+            throw error;
+        }
+    }
+
+    // --- Configuration Methods ---
+
+    async getConfig(): Promise<any> {
+        // Ensure one config doc exists
+        let config = await this.erpConfigModel.findOne().exec();
+        if (!config) {
+            config = await this.erpConfigModel.create({});
+        }
+        return config;
+    }
+
+    async updateConfig(configData: any): Promise<any> {
+        // Update the singleton config
+        // upsert: true ensures it creates if it doesn't exist
+        return this.erpConfigModel.findOneAndUpdate({}, configData, { new: true, upsert: true }).exec();
+    }
+}
+
+

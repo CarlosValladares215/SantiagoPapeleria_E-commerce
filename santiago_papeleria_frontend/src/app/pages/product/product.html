@@ -1,7 +1,7 @@
 <div class="container mx-auto px-8 md:px-16 lg:px-24 py-12 max-w-[1440px]">
 
-  <!-- ✅ GUARD: Solo renderiza si product() existe -->
-  <ng-container *ngIf="product() as p">
+  <!-- ✅ GUARD: Solo renderiza si productData() existe (Computed con datos enriquecidos) -->
+  <ng-container *ngIf="productData() as p">
 
     <!-- BREADCRUMB -->
     <app-product-breadcrumb [category]="p.category" [categoryPath]="categoryPath(p.category)" [productName]="p.name">
@@ -18,8 +18,29 @@
           (imageSelect)="onImageSelect($event)">
         </app-product-image-gallery>
 
+        <!-- WRAPPER for Custom Message (Moved below images) -->
+        <div *ngIf="p.allows_custom_message" class="mt-8 animate-fade-in-up">
+          <div class="bg-blue-50 border border-[#104D73] border-opacity-30 rounded-xl p-6 shadow-sm">
+            <label for="customMessage" class="block text-lg font-bold text-[#012E40] mb-3 flex items-center gap-2">
+              <i class="ri-edit-2-fill text-[#104D73] text-xl"></i> Personaliza tu producto
+            </label>
+            <p class="text-sm text-gray-600 mb-4">
+              Agrega un nombre, frase o dedicatoria especial. Este mensaje se enviará junto con tu pedido.
+            </p>
+            <textarea id="customMessage" rows="3"
+              class="w-full rounded-lg border-gray-300 focus:border-[#104D73] focus:ring-[#104D73] text-base bg-white p-4 transition-colors shadow-inner"
+              placeholder="Escribe aquí tu mensaje (ej. ¡Feliz Cumpleaños María!)..." [value]="customMessage()"
+              (input)="onCustomMessageChange($any($event.target).value)" maxlength="150"></textarea>
+            <div class="flex justify-end mt-2">
+              <span class="text-xs font-medium text-gray-500 bg-white px-2 py-1 rounded-md border border-gray-200">
+                {{ customMessage().length }}/150 caracteres
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- Badges (Overlay on Image) -->
-        <div class="absolute top-4 left-4 flex flex-col gap-2 z-10">
+        <div class="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
           <span *ngIf="p.isNew"
             class="bg-green-600 text-white px-3 py-1 rounded-md text-xs font-bold shadow-md uppercase tracking-wider">Nuevo</span>
           <span *ngIf="p.isOffer"
@@ -27,8 +48,6 @@
           <span *ngIf="p.discount" class="bg-yellow-400 text-black px-3 py-1 rounded-md text-xs font-bold shadow-md">-{{
             p.discount }}%</span>
         </div>
-
-        <!-- Badges (Overlay on Image) -->
 
       </div>
 
@@ -63,81 +82,137 @@
           <!-- Rating -->
           <div class="flex items-center gap-3 mb-6" *ngIf="p.rating">
             <div class="flex items-center">
-              <ng-container *ngFor="let star of [1,2,3,4,5]; let i = index">
-                <i
-                  [class]="'ri-star-' + (i < Math.floor(p.rating!) ? 'fill' : 'line') + ' text-yellow-400 text-lg'"></i>
-              </ng-container>
+              @for (star of [1,2,3,4,5]; track $index) {
+              <i
+                [class]="'ri-star-' + ($index < Math.floor(p.rating!) ? 'fill' : 'line') + ' text-yellow-400 text-lg'"></i>
+              }
             </div>
             <span class="text-gray-600">{{ p.rating }} ({{ p.reviews.length }} reseñas)</span>
           </div>
 
-          <!-- VARIANTS SELECTION -->
           <div *ngIf="p.has_variants && p.variant_groups" class="mb-8 space-y-6">
-            <div *ngFor="let group of p.variant_groups">
+            @for (group of p.variant_groups; track group.nombre) {
+            <div>
               <h3 class="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">{{ group.nombre }}</h3>
               <div class="flex flex-wrap gap-3">
-                <button *ngFor="let opt of group.opciones" (click)="onOptionSelect(group.nombre, opt)"
-                  [class.ring-2]="selections()[group.nombre] === opt"
+                @for (opt of group.opciones; track opt) {
+                <button (click)="onOptionSelect(group.nombre, opt)" [class.ring-2]="selections()[group.nombre] === opt"
                   [class.ring-[#104D73]]="selections()[group.nombre] === opt"
                   [class.bg-white]="selections()[group.nombre] !== opt" [class.text-gray-900]="true"
                   [class.shadow-md]="selections()[group.nombre] === opt"
                   class="px-5 py-2.5 rounded-lg text-sm font-medium border border-gray-200 hover:border-gray-400 transition-all min-w-[3rem]">
                   {{ opt }}
                 </button>
+                }
               </div>
             </div>
+            }
           </div>
 
-          <!-- PRICING TIERS -->
-          <app-pricing-tiers [basePrice]="basePrice()" [tiers]="p.priceTiers || []" [quantity]="quantity()"
-            [stock]="currentStock()" (selectTier)="onTierSelect($event)">
-          </app-pricing-tiers>
+          <!-- DUAL PRICING STRATEGY -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <!-- 1. Unit Price Card -->
+            <div class="border rounded-xl p-4 text-center transition-all duration-300 relative overflow-hidden"
+              [ngClass]="{'border-gray-200 bg-white': quantity() >= (p.priceTiers![0]?.min || 6), 'border-[#104D73] bg-blue-50 ring-2 ring-[#104D73] ring-opacity-20': quantity() < (p.priceTiers![0]?.min || 6)}"
+              (click)="onQuantityChange(1)">
+              <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">PVP (Público):</div>
+              <div class="text-2xl font-extrabold text-gray-900">${{ basePrice() | number:'1.2-2' }}</div>
+              <div class="text-xs text-gray-400 mt-1">1 - {{ (p.priceTiers![0]?.min || 6) - 1 }} unidades</div>
+              <!-- Checkmark if active -->
+              <div *ngIf="quantity() < (p.priceTiers![0]?.min || 6)" class="absolute top-2 right-2 text-[#104D73]">
+                <i class="ri-checkbox-circle-fill text-lg"></i>
+              </div>
+            </div>
 
-          <!-- PRICE SUMMARY -->
-          <app-price-summary [currentPrice]="currentPrice()" [quantity]="quantity()" [totalPrice]="totalPrice()"
-            [savings]="savings()">
-          </app-price-summary>
+            <!-- 2. Wholesale Price Card -->
+            <div class="border rounded-xl p-4 text-center transition-all duration-300 relative overflow-hidden group"
+              [ngClass]="{
+                'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200': currentStock() < (p.priceTiers![0]?.min || 6),
+                'border-[#F2CB07] bg-yellow-50 ring-2 ring-[#F2CB07] cursor-pointer': currentStock() >= (p.priceTiers![0]?.min || 6) && quantity() >= (p.priceTiers![0]?.min || 6),
+                'border-gray-200 bg-white hover:border-yellow-300 cursor-pointer': currentStock() >= (p.priceTiers![0]?.min || 6) && quantity() < (p.priceTiers![0]?.min || 6)
+              }"
+              (click)="currentStock() >= (p.priceTiers![0]?.min || 6) && onQuantityChange(p.priceTiers![0]?.min || 6)">
 
-          <!-- BRANCH AVAILABILITY -->
-          <div *ngIf="p.branches && p.branches.length > 0"
-            class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <h3 class="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <i class="ri-store-2-line"></i> Disponibilidad en Sucursales
-            </h3>
-            <ul class="space-y-2 text-sm">
-              <li *ngFor="let b of p.branches"
-                class="flex justify-between items-center pb-2 border-b border-gray-100 last:border-0 last:pb-0">
-                <span class="text-gray-700">{{ b.nombre }}</span>
-                <span class="font-medium" [class.text-green-600]="b.cantidad > 0"
-                  [class.text-red-500]="b.cantidad <= 0">
-                  {{ b.cantidad > 0 ? b.cantidad + ' un.' : 'Agotado' }}
-                </span>
-              </li>
-            </ul>
-          </div>
+              <!-- Savings Badge -->
+              <div
+                class="absolute top-0 right-0 bg-[#F2CB07] text-[#012E40] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg z-10">
+                AHORRA
+              </div>
 
-          <!-- PRODUCT ATTRIBUTES / TAGS -->
-          <div *ngIf="p.attributes && p.attributes.length > 0" class="mb-6">
-            <h3 class="text-sm font-semibold text-gray-900 mb-2">Detalles:</h3>
-            <div class="flex flex-wrap gap-2">
-              <span *ngFor="let attr of p.attributes"
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                <span class="text-gray-500 mr-1">{{attr.key}}:</span> {{attr.value}}
-              </span>
+              <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">PVM (Mayorista):</div>
+              <div class="text-2xl font-extrabold text-[#012E40]">${{ (p.wholesalePrice || (p.priceTiers![0]?.discount ?
+                basePrice() * (1 -
+                p.priceTiers![0].discount) : basePrice())) | number:'1.2-2' }}</div>
+
+              <!-- Conditional Subtext -->
+              @if (currentStock() < (p.priceTiers![0]?.min || 6)) { <div class="text-xs text-red-500 font-bold mt-1">
+                Insuficiente (Stock: {{ currentStock() }})
+            </div>
+            } @else {
+            <div class="text-xs text-gray-400 mt-1">{{ p.priceTiers![0]?.min || 6 }}+ unidades</div>
+            }
+
+            <!-- Checkmark if active -->
+            <div *ngIf="quantity() >= (p.priceTiers![0]?.min || 6) && currentStock() >= (p.priceTiers![0]?.min || 6)"
+              class="absolute top-2 left-2 text-[#012E40]">
+              <i class="ri-checkbox-circle-fill text-lg"></i>
             </div>
           </div>
+        </div>
 
-          <!-- TAGS (Moved here) -->
-          <div *ngIf="p.tags && p.tags.length > 0" class="mb-6">
-            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-2">
-              <i class="ri-price-tag-3-line"></i> Etiquetas:
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              <span *ngFor="let tag of p.tags"
-                class="px-3 py-1 bg-white border border-gray-200 text-gray-600 rounded-full text-xs font-medium shadow-sm hover:border-[#104D73] hover:text-[#104D73] transition-colors cursor-pointer">
-                #{{ tag }}
-              </span>
+        <!-- DYNAMIC PRICE SUMMARY -->
+        <div class="bg-gray-50 rounded-xl p-4 mb-6 flex justify-between items-center border border-gray-100">
+          <div>
+            <span class="block text-xs text-gray-500 font-bold uppercase">Total a Pagar</span>
+            <span class="text-sm text-gray-400">{{ quantity() }} x ${{ currentPrice() | number:'1.2-2' }}</span>
+          </div>
+          <div class="text-right">
+            <span class="block text-3xl font-black text-gray-900 tracking-tight">${{ totalPrice() | number:'1.2-2'
+              }}</span>
+            <span *ngIf="savings() > 0" class="text-xs text-green-600 font-bold bg-green-100 px-2 py-0.5 rounded-full">
+              Estás ahorrando ${{ savings() | number:'1.2-2' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- METADATA GRID (Weight, Dims, SKU) -->
+        <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+          <div *ngIf="productData()?.weight_kg"
+            class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
+            <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+              <i class="ri-weight-line"></i>
             </div>
+            <div>
+              <div class="text-[10px] uppercase text-gray-400 font-bold">Peso</div>
+              <div class="font-semibold text-gray-900">
+                {{ productData()?.weight_kg! < 1 ? (productData()?.weight_kg! * 1000 | number:'1.0-0') + ' g' :
+                  (productData()?.weight_kg! | number:'1.1-2') + ' kg' }} </div>
+              </div>
+            </div>
+            <div *ngIf="p.dimensions?.largo"
+              class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
+              <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                <i class="ri-ruler-line"></i>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase text-gray-400 font-bold">Medidas</div>
+                <div class="font-semibold text-gray-900">
+                  {{ p.dimensions!.largo }}x{{ p.dimensions!.ancho }}x{{ p.dimensions!.alto }} cm
+                </div>
+              </div>
+            </div>
+            <!-- Attributes Loop -->
+            @for (attr of p.attributes; track attr.key) {
+            <div class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
+              <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                <i class="ri-price-tag-3-line"></i>
+              </div>
+              <div>
+                <div class="text-[10px] uppercase text-gray-400 font-bold">{{ attr.key }}</div>
+                <div class="font-semibold text-gray-900 line-clamp-1" [title]="attr.value">{{ attr.value }}</div>
+              </div>
+            </div>
+            }
           </div>
 
           <!-- PRODUCT ACTIONS -->
@@ -168,10 +243,12 @@
         <div *ngIf="p.features && p.features.length > 0">
           <h3 class="text-lg font-semibold text-gray-900 mb-3">Características:</h3>
           <ul class="space-y-2">
-            <li *ngFor="let feature of p.features" class="flex items-start gap-2">
+            @for (feature of p.features; track $index) {
+            <li class="flex items-start gap-2">
               <i class="ri-check-line text-green-500 mt-1"></i>
               <span class="text-gray-700">{{ feature }}</span>
             </li>
+            }
           </ul>
         </div>
       </div>
