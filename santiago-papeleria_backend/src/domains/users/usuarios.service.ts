@@ -28,6 +28,21 @@ export class UsuariosService {
     return createdUsuario.save();
   }
 
+  // Método interno para registro con verificación (usado por el Controller)
+  async registerInternal(data: any): Promise<UsuarioDocument> {
+    const createdUsuario = new this.usuarioModel({
+      ...data,
+      estado: 'ACTIVO',
+      fecha_creacion: new Date(),
+    });
+    return createdUsuario.save();
+  }
+
+  // Buscar por token de verificación
+  async findByToken(token: string): Promise<UsuarioDocument | null> {
+    return this.usuarioModel.findOne({ verification_token: token }).exec();
+  }
+
   // Validar credenciales (Login)
   async validateUser(email: string, password: string): Promise<UsuarioDocument | null> {
     const user = await this.usuarioModel.findOne({ email }).exec();

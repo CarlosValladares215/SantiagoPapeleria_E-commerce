@@ -90,6 +90,15 @@ export class Usuario {
 
   @Prop({ default: Date.now })
   fecha_creacion: Date;
+
+  @Prop({ default: false })
+  email_verified: boolean;
+
+  @Prop()
+  verification_token: string;
+
+  @Prop()
+  verification_token_expiration: Date;
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario);

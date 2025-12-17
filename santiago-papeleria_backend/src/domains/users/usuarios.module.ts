@@ -5,14 +5,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UsuariosService } from './usuarios.service';
 import { UsuariosController } from './usuarios.controller';
 import { Usuario, UsuarioSchema } from './schemas/usuario.schema';
+import { EmailService } from './services/email.service';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Usuario.name, schema: UsuarioSchema }]),
   ],
   controllers: [UsuariosController],
-  providers: [UsuariosService],
+  providers: [UsuariosService, EmailService],
   // Exportamos el servicio o el módulo si otras entidades (como Pedidos) lo necesitan.
-  exports: [UsuariosService, MongooseModule],
+  exports: [UsuariosService, MongooseModule, EmailService],
 })
-export class UsuariosModule {}
+export class UsuariosModule { }
