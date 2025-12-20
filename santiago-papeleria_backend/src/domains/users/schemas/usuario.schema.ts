@@ -99,6 +99,18 @@ export class Usuario {
 
   @Prop()
   verification_token_expiration: Date;
+
+  @Prop({ default: null })
+  reset_password_token: string;
+
+  @Prop({ default: null })
+  reset_password_expires: Date;
+
+  @Prop({ default: 0 })
+  failed_attempts: number;
+
+  @Prop({ default: null })
+  blocked_until: Date;
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario);

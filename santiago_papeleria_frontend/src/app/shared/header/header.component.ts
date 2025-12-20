@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
+import { UiService } from '../../services/ui/ui.service';
+
+
 
 
 @Component({
@@ -65,8 +68,13 @@ export class Header {
   constructor(
     public auth: AuthService,
     private router: Router,
-
+    public uiService: UiService
   ) { }
+
+  toggleCart() {
+    this.uiService.toggleCart();
+  }
+
 
   toggleMobileMenu() {
     this.isMobileMenuOpen.update(v => !v);

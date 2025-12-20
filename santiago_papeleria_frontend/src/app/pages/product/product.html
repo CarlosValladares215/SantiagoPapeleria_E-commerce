@@ -109,174 +109,155 @@
             }
           </div>
 
-          <!-- DUAL PRICING STRATEGY -->
-          <div class="grid grid-cols-2 gap-4 mb-6">
-            <!-- 1. Unit Price Card -->
-            <div class="border rounded-xl p-4 text-center transition-all duration-300 relative overflow-hidden"
-              [ngClass]="{'border-gray-200 bg-white': quantity() >= (p.priceTiers![0]?.min || 6), 'border-[#104D73] bg-blue-50 ring-2 ring-[#104D73] ring-opacity-20': quantity() < (p.priceTiers![0]?.min || 6)}"
-              (click)="onQuantityChange(1)">
-              <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">PVP (Público):</div>
-              <div class="text-2xl font-extrabold text-gray-900">${{ basePrice() | number:'1.2-2' }}</div>
-              <div class="text-xs text-gray-400 mt-1">1 - {{ (p.priceTiers![0]?.min || 6) - 1 }} unidades</div>
-              <!-- Checkmark if active -->
-              <div *ngIf="quantity() < (p.priceTiers![0]?.min || 6)" class="absolute top-2 right-2 text-[#104D73]">
-                <i class="ri-checkbox-circle-fill text-lg"></i>
+          <!-- DYNAMIC PRICING DISPLAY -->
+          <div class="mb-8">
+            <!-- 1. MINORISTA VIEW: Simple Unit Price -->
+            <div *ngIf="!shouldShowPricingTiers()"
+              class="border rounded-xl p-6 bg-white shadow-sm border-gray-100 flex items-center justify-between">
+              <div>
+                <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Precio Unitario</div>
+                <div class="text-4xl font-extrabold text-[#104D73]">${{ basePrice() | number:'1.2-2' }}</div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block bg-blue-50 text-[#104D73] text-xs font-bold px-3 py-1 rounded-full">
+                  PVP
+                </span>
               </div>
             </div>
 
-            <!-- 2. Wholesale Price Card -->
-            <div class="border rounded-xl p-4 text-center transition-all duration-300 relative overflow-hidden group"
-              [ngClass]="{
-                'opacity-50 cursor-not-allowed bg-gray-50 border-gray-200': currentStock() < (p.priceTiers![0]?.min || 6),
-                'border-[#F2CB07] bg-yellow-50 ring-2 ring-[#F2CB07] cursor-pointer': currentStock() >= (p.priceTiers![0]?.min || 6) && quantity() >= (p.priceTiers![0]?.min || 6),
-                'border-gray-200 bg-white hover:border-yellow-300 cursor-pointer': currentStock() >= (p.priceTiers![0]?.min || 6) && quantity() < (p.priceTiers![0]?.min || 6)
-              }"
-              (click)="currentStock() >= (p.priceTiers![0]?.min || 6) && onQuantityChange(p.priceTiers![0]?.min || 6)">
-
-              <!-- Savings Badge -->
-              <div
-                class="absolute top-0 right-0 bg-[#F2CB07] text-[#012E40] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg z-10">
-                AHORRA
+            <!-- 2. MAYORISTA VIEW: Pricing Tiers Block -->
+            <div *ngIf="shouldShowPricingTiers()">
+              <div class="mb-4 flex items-center gap-2">
+                <span
+                  class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-md border border-yellow-200">MAYORISTA</span>
+                <span class="text-sm text-gray-600">Tu precio base: <strong>${{ basePrice() | number:'1.2-2'
+                    }}</strong></span>
               </div>
 
-              <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">PVM (Mayorista):</div>
-              <div class="text-2xl font-extrabold text-[#012E40]">${{ (p.wholesalePrice || (p.priceTiers![0]?.discount ?
-                basePrice() * (1 -
-                p.priceTiers![0].discount) : basePrice())) | number:'1.2-2' }}</div>
-
-              <!-- Conditional Subtext -->
-              @if (currentStock() < (p.priceTiers![0]?.min || 6)) { <div class="text-xs text-red-500 font-bold mt-1">
-                Insuficiente (Stock: {{ currentStock() }})
-            </div>
-            } @else {
-            <div class="text-xs text-gray-400 mt-1">{{ p.priceTiers![0]?.min || 6 }}+ unidades</div>
-            }
-
-            <!-- Checkmark if active -->
-            <div *ngIf="quantity() >= (p.priceTiers![0]?.min || 6) && currentStock() >= (p.priceTiers![0]?.min || 6)"
-              class="absolute top-2 left-2 text-[#012E40]">
-              <i class="ri-checkbox-circle-fill text-lg"></i>
+              <app-pricing-tiers [basePrice]="basePrice()" [tiers]="p.priceTiers || []" [quantity]="quantity()"
+                [stock]="currentStock()" (selectTier)="onTierSelect($event)">
+              </app-pricing-tiers>
             </div>
           </div>
-        </div>
 
-        <!-- DYNAMIC PRICE SUMMARY -->
-        <div class="bg-gray-50 rounded-xl p-4 mb-6 flex justify-between items-center border border-gray-100">
-          <div>
-            <span class="block text-xs text-gray-500 font-bold uppercase">Total a Pagar</span>
-            <span class="text-sm text-gray-400">{{ quantity() }} x ${{ currentPrice() | number:'1.2-2' }}</span>
-          </div>
-          <div class="text-right">
-            <span class="block text-3xl font-black text-gray-900 tracking-tight">${{ totalPrice() | number:'1.2-2'
-              }}</span>
-            <span *ngIf="savings() > 0" class="text-xs text-green-600 font-bold bg-green-100 px-2 py-0.5 rounded-full">
-              Estás ahorrando ${{ savings() | number:'1.2-2' }}
-            </span>
-          </div>
-        </div>
-
-        <!-- METADATA GRID (Weight, Dims, SKU) -->
-        <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
-          <div *ngIf="productData()?.weight_kg"
-            class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
-            <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
-              <i class="ri-weight-line"></i>
-            </div>
+          <!-- DYNAMIC PRICE SUMMARY -->
+          <div class="bg-gray-50 rounded-xl p-4 mb-6 flex justify-between items-center border border-gray-100">
             <div>
-              <div class="text-[10px] uppercase text-gray-400 font-bold">Peso</div>
-              <div class="font-semibold text-gray-900">
-                {{ productData()?.weight_kg! < 1 ? (productData()?.weight_kg! * 1000 | number:'1.0-0') + ' g' :
-                  (productData()?.weight_kg! | number:'1.1-2') + ' kg' }} </div>
-              </div>
+              <span class="block text-xs text-gray-500 font-bold uppercase">Total a Pagar</span>
+              <span class="text-sm text-gray-400">{{ quantity() }} x ${{ currentPrice() | number:'1.2-2' }}</span>
             </div>
-            <div *ngIf="p.dimensions?.largo"
+            <div class="text-right">
+              <span class="block text-3xl font-black text-gray-900 tracking-tight">${{ totalPrice() | number:'1.2-2'
+                }}</span>
+              <span *ngIf="savings() > 0"
+                class="text-xs text-green-600 font-bold bg-green-100 px-2 py-0.5 rounded-full">
+                Estás ahorrando ${{ savings() | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- METADATA GRID (Weight, Dims, SKU) -->
+          <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+            <div *ngIf="productData()?.weight_kg"
               class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
               <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
-                <i class="ri-ruler-line"></i>
+                <i class="ri-weight-line"></i>
               </div>
               <div>
-                <div class="text-[10px] uppercase text-gray-400 font-bold">Medidas</div>
+                <div class="text-[10px] uppercase text-gray-400 font-bold">Peso</div>
                 <div class="font-semibold text-gray-900">
-                  {{ p.dimensions!.largo }}x{{ p.dimensions!.ancho }}x{{ p.dimensions!.alto }} cm
+                  {{ productData()?.weight_kg! < 1 ? (productData()?.weight_kg! * 1000 | number:'1.0-0') + ' g' :
+                    (productData()?.weight_kg! | number:'1.1-2') + ' kg' }} </div>
                 </div>
               </div>
-            </div>
-            <!-- Attributes Loop -->
-            @for (attr of p.attributes; track attr.key) {
-            <div class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
-              <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
-                <i class="ri-price-tag-3-line"></i>
+              <div *ngIf="p.dimensions?.largo"
+                class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
+                <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                  <i class="ri-ruler-line"></i>
+                </div>
+                <div>
+                  <div class="text-[10px] uppercase text-gray-400 font-bold">Medidas</div>
+                  <div class="font-semibold text-gray-900">
+                    {{ p.dimensions!.largo }}x{{ p.dimensions!.ancho }}x{{ p.dimensions!.alto }} cm
+                  </div>
+                </div>
               </div>
-              <div>
-                <div class="text-[10px] uppercase text-gray-400 font-bold">{{ attr.key }}</div>
-                <div class="font-semibold text-gray-900 line-clamp-1" [title]="attr.value">{{ attr.value }}</div>
+              <!-- Attributes Loop -->
+              @for (attr of p.attributes; track attr.key) {
+              <div class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
+                <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
+                  <i class="ri-price-tag-3-line"></i>
+                </div>
+                <div>
+                  <div class="text-[10px] uppercase text-gray-400 font-bold">{{ attr.key }}</div>
+                  <div class="font-semibold text-gray-900 line-clamp-1" [title]="attr.value">{{ attr.value }}</div>
+                </div>
               </div>
+              }
             </div>
-            }
+
+            <!-- PRODUCT ACTIONS -->
+            <app-product-actions [product]="p" [quantity]="quantity()" [customMessage]="customMessage()"
+              [stock]="currentStock()" (quantityChange)="onQuantityChange($event)"
+              (customMessageChange)="onCustomMessageChange($event)" (addToCart)="onAddToCart($event)"
+              (buyNow)="onBuyNow($event)" (notify)="onNotify($event)">
+            </app-product-actions>
+
+            <!-- TRUST BADGES -->
+            <app-trust-badges></app-trust-badges>
+
           </div>
-
-          <!-- PRODUCT ACTIONS -->
-          <app-product-actions [product]="p" [quantity]="quantity()" [customMessage]="customMessage()"
-            [stock]="currentStock()" (quantityChange)="onQuantityChange($event)"
-            (customMessageChange)="onCustomMessageChange($event)" (addToCart)="onAddToCart($event)"
-            (buyNow)="onBuyNow($event)" (notify)="onNotify($event)">
-          </app-product-actions>
-
-          <!-- TRUST BADGES -->
-          <app-trust-badges></app-trust-badges>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- PRODUCT DESCRIPTION & FEATURES -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-
-      <!-- Description -->
-      <div class="bg-white rounded-xl p-6 shadow-lg">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción del Producto</h2>
-        <p class="text-gray-700 leading-relaxed mb-6">
-          {{ p.description || 'Este producto es parte de nuestro catálogo oficial. Detalles adicionales próximamente.'
-          }}
-        </p>
-
-        <div *ngIf="p.features && p.features.length > 0">
-          <h3 class="text-lg font-semibold text-gray-900 mb-3">Características:</h3>
-          <ul class="space-y-2">
-            @for (feature of p.features; track $index) {
-            <li class="flex items-start gap-2">
-              <i class="ri-check-line text-green-500 mt-1"></i>
-              <span class="text-gray-700">{{ feature }}</span>
-            </li>
-            }
-          </ul>
         </div>
       </div>
 
-      <!-- SHIPPING & PAYMENT INFO -->
-      <app-shipping-info></app-shipping-info>
+      <!-- PRODUCT DESCRIPTION & FEATURES -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
 
-    </div>
+        <!-- Description -->
+        <div class="bg-white rounded-xl p-6 shadow-lg">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción del Producto</h2>
+          <p class="text-gray-700 leading-relaxed mb-6">
+            {{ p.description || 'Este producto es parte de nuestro catálogo oficial. Detalles adicionales próximamente.'
+            }}
+          </p>
+
+          <div *ngIf="p.features && p.features.length > 0">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Características:</h3>
+            <ul class="space-y-2">
+              @for (feature of p.features; track $index) {
+              <li class="flex items-start gap-2">
+                <i class="ri-check-line text-green-500 mt-1"></i>
+                <span class="text-gray-700">{{ feature }}</span>
+              </li>
+              }
+            </ul>
+          </div>
+        </div>
+
+        <!-- SHIPPING & PAYMENT INFO -->
+        <app-shipping-info></app-shipping-info>
+
+      </div>
 
 
 
-    <!-- ESPECIFICACIONES -->
-    <div class="mt-12">
-      <app-product-specs [specs]="p.specs">
-      </app-product-specs>
-    </div>
+      <!-- ESPECIFICACIONES -->
+      <div class="mt-12">
+        <app-product-specs [specs]="p.specs">
+        </app-product-specs>
+      </div>
 
-    <!-- RESEÑAS -->
-    <div class="mt-12">
-      <app-product-reviews [reviews]="p.reviews">
-      </app-product-reviews>
-    </div>
+      <!-- RESEÑAS -->
+      <div class="mt-12">
+        <app-product-reviews [reviews]="p.reviews">
+        </app-product-reviews>
+      </div>
 
-    <!-- RELACIONADOS -->
-    <div class="mt-12">
-      <app-product-related [products]="relatedProducts()">
-      </app-product-related>
-    </div>
+      <!-- RELACIONADOS -->
+      <div class="mt-12">
+        <app-product-related [products]="relatedProducts()">
+        </app-product-related>
+      </div>
 
   </ng-container>
 

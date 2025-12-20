@@ -21,6 +21,9 @@ import { ErpSyncModule } from './domains/erp/sync/erp-sync.module';
     ContadoresModule,
     PromocionesModule,
     ErpSyncModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    })
   ],
   controllers: [AppController],
   providers: [AppService],

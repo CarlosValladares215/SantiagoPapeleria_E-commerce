@@ -1,5 +1,5 @@
 
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsString, MinLength, IsOptional, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class RegisterDto {
@@ -17,4 +17,13 @@ export class RegisterDto {
 
     @IsEnum(['MINORISTA', 'MAYORISTA'])
     client_type: string;
+
+    @IsOptional()
+    @IsString()
+    @Matches(/^\d{10}$/, { message: 'Cédula must be 10 digits' })
+    cedula?: string;
+
+    @IsOptional()
+    @IsString()
+    telefono?: string;
 }

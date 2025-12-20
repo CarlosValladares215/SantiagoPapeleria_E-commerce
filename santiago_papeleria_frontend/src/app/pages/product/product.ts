@@ -6,6 +6,7 @@ import { Subscription, interval } from 'rxjs';
 
 import { ProductService } from '../../services/product/product.service';
 import { CartService } from '../../services/cart/cart.service';
+import { AuthService } from '../../services/auth/auth.service';
 import { Product as ProductModel, PriceTier, Variant } from '../../models/product.model';
 
 // SHARED
@@ -21,6 +22,7 @@ import { ProductImageGallery } from './components/product-image-gallery/product-
 
 import { TrustBadges } from './components/trust-badges/trust-badges';
 import { ShippingInfo } from './components/shipping-info/shipping-info';
+import { PricingTiers } from './components/pricing-tiers/pricing-tiers';
 
 @Component({
   selector: 'app-product',
@@ -35,7 +37,10 @@ import { ShippingInfo } from './components/shipping-info/shipping-info';
     ProductRelated,
     ProductImageGallery,
     TrustBadges,
-    ShippingInfo
+    ProductImageGallery,
+    TrustBadges,
+    ShippingInfo,
+    PricingTiers
   ],
   templateUrl: './product.html',
   styleUrls: ['./product.scss'],
@@ -63,9 +68,10 @@ export class Product implements OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router, // Injected Router
+    private router: Router,
     private productService: ProductService,
-    private cartService: CartService
+    private cartService: CartService,
+    private authService: AuthService
   ) {
     // 1. Init Base Signals
     this.product = this.productService.selectedProduct;
@@ -93,7 +99,7 @@ export class Product implements OnDestroy {
       if (p) {
         // Fetch Related
         untracked(() => {
-          this.productService.fetchRelatedProducts(p.category, p._id).subscribe(related => {
+          this.productService.fetchRelatedProducts(p.category, p._id).subscribe((related: ProductModel[]) => {
             this.relatedProducts.set(related);
           });
         });
@@ -205,22 +211,38 @@ export class Product implements OnDestroy {
     return p.stock;
   });
 
-  // Effective Base Price
+  // Effective Base Price based on Variant and User Type
   basePrice = computed(() => {
     const p = this.productData();
     if (!p) return 0;
 
     const v = this.selectedVariant();
-    // If variant has specific price, use it. Otherwise use product price.
-    if (v && v.precio_especifico) return v.precio_especifico;
+    // 1. Variant specific price? matches selection
+    let price = v && v.precio_especifico ? v.precio_especifico : (p.basePrice || p.price);
 
-    return p.basePrice || p.price;
+    // 2. Override with Wholesale Price if applicable and no specific variant price override?
+    // Actually, usually Variants also have wholesale prices. But assuming simple product level wholesale for now or if p.wholesalePrice exists.
+    // If user is Mayorista, check if there is a wholesale price
+    if (this.authService.isMayorista()) {
+      // If variant has specific price, we might need a specific wholesale price too. 
+      // For now assuming wholesalePrice is on main product.
+      // If p.wholesalePrice exists, use it.
+      if (p.wholesalePrice) {
+        price = p.wholesalePrice;
+      }
+    }
+
+    return price;
   });
+
+  // Helper to determine if we should show tiers
+  shouldShowPricingTiers = computed(() => this.authService.isMayorista());
 
   // Current Wholesale Tier
   currentTier = computed(() => {
     const p = this.productData();
-    if (!p || !p.priceTiers || p.priceTiers.length === 0) {
+    // Only apply tiers if Mayorista
+    if (!this.authService.isMayorista() || !p || !p.priceTiers || p.priceTiers.length === 0) {
       return { min: 1, max: Infinity, discount: 0, label: '1+' };
     }
 

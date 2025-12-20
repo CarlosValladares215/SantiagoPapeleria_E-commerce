@@ -66,8 +66,8 @@ export class Register {
     const telefonoControl = this.registerForm.get('telefono');
 
     if (this.isWholesaler) {
-      // MAYORISTA: Requiere Teléfono y Datos Fiscales. Cédula opcional/oculta.
-      cedulaControl?.clearValidators();
+      // MAYORISTA: Requiere Cédula, Teléfono y Datos Fiscales.
+      cedulaControl?.setValidators([Validators.required]); // Ahora requerido también
       telefonoControl?.setValidators([Validators.required]);
 
       fiscalGroup.get('identificacion')?.setValidators([Validators.required]);
@@ -75,7 +75,7 @@ export class Register {
       addressGroup.get('calle_principal')?.setValidators([Validators.required]);
       addressGroup.get('ciudad')?.setValidators([Validators.required]);
     } else {
-      // MINORISTA: Requiere Cédula. Teléfono opcional/oculto.
+      // MINORISTA: Requiere Cédula. Teléfono opcional.
       cedulaControl?.setValidators([Validators.required]);
       telefonoControl?.clearValidators();
 
@@ -109,19 +109,37 @@ export class Register {
       }
       console.log('Enviando registro:', formValue);
 
-      this.authService.register(formValue).subscribe({
+      // Helper to cleanup empty strings to undefined
+      const clean = (val: string) => val === '' ? undefined : val;
+
+      const payload = {
+        name: formValue.nombres,
+        email: formValue.email,
+        password: formValue.password,
+        client_type: formValue.tipo_cliente,
+        cedula: clean(formValue.cedula),
+        telefono: clean(formValue.telefono)
+      };
+
+      this.authService.registerNew(payload).subscribe({
         next: (res) => {
           console.log('Registro exitoso', res);
-          // La respuesta ya debe venir con el formato correcto, agregamos token si falta
-          const newUser = { ...res, token: 'mock-jwt-token-registered' };
+          // Save for verify-email page
+          localStorage.setItem('pendingVerificationEmail', formValue.email);
+          localStorage.setItem('pendingVerificationName', formValue.nombres);
 
-          this.authService.setSession(newUser);
-          alert('¡Cuenta creada exitosamente! Bienvenido ' + newUser.nombres);
-          this.router.navigate(['/']);
+          // Redirect to verification page
+          this.router.navigate(['/verify-email'], {
+            queryParams: { email: formValue.email }
+          });
         },
         error: (err) => {
           console.error('Error en registro', err);
-          alert('Error al registrar usuario: ' + (err.error?.message || 'Error desconocido'));
+          if (err.status === 409) {
+            alert(err.error?.message || 'Email o Cédula ya registrados');
+          } else {
+            alert('Error al registrar usuario: ' + (err.error?.message || 'Error desconocido'));
+          }
         }
       });
     } else {

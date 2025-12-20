@@ -83,7 +83,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
             if (this.map) {
                 this.marker = L.marker([lat, lng], { draggable: true }).addTo(this.map);
 
-                this.marker.on('dragend', (event) => {
+                this.marker.on('dragend', (event: L.LeafletEvent) => {
                     const position = event.target.getLatLng();
                     this.locationChange.emit({ lat: position.lat, lng: position.lng });
                 });

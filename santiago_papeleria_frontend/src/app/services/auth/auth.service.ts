@@ -9,12 +9,18 @@ import { Usuario } from '../../models/usuario.model';
 })
 export class AuthService {
   private apiUrl = 'http://localhost:3000/api/usuarios';
+  private verifyApiUrl = 'http://localhost:3000/api/usuarios';
 
   user = signal<Usuario | null>(null);
 
   isAuthenticated = computed(() => this.user() !== null);
   isAdmin = computed(() => this.user()?.role === 'admin');
   isWarehouse = computed(() => this.user()?.role === 'warehouse');
+
+  // Customer Types
+  isMinorista = computed(() => this.user()?.tipo_cliente === 'MINORISTA');
+  isMayorista = computed(() => this.user()?.tipo_cliente === 'MAYORISTA');
+  customerType = computed(() => this.user()?.tipo_cliente || 'MINORISTA');
 
 
   constructor(private router: Router, private http: HttpClient) {
@@ -28,6 +34,41 @@ export class AuthService {
 
   register(userData: Usuario): Observable<Usuario> {
     return this.http.post<Usuario>(this.apiUrl, userData);
+  }
+
+  registerNew(userData: {
+    name: string;
+    email: string;
+    password: string;
+    client_type: 'MINORISTA' | 'MAYORISTA';
+    cedula?: string;
+    telefono?: string;
+  }): Observable<{ message: string; userId: string }> {
+    return this.http.post<{ message: string; userId: string }>(
+      `${this.verifyApiUrl}/register`,
+      userData
+    );
+  }
+
+  verifyEmail(token: string): Observable<{ verified: boolean; message: string; access_token?: string; user?: any }> {
+    return this.http.get<{ verified: boolean; message: string; access_token?: string; user?: any }>(
+      `${this.verifyApiUrl}/verify-email?token=${token}`
+    );
+  }
+
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, { token, newPassword });
+  }
+
+  resendVerificationEmail(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.verifyApiUrl}/resend-verification`,
+      { email }
+    );
   }
 
   // Login contra el backend
