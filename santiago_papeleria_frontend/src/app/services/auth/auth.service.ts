@@ -2,6 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
 import { Usuario } from '../../models/usuario.model';
 
 @Injectable({
@@ -24,12 +25,7 @@ export class AuthService {
 
 
   constructor(private router: Router, private http: HttpClient) {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      const saved = localStorage.getItem('user');
-      if (saved) {
-        this.user.set(JSON.parse(saved));
-      }
-    }
+    this.hydrateUser();
   }
 
   register(userData: Usuario): Observable<Usuario> {
@@ -71,26 +67,55 @@ export class AuthService {
     );
   }
 
-  // Login contra el backend
-  loginApi(credentials: { email: string, password: string }): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}/login`, credentials);
+  // Login contra el backend calling /login then /me
+  login(credentials: { email: string, password: string }): Observable<Usuario> {
+    return this.http.post<{ access_token: string }>(`${this.apiUrl}/login`, credentials).pipe(
+      switchMap(response => {
+        // Save Token
+        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+          localStorage.setItem('token', response.access_token);
+        }
+        // Fetch Profile
+        return this.getProfile();
+      }),
+      tap(user => {
+        this.setUserState(user);
+      })
+    );
   }
 
-  // Guardar sesión en el estado (Signal + LocalStorage)
-  setSession(userData: Usuario) {
-    // Asegurar que el token exista (aunque sea mock) para validaciones isAuth
-    if (!userData.token) userData.token = 'mock-jwt-token-login';
+  // Fetch full profile from /me using token
+  getProfile(): Observable<Usuario> {
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : '';
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.get<Usuario>(`${this.apiUrl}/me`, { headers });
+  }
 
-    this.user.set(userData);
+  // Helper to update state
+  private setUserState(user: Usuario) {
+    this.user.set(user);
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      localStorage.setItem('user', JSON.stringify(userData));
+      // We might not need to store full user in localstorage anymore if we hydrate on load
+      // But for offline/performance it's okay to keep it, but source of truth is /me
+      localStorage.setItem('user', JSON.stringify(user));
     }
+  }
+
+  // Deprecated/Low-level API call if needed directly (returns only token)
+  loginApi(credentials: { email: string, password: string }): Observable<{ access_token: string }> {
+    return this.http.post<{ access_token: string }>(`${this.apiUrl}/login`, credentials);
+  }
+
+  // Guardar sesión en el estado (Signal + LocalStorage) -> Deprecated, use setUserState
+  setSession(userData: Usuario) {
+    this.setUserState(userData);
   }
 
   logout() {
     this.user.set(null);
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
     }
     this.router.navigate(['/']);
   }
@@ -99,20 +124,28 @@ export class AuthService {
     return new Observable(observer => {
       this.http.put<Usuario>(`${this.apiUrl}/${userId}`, data).subscribe({
         next: (updatedUser) => {
-          // Update local state and storage
-          // Merge with existing session data to keep tokens etc if backend doesn't return them
           const currentUser = this.user();
           const newUserData = { ...currentUser, ...updatedUser };
+          this.setUserState(newUserData);
 
-          this.user.set(newUserData);
-          if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(newUserData));
-          }
           observer.next(newUserData);
           observer.complete();
         },
         error: (err) => observer.error(err)
       });
     });
+  }
+
+  // Helper to hydrate state on app load
+  hydrateUser() {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        this.getProfile().subscribe({
+          next: (user) => this.user.set(user),
+          error: () => this.logout() // Token expired/invalid
+        });
+      }
+    }
   }
 }

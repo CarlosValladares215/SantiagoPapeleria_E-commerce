@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, NotFoundException, Query, UnauthorizedException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, NotFoundException, Query, UnauthorizedException, BadRequestException, ForbiddenException, ConflictException, Headers } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsuariosService } from './usuarios.service';
 import { UsuarioDocument } from './schemas/usuario.schema';
@@ -61,8 +61,28 @@ export class UsuariosController {
       roles: [user.tipo_cliente], // can be MINORISTA or MAYORISTA
     }, this.jwtSecret, { expiresIn: '7d' });
 
-    return { access_token: token, user: { id: user._id, email: user.email, roles: [user.tipo_cliente] } };
+    // ONLY return access_token as per new requirements
+    return { access_token: token };
   }
+
+  // GET /usuarios/me (Get current user profile)
+  @Get('me')
+  async getMe(@Headers('authorization') authHeader: string) {
+    if (!authHeader) throw new UnauthorizedException('No token provided');
+
+    const token = authHeader.replace('Bearer ', '');
+    try {
+      const decoded = jwt.verify(token, this.jwtSecret) as any;
+      const user = await this.usuariosService.findById(decoded.sub);
+      if (!user) throw new NotFoundException('User not found');
+
+      return user;
+    } catch (e) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+  }
+
+
 
   // POST /usuarios (Ruta de Registro legacy)
   @Post()

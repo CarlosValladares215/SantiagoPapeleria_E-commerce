@@ -88,4 +88,9 @@ export class UsuariosService {
   async update(id: string, updateData: any): Promise<UsuarioDocument | null> {
     return this.usuarioModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
   }
+
+  // Buscar por ID
+  async findById(id: string): Promise<UsuarioDocument | null> {
+    return this.usuarioModel.findById(id).exec();
+  }
 }

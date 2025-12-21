@@ -29,11 +29,11 @@ export class Login {
   handleSubmit() {
     this.isLoading = true;
 
-    this.authService.loginApi(this.formData).subscribe({
+    this.authService.login(this.formData).subscribe({
       next: (user) => {
         this.isLoading = false;
         console.log('Login exitoso:', user);
-        this.authService.setSession(user);
+        // Session set automatically by service
 
         if (this.authService.isAdmin()) {
           this.router.navigate(['/admin/dashboard']);
