@@ -2,12 +2,14 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
+import { DisplayPricePipe } from '../../pipes/display-price.pipe';
 
 interface FavoriteProduct {
     id: string;
     name: string;
     category: string;
     price: number;
+    wholesalePrice?: number;
     image: string;
     inStock: boolean;
     filterCategory: string; // To match the tabs
@@ -16,7 +18,7 @@ interface FavoriteProduct {
 @Component({
     selector: 'app-favorites',
     standalone: true,
-    imports: [CommonModule, RouterLink, RouterLinkActive],
+    imports: [CommonModule, RouterLink, RouterLinkActive, DisplayPricePipe],
     templateUrl: './favorites.html',
     styleUrl: './favorites.scss'
 })
@@ -40,6 +42,7 @@ export class Favorites {
             name: 'JUEGO DE GEOMETRÍA 5 PIEZAS',
             category: 'GEOMETRÍA Y DIBUJO',
             price: 3.99,
+            wholesalePrice: 2.99,
             image: 'assets/products/geometry.png', // Placeholder
             inStock: true,
             filterCategory: 'Útiles Escolares'
@@ -49,6 +52,7 @@ export class Favorites {
             name: 'CUADERNO UNIVERSITARIO',
             category: 'GEOMETRÍA Y DIBUJO',
             price: 2.50,
+            wholesalePrice: 1.80,
             image: 'assets/products/notebook.png',
             inStock: true,
             filterCategory: 'Útiles Escolares'
@@ -58,6 +62,7 @@ export class Favorites {
             name: 'SET DE PINCELES PROFESIONALES',
             category: 'ARTE Y PINTURA',
             price: 12.99,
+            wholesalePrice: 10.00,
             image: 'assets/products/brushes.png',
             inStock: true,
             filterCategory: 'Arte y Manualidades'
@@ -67,6 +72,7 @@ export class Favorites {
             name: 'ACUARELAS 12 COLORES',
             category: 'ARTE Y PINTURA',
             price: 8.50,
+            wholesalePrice: 6.50,
             image: 'assets/products/watercolors.png',
             inStock: true,
             filterCategory: 'Arte y Manualidades'
@@ -76,6 +82,7 @@ export class Favorites {
             name: 'LIENZO 30x40cm',
             category: 'ARTE Y PINTURA',
             price: 5.75,
+            wholesalePrice: 4.25,
             image: 'assets/products/canvas.png',
             inStock: false, // Testing out of stock?
             filterCategory: 'Arte y Manualidades'
@@ -85,6 +92,7 @@ export class Favorites {
             name: 'CALCULADORA CIENTÍFICA',
             category: 'TECNOLOGÍA',
             price: 25.00,
+            wholesalePrice: 21.50,
             image: 'assets/products/calculator.png',
             inStock: true,
             filterCategory: 'Tecnología'
@@ -94,6 +102,7 @@ export class Favorites {
             name: 'RESMA PAPEL BOND A4',
             category: 'OFICINA',
             price: 4.50,
+            wholesalePrice: 3.75,
             image: 'assets/products/paper.png',
             inStock: true,
             filterCategory: 'Suministros de Oficina'
@@ -103,6 +112,7 @@ export class Favorites {
             name: 'ARCHIVADOR PALANCA',
             category: 'OFICINA',
             price: 3.25,
+            wholesalePrice: 2.50,
             image: 'assets/products/folder.png',
             inStock: true,
             filterCategory: 'Suministros de Oficina'

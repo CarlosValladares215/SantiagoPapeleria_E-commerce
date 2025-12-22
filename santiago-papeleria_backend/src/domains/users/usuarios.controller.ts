@@ -36,9 +36,9 @@ export class UsuariosController {
       throw new ForbiddenException('Account temporarily blocked. Try again later.');
     }
 
-    if (!user.email_verified) {
-      throw new ForbiddenException('Please verify your email first');
-    }
+    // if (!user.email_verified) {
+    //   throw new ForbiddenException('Please verify your email first');
+    // }
 
     const isMatch = await bcrypt.compare(dto.password, user.password_hash);
     if (!isMatch) {
@@ -120,17 +120,50 @@ export class UsuariosController {
       tipo_cliente: dto.client_type,
       cedula: dto.cedula,
       telefono: dto.telefono,
-      email_verified: false,
+      email_verified: true, // Bypass verification for now due to SMTP issues
       verification_token: token,
       verification_token_expiration: expiration,
-      role: 'customer' // Default
+      role: 'customer', // Default
+      datos_negocio: dto.datos_negocio // Include business data
     };
 
     const user = await this.usuariosService.registerInternal(userData);
 
-    // 4. Enviar email
-    await this.emailService.sendVerificationEmail(dto.email, token, dto.name);
-    return { message: 'User registered. Check your email.', userId: user._id };
+    // 4. Enviar email (Try-Catch para evitar 500 si falla SMTP)
+    try {
+      // DEBUG: Log token to console in case email fails
+      console.log('==========================================');
+      console.log('🛠️ DEBUG TOKEN DE VERIFICACIÓN:', token);
+      console.log('==========================================');
+
+      await this.emailService.sendVerificationEmail(dto.email, token, dto.name);
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      // We continue to allow login even if email fails
+    }
+
+    // 5. AUTO-LOGIN: Generate JWT
+    const jwtToken = jwt.sign({
+      sub: user._id,
+      email: user.email,
+      roles: [user.tipo_cliente],
+    }, this.jwtSecret, { expiresIn: '7d' });
+
+    return {
+      message: 'User registered successfully.',
+      userId: user._id,
+      access_token: jwtToken,
+      user: {
+        _id: user._id,
+        nombres: user.nombres,
+        email: user.email,
+        cedula: user.cedula,
+        telefono: user.telefono,
+        tipo_cliente: user.tipo_cliente,
+        role: user.role,
+        datos_negocio: user.datos_negocio
+      }
+    };
   }
 
   // POST /usuarios/resend-verification
@@ -199,7 +232,11 @@ export class UsuariosController {
         id: user._id,
         email: user.email,
         nombres: user.nombres,
-        roles: [user.tipo_cliente]
+        cedula: user.cedula,
+        telefono: user.telefono,
+        roles: [user.tipo_cliente], // keeping 'roles' array for compatibility if used elsewhere, although register uses 'role' string and 'tipo_cliente'
+        tipo_cliente: user.tipo_cliente,
+        datos_negocio: user.datos_negocio
       }
     };
   }
@@ -297,6 +334,19 @@ export class UsuariosController {
       throw new NotFoundException('Usuario no encontrado');
     }
     return updatedUser;
+  }
+
+  // PUT /usuarios/:id/cart
+  @Put(':id/cart')
+  async updateCart(
+    @Param('id') id: string,
+    @Body() cartItems: any[],
+  ) {
+    const updatedUser = await this.usuariosService.update(id, { carrito: cartItems });
+    if (!updatedUser) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return updatedUser.carrito;
   }
 
 

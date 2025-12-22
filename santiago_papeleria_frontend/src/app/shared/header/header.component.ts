@@ -4,9 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
 import { UiService } from '../../services/ui/ui.service';
-
-
-
+import { CartService } from '../../services/cart/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -68,7 +66,8 @@ export class Header {
   constructor(
     public auth: AuthService,
     private router: Router,
-    public uiService: UiService
+    public uiService: UiService,
+    public cartService: CartService
   ) { }
 
   toggleCart() {
@@ -155,5 +154,12 @@ export class Header {
     this.closeMobileMenu();
   }
 
+
+  getInitials(name: string): string {
+    if (!name) return '';
+    const names = name.split(' ');
+    if (names.length === 0) return '';
+    return names[0].charAt(0).toUpperCase();
+  }
 
 }

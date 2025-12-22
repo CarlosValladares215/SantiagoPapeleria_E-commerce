@@ -54,36 +54,89 @@
         </div>
 
         <!-- Acciones de Usuario -->
-        <div class="header-right">
-          <!-- Wishlist -->
-          <button class="header-action-btn" aria-label="Lista de deseos" data-badge="3">
-            <i class="far fa-heart"></i>
-          </button>
+        <ng-container *ngIf="auth.user(); else guestActions">
 
-          <!-- Carrito -->
-          <button class="header-action-btn cart-btn" aria-label="Carrito de compras" (click)="toggleCart()">
-            <i class="fas fa-shopping-bag"></i>
-          </button>
-
-          <!-- Usuario -->
-          <div class="user-dropdown">
-            <button class="header-action-btn user-btn" aria-label="Mi cuenta" (click)="toggleProfileMenu()">
-              <i class="far fa-user"></i>
+          <!-- Usuario Dropdown Trigger (Avatar + Info) -->
+          <div class="user-dropdown" (mouseleave)="closeProfileMenu()">
+            <button class="user-info-trigger" aria-label="Menú de usuario" (click)="toggleProfileMenu()">
+              <div class="avatar-circle">
+                {{ getInitials(auth.user()?.nombres || '') }}
+              </div>
+              <div class="user-text-info">
+                <span class="u-name">
+                  {{ auth.user()?.nombres?.split(' ')?.[0] }} {{ auth.user()?.nombres?.split(' ')?.[1] || '' }}
+                  <i class="fas fa-chevron-down"></i>
+                </span>
+                <span class="u-role">{{ auth.user()?.tipo_cliente || 'Minorista' | titlecase }}</span>
+              </div>
             </button>
-            <div class="dropdown-content" [class.show]="isProfileMenuOpen()">
-              <ng-container *ngIf="auth.user(); else guestMenu">
-                <a (click)="goToProfile()"><i class="fas fa-user-circle"></i> Mi Perfil</a>
-                <a routerLink="/pedidos"><i class="fas fa-box"></i> Mis Pedidos</a>
-                <div class="dropdown-divider"></div>
-                <a (click)="logout()" class="login-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
-              </ng-container>
-              <ng-template #guestMenu>
-                <a routerLink="/login" class="login-btn"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
-                <a routerLink="/register" class="register-btn"><i class="fas fa-user-plus"></i> Registrarse</a>
-              </ng-template>
+
+            <!-- Card Menu (Misma estructura interna) -->
+            <div class="user-card-dropdown" [class.show]="isProfileMenuOpen()">
+              <div class="card-header">
+                <div class="card-avatar">
+                  {{ getInitials(auth.user()?.nombres || '') }}
+                </div>
+                <div class="card-info">
+                  <span class="user-name">{{ auth.user()?.nombres }}</span>
+                  <span class="user-email">{{ auth.user()?.email }}</span>
+                  <span class="user-role-badge">
+                    {{ auth.user()?.tipo_cliente || 'Cliente' }}
+                  </span>
+                </div>
+              </div>
+              <ul class="card-menu">
+                <li><a (click)="goToProfile()"><i class="far fa-user"></i> Mi Perfil</a></li>
+                <li><a routerLink="/orders"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a></li>
+                <li><a routerLink="/favorites"><i class="far fa-heart"></i> Favoritos</a></li>
+              </ul>
+              <div class="card-footer">
+                <a (click)="logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+              </div>
             </div>
           </div>
-        </div>
+
+
+          <!-- Carrito (Texto + Icono) -->
+          <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
+            (click)="toggleCart()">
+            <div class="relative inline-block">
+              <i class="fas fa-shopping-cart text-lg"></i>
+              <span *ngIf="cartService.cartCount() > 0"
+                class="absolute -top-2 -right-2 bg-[#ff0000] text-white text-[11px] font-bold h-[20px] min-w-[20px] flex items-center justify-center rounded-full border-[2px] border-white shadow-sm transform scale-100 transition-transform duration-200"
+                style="color: #ffffff !important; background-color: #ff0000 !important;">
+                {{ cartService.cartCount() }}
+              </span>
+            </div>
+            <span class="ml-1 font-medium text-sm">Carrito</span>
+          </button>
+
+        </ng-container>
+
+        <ng-template #guestActions>
+          <div class="guest-actions">
+            <!-- Botones de Sesión -->
+            <div class="session-buttons">
+              <a routerLink="/login" class="btn-login-header">Iniciar Sesión</a>
+              <a routerLink="/register" class="btn-register-header">Registrarse</a>
+            </div>
+
+            <!-- Carrito Estilo Guest -->
+            <!-- Carrito Estilo Guest (Identico a Logueado) -->
+            <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
+              (click)="toggleCart()">
+              <div class="relative inline-block">
+                <i class="fas fa-shopping-cart text-lg"></i>
+                <span *ngIf="cartService.cartCount() > 0"
+                  class="absolute -top-2 -right-2 bg-[#ff0000] text-white text-[11px] font-bold h-[20px] min-w-[20px] flex items-center justify-center rounded-full border-[2px] border-white shadow-sm transform scale-100 transition-transform duration-200"
+                  style="color: #ffffff !important; background-color: #ff0000 !important;">
+                  {{ cartService.cartCount() }}
+                </span>
+              </div>
+              <span class="ml-1 font-medium text-sm">Carrito</span>
+            </button>
+          </div>
+        </ng-template>
       </div>
     </div>
   </div>

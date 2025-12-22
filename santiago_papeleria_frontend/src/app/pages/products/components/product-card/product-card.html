@@ -39,7 +39,7 @@
                     ${{ product.originalPrice.toFixed(2) }}
                 </span>
                 <span class="text-3xl font-bold text-[#104D73]">
-                    ${{ product.price.toFixed(2) }}
+                    ${{ product | displayPrice | number:'1.2-2' }}
                 </span>
             </div>
         </div>

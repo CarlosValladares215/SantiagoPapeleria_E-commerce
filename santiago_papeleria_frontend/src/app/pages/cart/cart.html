@@ -65,6 +65,14 @@
                     }
                 </div>
 
+                <!-- Empty Cart Action -->
+                <div class="flex justify-end pt-2">
+                    <button (click)="clearCart()"
+                        class="text-red-500 hover:text-red-700 font-semibold text-sm flex items-center gap-2 px-3 py-1.5 rounded hover:bg-red-50 transition-colors">
+                        <i class="ri-delete-bin-line"></i> Vaciar todo el carrito
+                    </button>
+                </div>
+
                 <!-- Delivery Options -->
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                     <h3 class="font-bold text-[#012e40] mb-4 flex items-center gap-2">

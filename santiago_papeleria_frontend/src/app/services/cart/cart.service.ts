@@ -1,7 +1,9 @@
-import { Injectable, signal, computed, inject, effect } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, Injector } from '@angular/core';
 import { UiService } from '../ui/ui.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DireccionEntrega } from '../../models/usuario.model';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../auth/auth.service';
 
 export interface CartItem {
     id: string;
@@ -25,6 +27,9 @@ export interface CartItem {
 })
 export class CartService {
     private uiService = inject(UiService);
+    private http = inject(HttpClient);
+    private authService = inject(AuthService); // Inject AuthService
+    private apiUrl = 'http://localhost:3000/api/usuarios';
 
     // Sync with UiService observables
     private _isOpen = toSignal(this.uiService.isCartOpen$, { initialValue: false });
@@ -32,48 +37,99 @@ export class CartService {
     // Internal state signal
     private cartItemsSignal = signal<CartItem[]>(this.loadFromStorage());
 
-    // Shipping State
+    // ... (Shipping State remains same)
     selectedAddress = signal<DireccionEntrega | null>(null);
     shippingCost = signal<number>(0);
     deliveryMethod = signal<'shipping' | 'pickup'>('shipping');
     paymentMethod = signal<'transfer' | 'cash' | null>(null);
 
-    // Constants
-    private readonly STORE_LOCATION = { lat: -3.99313, lng: -79.20422 }; // Loja, Ecuador (Example)
+    // ... (Constants remain same)
+    private readonly STORE_LOCATION = { lat: -3.99313, lng: -79.20422 };
     private readonly RATE_BASE = 2.50;
     private readonly RATE_PER_KM = 0.35;
     private readonly RATE_PER_KG = 0.25;
 
-    // Public signals
+    // ... (Public signals remain same)
     isOpen = computed(() => this._isOpen());
     cartItems = computed(() => this.cartItemsSignal());
 
     // Computed totals
     totalItems = computed(() => this.cartItemsSignal().reduce((acc, item) => acc + item.quantity, 0));
-
-    // Subtotal
     totalValue = computed(() => this.cartItemsSignal().reduce((acc, item) => acc + (item.price * item.quantity), 0));
-
-    // Final Total (Subtotal + Shipping)
     finalTotal = computed(() => this.totalValue() + this.shippingCost());
-
-    // Expose cart count for header badges
     cartCount = this.totalItems;
 
     constructor() {
-        // Effect to sync changes to localStorage
+        // 1. Effect: Sync changes TO LocalStorage & Backend
         effect(() => {
             const items = this.cartItemsSignal();
             this.saveToStorage(items);
-            // Recalculate shipping if items change
             this.calculateShipping();
+
+            // Sync to Backend if User is Logged In
+            const user = this.authService.user();
+            if (user && user._id) {
+                this.saveCartToBackend(user._id, items);
+            }
         });
 
-        // Effect to recalculate if address changes
+        // 2. Effect: Recalculate if address changes
         effect(() => {
-            const addr = this.selectedAddress(); // Dependency
+            const addr = this.selectedAddress();
             this.calculateShipping();
         }, { allowSignalWrites: true });
+
+        // 3. Effect: React to User Login/Logout (Sync FROM Backend)
+        effect(() => {
+            const user = this.authService.user();
+            if (user) {
+                // User Logged In: Load their cart (overwrite local)
+                // Note: We might want to merge, but user asked for "appear their data", implying server state wins.
+                // However, user.carrito might be null/undefined initially or empty.
+                if (user.carrito && Array.isArray(user.carrito)) {
+                    // Map backend schema to CartItem if needed, or assume match
+                    // Mongoose might return _id, frontend uses id. existingItemIndex check uses .id
+                    // Let's ensure compatibility.
+                    const mappedCart = user.carrito.map((c: any) => ({
+                        ...c,
+                        id: c.id || c._id // Ensure ID exists
+                    }));
+                    // Allow writes to update signal from within effect
+                    // We use untracked to avoid loop?? No, we want this to run only when USER changes.
+                    // But setting cartItemsSignal triggers Effect #1 which saves back to backend.
+                    // This loop (Load -> Set -> Save) is slight redundancy but harmless usually.
+                    // To avoid infinite loop (Save -> User Update -> Load...), we need to be careful.
+                    // Ideally, updateCart endpoint shouldn't trigger a full user reload that changes the object reference heavily.
+                    // Or we can check deep equality.
+                    // For now, let's just set it.
+                    // We need allowSignalWrites because we are writing to cartItemsSignal inside an effect.
+
+                    // CRITICAL: Only set if different to avoid cycle/flicker?
+                    // Just setting it.
+
+                    // To avoid the cycle of "Set Signal -> Save to Backend -> Update User -> Set Signal",
+                    // The "Save to Backend" doesn't necessarily update the local `authService.user` signal unless we explicity do so.
+                    // `saveCartToBackend` just sends PUT. It returns the new cart. We usually ignore it or update local state?
+                    // If we don't update `authService.user` with the response, the effect watching `authService.user` won't re-fire.
+                    // So it stops the loop.
+
+                    this.cartItemsSignal.set(mappedCart);
+                }
+            } else {
+                // User Logged Out: Clear Cart
+                this.cartItemsSignal.set([]); // Clear local cart
+            }
+        }, { allowSignalWrites: true });
+    }
+
+    private saveCartToBackend(userId: string, items: CartItem[]) {
+        // Debounce logic could be good here, but for now direct call
+        // We use subscribe but don't strictly wait.
+        // Also: items might have Circular structures if not careful? No, they are POJOs.
+        this.http.put(`${this.apiUrl}/${userId}/cart`, items).subscribe({
+            next: (res) => console.log('Cart synced to backend'),
+            error: (err) => console.error('Failed to sync cart', err)
+        });
     }
 
     addToCart(product: any, quantity: number = 1, options: any = {}) {

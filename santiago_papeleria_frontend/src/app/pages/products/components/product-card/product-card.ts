@@ -1,11 +1,13 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Product } from '../../../../models/product.model';
+import { DisplayPricePipe } from '../../../../pipes/display-price.pipe';
+import { AuthService } from '../../../../services/auth/auth.service';
 
 @Component({
     selector: 'app-product-card',
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule, DisplayPricePipe],
     templateUrl: './product-card.html',
     styleUrls: ['./product-card.scss']
 })
@@ -15,13 +17,26 @@ export class ProductCard {
     @Output() viewDetails = new EventEmitter<string>();
     @Output() addToCart = new EventEmitter<Product>();
 
+    private authService = inject(AuthService);
+
     onViewDetails(): void {
         this.viewDetails.emit(this.product.slug || this.product._id);
     }
 
     onAddToCart(): void {
         if (this.product.stock > 0) {
-            this.addToCart.emit(this.product);
+            // Create a copy with the correct price based on role
+            const isMayorista = this.authService.isMayorista();
+            const effectivePrice = (isMayorista && this.product.wholesalePrice)
+                ? this.product.wholesalePrice
+                : this.product.price;
+
+            const productToAdd = {
+                ...this.product,
+                price: effectivePrice
+            };
+
+            this.addToCart.emit(productToAdd);
         }
     }
 

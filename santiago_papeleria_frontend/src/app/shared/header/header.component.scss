@@ -1664,3 +1664,427 @@
         max-width: none;
     }
 }
+
+/* 9. GUEST HEADER ACTIONS (New Requirement) */
+.guest-actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.session-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Button Reset/Base */
+.btn-login-header,
+.btn-register-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    font-size: 0.9375rem;
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--border-radius-md);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+/* Login Button - Outlined */
+.btn-login-header {
+    background: transparent;
+    border: 1px solid var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.btn-login-header:hover {
+    background: var(--gray-50);
+}
+
+/* Register Button - Solid Yellow */
+.btn-register-header {
+    background: var(--accent-yellow);
+    border: 1px solid var(--accent-yellow);
+    color: var(--primary-dark);
+}
+
+.btn-register-header:hover {
+    background: var(--accent-yellow-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Guest Cart Button */
+.cart-btn-guest {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-primary);
+    position: relative;
+    padding: 8px;
+    border-radius: var(--border-radius-md);
+    transition: background var(--transition-fast);
+}
+
+.cart-btn-guest:hover {
+    background: var(--gray-50);
+}
+
+.cart-btn-guest i {
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+}
+
+.cart-text {
+    font-size: 1rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--primary-blue);
+}
+
+.cart-badge {
+    position: absolute;
+    top: 0;
+    right: -5px;
+    background: var(--error);
+    color: var(--white);
+    font-size: 0.75rem;
+    font-weight: bold;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+    box-shadow: var(--shadow-xs);
+}
+
+/* 10. USER CARD DROPDOWN (Logged-in) */
+
+/* Avatar Trigger in Navbar */
+.avatar-trigger {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--primary-dark);
+    color: var(--white);
+    font-weight: bold;
+    font-size: 1rem;
+    border: 2px solid var(--white);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition-fast);
+}
+
+.avatar-trigger:hover {
+    transform: scale(1.05);
+}
+
+/* Dropdown Card Container */
+.user-card-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 280px;
+    background: var(--white);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--gray-200);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-fast);
+    z-index: 1001;
+    overflow: visible;
+    /* Changed from hidden to allow ::before to stick out */
+}
+
+/* Invisible bridge to prevent closing when moving from button to dropdown */
+.user-card-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 0;
+    width: 100%;
+    height: 15px;
+    background: transparent;
+}
+
+.user-card-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Card Header */
+.card-header {
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    /* Align top for multi-line info */
+    gap: 16px;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.card-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary-dark);
+    color: var(--white);
+    font-size: 1.25rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name {
+    font-weight: var(--font-weight-bold);
+    color: var(--primary-dark);
+    font-size: 0.9375rem;
+    line-height: 1.2;
+}
+
+.user-email {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    word-break: break-word;
+}
+
+.user-role-badge {
+    display: inline-block;
+    background: var(--accent-yellow);
+    color: var(--primary-dark);
+    font-size: 0.6875rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: var(--border-radius-full);
+    margin-top: 4px;
+    align-self: flex-start;
+    text-transform: capitalize;
+}
+
+/* Card Menu */
+.card-menu {
+    list-style: none;
+    padding: 8px 0;
+}
+
+.card-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    color: var(--gray-700);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    font-size: 0.875rem;
+    transition: background var(--transition-fast);
+    cursor: pointer;
+}
+
+.card-menu li a:hover {
+    background: var(--gray-50);
+    color: var(--primary-blue);
+}
+
+.card-menu li a i {
+    width: 16px;
+    text-align: center;
+    color: var(--primary-blue);
+}
+
+/* Card Footer */
+.card-footer {
+    padding: 8px 0;
+    border-top: 1px solid var(--gray-200);
+}
+
+.logout-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    color: var(--error);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.logout-link:hover {
+    background: #ffeeee;
+}
+
+.logout-link i {
+    width: 16px;
+    text-align: center;
+}
+
+/* 11. NEW LOGGED-IN HEADER DESIGN (Refactored) */
+
+.user-info-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    padding: 4px 8px;
+    border-radius: var(--border-radius-md);
+    transition: background var(--transition-fast);
+}
+
+.user-info-trigger:hover {
+    background: var(--gray-50);
+}
+
+.avatar-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #012E40;
+    /* Dark Blue from Image */
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.125rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-text-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+.u-name {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.u-name i {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
+.u-role {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    font-weight: 400;
+}
+
+/* Track Order Button */
+.track-order-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray-600);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-fast);
+    margin-left: 16px;
+    background: transparent;
+    border: none;
+}
+
+.track-order-btn:hover {
+    color: var(--primary-blue);
+    background: var(--gray-50);
+}
+
+.track-order-btn i {
+    font-size: 1.125rem;
+    color: #012E40;
+}
+
+/* Logged-in Cart Button */
+.cart-btn-logged {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin-left: 0;
+    position: relative;
+    padding: 8px 12px;
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-fast);
+}
+
+.cart-btn-logged:hover {
+    background: var(--gray-50);
+}
+
+.cart-btn-logged i {
+    font-size: 1.25rem;
+    color: var(--text-dark);
+}
+
+.cart-btn-logged span {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.cart-btn-logged .badge-count {
+    background: var(--error);
+    /* Red Badge */
+    color: var(--white);
+    font-size: 0.75rem;
+    font-weight: bold;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(25%, -25%);
+    border: 2px solid var(--white);
+}
+
+/* Adjust Dropdown Position */
+.user-dropdown {
+    position: relative;
+}
+
+.user-card-dropdown {
+    /* Existing styles are fine, just ensuring it aligns right */
+    right: 0;
+    width: 300px;
+    /* Slightly wider for better card feel */
+}

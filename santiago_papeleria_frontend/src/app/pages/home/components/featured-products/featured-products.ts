@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../../../services/auth/auth.service';
+import { DisplayPricePipe } from '../../../../pipes/display-price.pipe';
 
 interface Product {
   id: number;
@@ -17,11 +19,13 @@ interface Product {
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [RouterModule, CommonModule],   // ← NECESARIO PARA ngClass
+  imports: [RouterModule, CommonModule, DisplayPricePipe],   // ← NECESARIO PARA ngClass
   templateUrl: './featured-products.html',
   styleUrl: './featured-products.scss',
 })
 export class FeaturedProducts {
+  authService = inject(AuthService);
+
 
   products = [
     {

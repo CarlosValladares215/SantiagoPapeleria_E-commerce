@@ -27,6 +27,12 @@ export const routes: Routes = [
     children: ADMIN_ROUTES
   },
 
+  // Warehouse Routes
+  {
+    path: 'warehouse',
+    loadChildren: () => import('./pages/warehouse/warehouse.routes').then(m => m.WAREHOUSE_ROUTES)
+  },
+
   // Public Routes (Wrapped in MainLayout)
   {
     path: '',

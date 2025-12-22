@@ -49,11 +49,18 @@ export class Profile implements OnInit {
 
     constructor() {
         this.profileForm = this.fb.group({
+            // Personal Data
             nombres: [{ value: '', disabled: true }, [Validators.required]],
             email: [{ value: '', disabled: true }, [Validators.required, Validators.email]],
             telefono: [{ value: '', disabled: true }],
-            empresa: [{ value: '', disabled: true }],
             identificacion: [{ value: '', disabled: true }],
+
+            // Business Data (Mayorista Only - Read Only)
+            nombre_negocio: [{ value: '', disabled: true }],
+            ruc: [{ value: '', disabled: true }],
+            direccion_negocio: [{ value: '', disabled: true }],
+            ciudad_negocio: [{ value: '', disabled: true }],
+            telefono_negocio: [{ value: '', disabled: true }],
         });
 
         this.addressForm = this.fb.group({
@@ -82,8 +89,14 @@ export class Profile implements OnInit {
                 nombres: user.nombres,
                 email: user.email,
                 telefono: user.telefono,
-                empresa: user.datos_fiscales?.razon_social || '',
-                identificacion: user.cedula || user.datos_fiscales?.identificacion || '',
+                identificacion: user.cedula || '',
+
+                // Patch Business Data
+                nombre_negocio: user.datos_negocio?.nombre_negocio || '',
+                ruc: user.datos_negocio?.ruc || '',
+                direccion_negocio: user.datos_negocio?.direccion_negocio || '',
+                ciudad_negocio: user.datos_negocio?.ciudad || '',
+                telefono_negocio: user.datos_negocio?.telefono_negocio || ''
             });
         }
 
@@ -111,8 +124,12 @@ export class Profile implements OnInit {
         if (this.isEditing) {
             this.profileForm.enable();
             if (this.isMayorista) {
-                this.profileForm.get('empresa')?.disable();
-                this.profileForm.get('identificacion')?.disable();
+                // Business Data stays disabled (Read Only)
+                this.profileForm.get('nombre_negocio')?.disable();
+                this.profileForm.get('ruc')?.disable();
+                this.profileForm.get('direccion_negocio')?.disable();
+                this.profileForm.get('ciudad_negocio')?.disable();
+                this.profileForm.get('telefono_negocio')?.disable();
             }
             // Email usually read-only
             this.profileForm.get('email')?.disable();

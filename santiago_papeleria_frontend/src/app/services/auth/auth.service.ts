@@ -39,8 +39,9 @@ export class AuthService {
     client_type: 'MINORISTA' | 'MAYORISTA';
     cedula?: string;
     telefono?: string;
-  }): Observable<{ message: string; userId: string }> {
-    return this.http.post<{ message: string; userId: string }>(
+    datos_negocio?: any; // Allow passing business data
+  }): Observable<{ message: string; userId: string; access_token?: string; user?: any }> {
+    return this.http.post<{ message: string; userId: string; access_token?: string; user?: any }>(
       `${this.verifyApiUrl}/register`,
       userData
     );

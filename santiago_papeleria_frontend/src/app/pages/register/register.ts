@@ -40,7 +40,8 @@ export class Register {
         alias: ['Principal'],
         calle_principal: [''],
         ciudad: [''],
-        referencia: ['']
+        referencia: [''],
+        telefono_negocio: [''] // Temporary field for business phone separate from personal
       }),
       preferencias: this.fb.group({
         acepta_boletin: [true]
@@ -95,24 +96,14 @@ export class Register {
 
   onSubmit() {
     if (this.registerForm.valid) {
-      const formValue = this.registerForm.value;
-
-      // Limpiar datos si no es mayorista para no enviar basura
-      if (!this.isWholesaler) {
-        delete formValue.datos_fiscales;
-        delete formValue.direcciones_entrega;
-      } else {
-        // Ajustar estructura si es necesario (el backend espera arreglo en direcciones, pero el form es objeto simple por simplicidad inicial)
-        if (formValue.direcciones_entrega) {
-          formValue.direcciones_entrega = [formValue.direcciones_entrega];
-        }
-      }
-      console.log('Enviando registro:', formValue);
+      // Usar getRawValue para obtener todo sin modificaciones
+      const formValue = this.registerForm.getRawValue();
+      console.log('Enviando registro (Raw):', formValue);
 
       // Helper to cleanup empty strings to undefined
       const clean = (val: string) => val === '' ? undefined : val;
 
-      const payload = {
+      const payload: any = {
         name: formValue.nombres,
         email: formValue.email,
         password: formValue.password,
@@ -121,17 +112,41 @@ export class Register {
         telefono: clean(formValue.telefono)
       };
 
+      // Add Business Data if Mayorista
+      if (this.isWholesaler) {
+        // Construct the object expected by backend using the RAW form group values
+        const datosFiscales = formValue.datos_fiscales;
+        const datosDireccion = formValue.direcciones_entrega;
+
+        payload.datos_negocio = {
+          nombre_negocio: datosFiscales.razon_social,
+          ruc: datosFiscales.identificacion,
+          direccion_negocio: datosDireccion.calle_principal,
+          ciudad: datosDireccion.ciudad,
+          telefono_negocio: datosDireccion.telefono_negocio
+        };
+      }
+
       this.authService.registerNew(payload).subscribe({
         next: (res) => {
           console.log('Registro exitoso', res);
-          // Save for verify-email page
-          localStorage.setItem('pendingVerificationEmail', formValue.email);
-          localStorage.setItem('pendingVerificationName', formValue.nombres);
 
-          // Redirect to verification page
-          this.router.navigate(['/verify-email'], {
-            queryParams: { email: formValue.email }
-          });
+          if (res.access_token && res.user) {
+            // AUTO-LOGIN
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('token', res.access_token);
+            }
+            // Update Auth State
+            this.authService.setSession(res.user);
+
+            // Redirect to Home
+            this.router.navigate(['/']);
+          } else {
+            // Fallback
+            this.router.navigate(['/verify-email'], {
+              queryParams: { email: formValue.email }
+            });
+          }
         },
         error: (err) => {
           console.error('Error en registro', err);

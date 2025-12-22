@@ -74,32 +74,68 @@
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">Nombre Completo</label>
                                 <input type="text" formControlName="nombres"
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
                             </div>
                             <!-- Email -->
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">Correo Electrónico</label>
                                 <input type="email" formControlName="email"
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
                             </div>
                             <!-- Telefono -->
                             <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono</label>
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono Personal</label>
                                 <input type="tel" formControlName="telefono"
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
                             </div>
-                            <!-- RUC/Cedula -->
-                            <div>
-                                <label class="block text-xs font-bold text-gray-600 mb-1.5">RUC / Cédula</label>
+                            <!-- RUC/Cedula (Identificación Personal) -->
+                            <div *ngIf="!isMayorista">
+                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Cédula</label>
                                 <input type="text" formControlName="identificacion"
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
                             </div>
-                            <!-- Empresa -->
-                            <div *ngIf="isMayorista" class="md:col-span-2">
-                                <label class="block text-xs font-bold text-gray-600 mb-1.5">Empresa /
-                                    Institución</label>
-                                <input type="text" formControlName="empresa"
-                                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07]">
+                        </div>
+
+                        <!-- SECCIÓN DATOS DEL NEGOCIO (SOLO MAYORISTAS) -->
+                        <div *ngIf="isMayorista" class="mt-8 border-t border-gray-100 pt-6">
+                            <h3 class="text-lg font-bold text-[#0f4c75] mb-4 flex items-center gap-2">
+                                <i class="ri-store-2-line"></i> Información del Negocio
+                            </h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Nombre del Negocio -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Nombre del
+                                        Negocio</label>
+                                    <input type="text" formControlName="nombre_negocio"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                                </div>
+                                <!-- RUC -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5">RUC</label>
+                                    <input type="text" formControlName="ruc"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                                </div>
+                                <!-- Dirección del Negocio -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Dirección del
+                                        Negocio</label>
+                                    <input type="text" formControlName="direccion_negocio"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                                </div>
+                                <!-- Ciudad -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Ciudad</label>
+                                    <input type="text" formControlName="ciudad_negocio"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                                </div>
+                                <!-- Teléfono del Negocio -->
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono del
+                                        Negocio</label>
+                                    <input type="text" formControlName="telefono_negocio"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                                </div>
                             </div>
                         </div>
 

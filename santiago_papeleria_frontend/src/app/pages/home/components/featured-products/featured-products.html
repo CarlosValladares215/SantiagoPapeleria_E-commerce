@@ -40,17 +40,17 @@
           <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
               <span class="text-2xl font-bold text-[#104D73]">
-                ${{ product.price.toFixed(2) }}
+                ${{ product | displayPrice | number:'1.2-2' }}
               </span>
               <span class="text-sm text-gray-500">PVP (inc. IVA)</span>
             </div>
 
-            <div class="bg-[#F2DF7E] p-2 rounded-lg">
+            <div class="bg-[#F2DF7E] p-2 rounded-lg" *ngIf="!authService.isMayorista()">
               <div class="flex items-center justify-between">
                 <span class="text-sm text-[#012E40] font-semibold">
                   Precio Mayorista: ${{ product.wholesalePrice.toFixed(2) }}
                 </span>
-                <a routerLink="/login" class="text-xs text-[#104D73] hover:underline">
+                <a routerLink="/login" class="text-xs text-[#104D73] hover:underline" *ngIf="!authService.user()">
                   Iniciar Sesión
                 </a>
               </div>

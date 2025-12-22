@@ -51,6 +51,53 @@ class Preferencias {
   acepta_boletin: boolean;
 }
 
+class DatosNegocio {
+  @Prop()
+  nombre_negocio: string;
+
+  @Prop()
+  ruc: string;
+
+  @Prop()
+  direccion_negocio: string;
+
+  @Prop()
+  ciudad: string;
+
+  @Prop()
+  telefono_negocio: string;
+}
+
+class CartItem {
+  @Prop({ required: true })
+  id: string;
+
+  @Prop({ required: true })
+  quantity: number;
+
+  @Prop()
+  sku: string;
+
+  @Prop()
+  name: string;
+
+  @Prop()
+  price: number;
+
+  @Prop()
+  image: string;
+
+  @Prop({ type: Object })
+  options: any;
+
+  @Prop()
+  weight_kg: number;
+
+  @Prop({ type: Object })
+  dimensions: any;
+}
+
+
 // --- Esquema Principal ---
 
 @Schema()
@@ -78,6 +125,9 @@ export class Usuario {
 
   @Prop({ default: 'ACTIVO' })
   estado: string; // ACTIVO, INACTIVO
+
+  @Prop({ type: DatosNegocio })
+  datos_negocio: DatosNegocio;
 
   @Prop({ type: DatosFiscales })
   datos_fiscales: DatosFiscales;
@@ -111,6 +161,9 @@ export class Usuario {
 
   @Prop({ default: null })
   blocked_until: Date;
+
+  @Prop({ type: [CartItem], default: [] })
+  carrito: CartItem[];
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario);

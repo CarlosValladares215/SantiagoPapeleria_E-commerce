@@ -1,0 +1,826 @@
+<div class="min-h-screen bg-[#F4F6F8] font-sans">
+
+    <!-- HEADER -->
+    <header class="bg-[#012E40] text-white px-6 py-3 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-10 h-10 bg-[#F2CB07] rounded-lg flex items-center justify-center text-[#012E40] font-bold text-xl">
+                <i class="ri-store-2-fill"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight">Santiago Papelería</h1>
+                <p class="text-xs text-gray-300">Panel de Gestión de Pedidos</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button
+                class="bg-[#104D73] hover:bg-[#0f4c75] px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors border border-[#1E5D87]">
+                <i class="ri-dashboard-line"></i> Sincronizar DobraNet
+            </button>
+
+            <div
+                class="bg-[#064e3b] text-[#34d399] px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 border border-[#059669]">
+                <span class="w-2 h-2 bg-[#34d399] rounded-full animate-pulse"></span>
+                Sistema Activo
+            </div>
+
+            <div class="h-8 w-px bg-gray-600 mx-2"></div>
+
+            <button class="p-2 hover:bg-[#104D73] rounded-full text-gray-300 hover:text-white transition-colors">
+                <i class="ri-notification-3-line text-xl"></i>
+            </button>
+            <button class="p-2 hover:bg-[#104D73] rounded-full text-gray-300 hover:text-white transition-colors">
+                <i class="ri-user-3-line text-xl"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- TABS -->
+    <div class="bg-white border-b border-gray-200 px-6 pt-2">
+        <div class="flex gap-8">
+            <button class="pb-3 border-b-2 px-2 font-semibold text-sm flex items-center gap-2 transition-colors"
+                [class.border-[#F2CB07]]="activeTab === 'orders'" [class.text-[#012E40]]="activeTab === 'orders'"
+                [class.border-transparent]="activeTab !== 'orders'" [class.text-gray-500]="activeTab !== 'orders'"
+                (click)="activeTab = 'orders'">
+                <i class="ri-file-list-3-line"></i> Gestión de Pedidos
+            </button>
+            <button class="pb-3 border-b-2 px-2 font-semibold text-sm flex items-center gap-2 transition-colors"
+                [class.border-[#F2CB07]]="activeTab === 'inventory'" [class.text-[#012E40]]="activeTab === 'inventory'"
+                [class.border-transparent]="activeTab !== 'inventory'" [class.text-gray-500]="activeTab !== 'inventory'"
+                (click)="activeTab = 'inventory'">
+                <i class="ri-box-3-line"></i> Gestión de Inventario
+            </button>
+        </div>
+    </div>
+
+    <div class="p-6 max-w-[1600px] mx-auto space-y-6">
+
+        <!-- ================= ORDERS VIEW ================= -->
+        @if (activeTab === 'orders') {
+        <!-- KPI CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- Card: Pendientes -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-500 mb-3">
+                        <i class="ri-time-line text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Pedidos Pendientes</h3>
+                    <p class="text-xs text-gray-500 mt-1">Requieren atención inmediata</p>
+                </div>
+                <span class="text-3xl font-bold text-red-500">{{ stats.pending }}</span>
+            </div>
+
+            <!-- Card: En Preparación -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 mb-3">
+                        <i class="ri-box-3-line text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">En Preparación</h3>
+                    <p class="text-xs text-gray-500 mt-1">Siendo procesados en bodega</p>
+                </div>
+                <span class="text-3xl font-bold text-blue-500">{{ stats.preparing }}</span>
+            </div>
+
+            <!-- Card: En Tránsito -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <div
+                        class="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600 mb-3">
+                        <i class="ri-truck-line text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">En Tránsito</h3>
+                    <p class="text-xs text-gray-500 mt-1">Camino al cliente</p>
+                </div>
+                <span class="text-3xl font-bold text-yellow-500">{{ stats.transit }}</span>
+            </div>
+
+            <!-- Card: Entregados -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center text-green-500 mb-3">
+                        <i class="ri-checkbox-circle-line text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Entregados</h3>
+                    <p class="text-xs text-gray-500 mt-1">Completados exitosamente</p>
+                </div>
+                <span class="text-3xl font-bold text-green-500">{{ stats.delivered }}</span>
+            </div>
+        </div>
+
+        <!-- FILTERS SECTION -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-md bg-[#012E40] flex items-center justify-center text-white">
+                    <i class="ri-filter-3-line"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-[#012E40]">Filtros de Búsqueda</h2>
+                    <p class="text-xs text-gray-500">{{ orders.length }} pedidos encontrados</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+                <!-- Search -->
+                <div class="lg:col-span-5">
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-search-line"></i> Buscar
+                        por Pedido o Guía</label>
+                    <input type="text" placeholder="PED-2024-001 o GUIA-12345"
+                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:border-[#F2CB07] outline-none transition-colors">
+                </div>
+
+                <!-- Status Filter -->
+                <div class="lg:col-span-3">
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-list-check"></i>
+                        Estado</label>
+                    <select
+                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:border-[#F2CB07] outline-none bg-white">
+                        <option>Todos los estados</option>
+                        <option>Confirmado</option>
+                        <option>En Preparación</option>
+                        <option>Enviado</option>
+                        <option>Pendiente</option>
+                        <option>Entregado</option>
+                    </select>
+                </div>
+
+                <!-- Date Range -->
+                <div class="lg:col-span-2">
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-calendar-line"></i>
+                        Desde</label>
+                    <input type="date"
+                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 focus:border-[#F2CB07] outline-none">
+                </div>
+                <div class="lg:col-span-2">
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-calendar-line"></i>
+                        Hasta</label>
+                    <input type="date"
+                        class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 focus:border-[#F2CB07] outline-none">
+                </div>
+            </div>
+
+            <!-- Filter Tags -->
+            <div class="flex gap-2 mt-4">
+                <span
+                    class="bg-red-50 text-red-600 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-red-100">
+                    <i class="ri-alert-line"></i> Confirmados
+                </span>
+                <span
+                    class="bg-orange-50 text-orange-600 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-orange-100">
+                    <i class="ri-time-line"></i> Pendientes
+                </span>
+                <span
+                    class="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-blue-100">
+                    <i class="ri-loader-4-line"></i> En Preparación
+                </span>
+                <span
+                    class="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-yellow-100">
+                    <i class="ri-truck-line"></i> Enviados
+                </span>
+            </div>
+        </div>
+
+        <!-- TABLE SECTION -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-[#012E40] text-white">
+                <h3 class="font-bold flex items-center gap-2">
+                    <i class="ri-file-list-3-line"></i> Lista de Pedidos
+                    <span class="bg-[#F2CB07] text-[#012E40] text-xs px-2 py-0.5 rounded-full font-bold ml-1">{{
+                        orders.length }}</span>
+                </h3>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 text-xs text-gray-500 uppercase font-bold tracking-wider text-left">
+                        <tr>
+                            <th class="px-6 py-4">ID Pedido</th>
+                            <th class="px-6 py-4">Cliente</th>
+                            <th class="px-6 py-4">Fecha</th>
+                            <th class="px-6 py-4">Productos</th>
+                            <th class="px-6 py-4">Total</th>
+                            <th class="px-6 py-4">Pago</th>
+                            <th class="px-6 py-4">Estado</th>
+                            <th class="px-6 py-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <tr *ngFor="let order of orders" class="hover:bg-gray-50 transition-colors">
+                            <!-- ID -->
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-[#012E40]">{{ order.id }}</div>
+                                <div class="text-xs text-gray-400 mt-0.5" *ngIf="order.guide">Guía: {{ order.guide }}
+                                </div>
+                            </td>
+
+                            <!-- Cliente -->
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-800 text-sm">{{ order.client.name }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5">{{ order.client.ruc }}</div>
+                            </td>
+
+                            <!-- Fecha -->
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-600 font-medium">{{ order.date | date:'dd/MM/yyyy' }}
+                                </div>
+                                <div class="text-xs text-gray-400 mt-0.5">{{ order.date | date:'hh:mm a' }}</div>
+                            </td>
+
+                            <!-- Productos -->
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-bold text-gray-800">{{ order.itemsCount }} items</div>
+                                <div class="text-xs text-gray-500 mt-0.5">{{ order.totalUnits }} unidades</div>
+                            </td>
+
+                            <!-- Total -->
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-[#104D73] text-base">${{ order.total | number:'1.2-2' }}
+                                </div>
+                            </td>
+
+                            <!-- Pago -->
+                            <td class="px-6 py-4">
+                                <div
+                                    class="flex items-center gap-2 text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded inline-block">
+                                    <i class="ri-bank-card-line" *ngIf="order.paymentMethod === 'Tarjeta'"></i>
+                                    <i class="ri-bank-line" *ngIf="order.paymentMethod === 'Transferencia'"></i>
+                                    <i class="ri-money-dollar-circle-line"
+                                        *ngIf="order.paymentMethod === 'Contraentrega'"></i>
+                                    {{ order.paymentMethod }}
+                                </div>
+                            </td>
+
+                            <!-- Estado -->
+                            <td class="px-6 py-4">
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1 w-fit"
+                                    [ngClass]="getStatusClass(order.status)">
+                                    <i [class]="getStatusIcon(order.status)"></i>
+                                    {{ order.status }}
+                                </span>
+                            </td>
+
+                            <!-- Acciones -->
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button (click)="viewOrder(order)"
+                                        class="w-8 h-8 rounded bg-[#104D73] text-white flex items-center justify-center hover:bg-[#0f4c75] transition-colors"
+                                        title="Ver Detalles">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                    <button
+                                        class="w-8 h-8 rounded bg-[#F2CB07] text-[#012E40] flex items-center justify-center hover:bg-[#e0bc06] transition-colors"
+                                        title="Imprimir Etiqueta">
+                                        <i class="ri-printer-line"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        }
+
+        <!-- ================= INVENTORY VIEW ================= -->
+        @if (activeTab === 'inventory') {
+        <!-- INVENTORY KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- Total Products -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <h3 class="text-xs text-gray-500 mb-1">Total Productos</h3>
+                    <span class="text-3xl font-bold text-blue-600">{{ inventoryStats.totalProducts }}</span>
+                </div>
+                <div
+                    class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                    <i class="ri-box-3-fill text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- Low Stock -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <h3 class="text-xs text-gray-500 mb-1">Stock Bajo</h3>
+                    <span class="text-3xl font-bold text-red-600">{{ inventoryStats.lowStock }}</span>
+                </div>
+                <div
+                    class="w-12 h-12 rounded-lg bg-red-500 flex items-center justify-center text-white shadow-lg shadow-red-200">
+                    <i class="ri-error-warning-fill text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- Total Value -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <h3 class="text-xs text-gray-500 mb-1">Valor Total Inventario</h3>
+                    <span class="text-3xl font-bold text-green-600">{{ inventoryStats.totalValue | currency }}</span>
+                </div>
+                <div
+                    class="w-12 h-12 rounded-lg bg-green-500 flex items-center justify-center text-white shadow-lg shadow-green-200">
+                    <i class="ri-money-dollar-circle-fill text-2xl"></i>
+                </div>
+            </div>
+
+            <!-- Avg Stock -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <h3 class="text-xs text-gray-500 mb-1">Stock Promedio</h3>
+                    <span class="text-3xl font-bold text-purple-600">{{ inventoryStats.avgStock }}</span>
+                </div>
+                <div
+                    class="w-12 h-12 rounded-lg bg-purple-500 flex items-center justify-center text-white shadow-lg shadow-purple-200">
+                    <i class="ri-bar-chart-fill text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- INVENTORY FILTERS -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col lg:flex-row gap-6 items-end">
+            <div class="flex-grow space-y-1.5 w-full">
+                <label class="block text-xs font-bold text-gray-600">Buscar Producto</label>
+                <div class="relative">
+                    <i class="ri-search-line absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" placeholder="Código o nombre..."
+                        class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none">
+                </div>
+            </div>
+
+            <div class="flex-grow space-y-1.5 w-full">
+                <label class="block text-xs font-bold text-gray-600">Categoría</label>
+                <select
+                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none bg-white">
+                    <option>Todas las categorías</option>
+                    <option>Papel</option>
+                    <option>Escritura</option>
+                </select>
+            </div>
+
+            <div class="flex-grow space-y-1.5 w-full">
+                <label class="block text-xs font-bold text-gray-600">Estado de Stock</label>
+                <select
+                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none bg-white">
+                    <option>Todos los estados</option>
+                    <option>Stock Normal</option>
+                    <option>Stock Bajo</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- INVENTORY TABLE -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full bg-[#012E40] text-white">
+                    <thead class="text-xs uppercase font-bold tracking-wider text-left border-b border-[#104D73]">
+                        <tr>
+                            <th class="px-6 py-4 bg-[#012E40]">Código</th>
+                            <th class="px-6 py-4 bg-[#012E40]">Producto</th>
+                            <th class="px-6 py-4 bg-[#012E40]">Categoría</th>
+                            <th class="px-6 py-4 bg-[#012E40]">Stock Actual</th>
+                            <th class="px-6 py-4 bg-[#012E40]">Stock Mín/Máx</th>
+                            <th class="px-6 py-4 bg-[#012E40]">Estado</th>
+                            <th class="px-6 py-4 bg-[#012E40]">Precio Unit.</th>
+                            <th class="px-6 py-4 bg-[#012E40] text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white text-gray-800 divide-y divide-gray-100">
+                        <tr *ngFor="let item of inventoryItems" class="hover:bg-gray-50 transition-colors">
+
+                            <!-- Code -->
+                            <td class="px-6 py-4 text-sm font-bold text-[#104D73]">{{ item.code }}</td>
+
+                            <!-- Product -->
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-[#012E40]">{{ item.name }}</div>
+                                <div class="text-xs text-gray-500">{{ item.description }}</div>
+                            </td>
+
+                            <!-- Category -->
+                            <td class="px-6 py-4">
+                                <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">
+                                    {{ item.category }}
+                                </span>
+                            </td>
+
+                            <!-- Stock Actual -->
+                            <td class="px-6 py-4 w-48">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-bold text-lg">{{ item.stock }}</span>
+                                </div>
+                                <!-- Progress Bar -->
+                                <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                    <div class="h-1.5 rounded-full"
+                                        [style.width.%]="getStockPercentage(item.stock, item.max)"
+                                        [class]="getStockProgressColor(item.stock, item.min, item.max)">
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Min/Max -->
+                            <td class="px-6 py-4 text-xs">
+                                <div class="text-red-500 font-medium">Mín: {{ item.min }}</div>
+                                <div class="text-green-600 font-medium">Máx: {{ item.max }}</div>
+                            </td>
+
+                            <!-- Estado -->
+                            <td class="px-6 py-4">
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit bg-blue-100 text-blue-700">
+                                    <i class="ri-information-fill"></i> {{ item.status }}
+                                </span>
+                            </td>
+
+                            <!-- Price -->
+                            <td class="px-6 py-4 font-bold text-[#012E40]">
+                                {{ item.price | currency }}
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="px-6 py-4 text-right">
+                                <button (click)="openStockModal(item)"
+                                    class="bg-[#F2CB07] hover:bg-[#e0bc06] text-[#012E40] px-4 py-2 rounded-md text-xs font-bold transition-colors shadow-sm inline-flex items-center gap-2">
+                                    <i class="ri-add-circle-fill text-base"></i> Añadir Stock
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        }
+
+    </div>
+
+    <!-- ================= ORDER DETAIL MODAL ================= -->
+    @if (selectedOrder) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-[#F8FAFC] rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+
+            <!-- Modal Header -->
+            <div class="bg-[#012E40] text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+                <div class="flex items-center gap-3">
+                    <div class="bg-[#F2CB07] text-[#012E40] w-10 h-10 rounded-lg flex items-center justify-center">
+                        <i class="ri-file-list-3-fill text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg">Detalle del Pedido</h2>
+                        <p class="text-xs text-gray-300 font-mono">{{ selectedOrder.id }}</p>
+                    </div>
+                </div>
+                <button (click)="closeModal()"
+                    class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-4">
+                    <button
+                        class="bg-[#104D73] hover:bg-[#0e4363] text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
+                        <i class="ri-download-line text-lg"></i> Descargar Guía
+                    </button>
+                    <button
+                        class="bg-[#F2CB07] hover:bg-[#d9b506] text-[#012E40] px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
+                        <i class="ri-printer-line text-lg"></i> Imprimir
+                    </button>
+                    <button
+                        class="bg-[#22C55E] hover:bg-[#1ea34d] text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
+                        <i class="ri-truck-line text-lg"></i> Generar Guía
+                    </button>
+                </div>
+
+                <!-- Info Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Client Info -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
+                            <i class="ri-user-line text-lg"></i>
+                            <h3 class="font-bold text-sm">Información del Cliente</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Nombre</p>
+                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.name }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">RUC</p>
+                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.ruc }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Teléfono</p>
+                                <p class="text-gray-800 font-medium">+593 99 123 4567</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Email</p>
+                                <p class="text-gray-800 font-medium">ventas&#64;elestudiante.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Info -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
+                            <i class="ri-map-pin-line text-lg"></i>
+                            <h3 class="font-bold text-sm">Dirección de Envío</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Dirección Completa</p>
+                                <p class="text-gray-800 font-medium">Av. Amazonas N24-156 y Colón</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-xs text-gray-500 font-bold mb-1">Ciudad</p>
+                                    <p class="text-gray-800 font-medium">Quito</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 font-bold mb-1">Código Postal</p>
+                                    <p class="text-gray-800 font-medium">170515</p>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Número de Guía</p>
+                                <p class="font-bold text-[#012E40]">{{ selectedOrder.guide || 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status & Payment Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Update Status -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
+                            <i class="ri-refresh-line text-lg"></i>
+                            <h3 class="font-bold text-sm">Actualizar Estado</h3>
+                        </div>
+
+                        <div class="relative">
+                            <!-- Dropdown Trigger -->
+                            <button (click)="toggleStatusDropdown()"
+                                class="w-full border-2 border-[#104D73] rounded-lg px-4 py-3 text-sm font-bold text-[#012E40] bg-white flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                <span class="flex items-center gap-2">
+                                    {{ selectedOrder.status }}
+                                </span>
+                                <i class="ri-arrow-down-s-line text-lg transition-transform duration-200"
+                                    [class.rotate-180]="isStatusDropdownOpen"></i>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div *ngIf="isStatusDropdownOpen"
+                                class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-20 py-1 overflow-hidden">
+
+                                <!-- Confirmado -->
+                                <button (click)="selectStatus('Confirmado')"
+                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                    <i class="ri-alert-fill text-red-500 text-lg"></i>
+                                    <span class="font-bold text-gray-700 text-sm">Confirmado</span>
+                                </button>
+
+                                <!-- Pendiente -->
+                                <button (click)="selectStatus('Pendiente')"
+                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                    <i class="ri-time-line text-orange-500 text-lg"></i>
+                                    <span class="font-bold text-gray-700 text-sm">Pendiente</span>
+                                </button>
+
+                                <!-- En Preparación -->
+                                <button (click)="selectStatus('En Preparación')"
+                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                    <i class="ri-box-3-line text-blue-500 text-lg"></i>
+                                    <span class="font-bold text-gray-700 text-sm">En Preparación</span>
+                                </button>
+
+                                <!-- Enviado -->
+                                <button (click)="selectStatus('Enviado')"
+                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                    <i class="ri-truck-line text-yellow-600 text-lg"></i>
+                                    <span class="font-bold text-gray-700 text-sm">Enviado</span>
+                                </button>
+
+                                <!-- Entregado -->
+                                <button (click)="selectStatus('Entregado')"
+                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                    <i class="ri-checkbox-circle-line text-green-500 text-lg"></i>
+                                    <span class="font-bold text-gray-700 text-sm">Entregado</span>
+                                </button>
+
+                                <!-- Cancelado -->
+                                <button (click)="selectStatus('Cancelado')"
+                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors border-t border-gray-100">
+                                    <i class="ri-close-circle-line text-gray-400 text-lg"></i>
+                                    <span class="font-bold text-gray-700 text-sm">Cancelado</span>
+                                </button>
+
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-xs text-gray-500 font-bold mb-2">Historial de Cambios</p>
+                            <div class="flex gap-2 text-xs text-gray-600">
+                                <i class="ri-history-line"></i>
+                                <span>Confirmado • {{ selectedOrder.date | date:'dd/MM/yyyy, h:mm a' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Info -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
+                            <i class="ri-bank-card-line text-lg"></i>
+                            <h3 class="font-bold text-sm">Método de Pago</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Método</p>
+                                <p class="text-gray-800 font-bold text-lg">{{ selectedOrder.paymentMethod }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Total a Cobrar</p>
+                                <p class="text-[#012E40] font-bold text-2xl">${{ selectedOrder.total |
+                                    number:'1.2-2' }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Observaciones</p>
+                                <p class="text-gray-600 text-sm">Entrega urgente - Cliente preferencial</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100">
+                        <h3 class="font-bold text-[#012E40] flex items-center gap-2">
+                            <i class="ri-shopping-cart-2-line"></i> Productos del Pedido
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead
+                                class="bg-gray-50 text-xs text-gray-500 uppercase font-bold tracking-wider text-left">
+                                <tr>
+                                    <th class="px-6 py-4">Código</th>
+                                    <th class="px-6 py-4">Producto</th>
+                                    <th class="px-6 py-4">Cantidad</th>
+                                    <th class="px-6 py-4">Precio Unit.</th>
+                                    <th class="px-6 py-4">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr *ngFor="let product of orderProducts">
+                                    <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ product.code }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-[#012E40] text-sm">{{ product.name }}</div>
+                                        <div class="text-xs text-gray-500">{{ product.description }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-gray-800">{{ product.quantity }}</td>
+                                    <td class="px-6 py-4 text-gray-600">{{ product.price | currency }}</td>
+                                    <td class="px-6 py-4 font-bold text-[#012E40]">{{ product.subtotal | currency }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="bg-[#012E40] text-white">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-right font-bold text-sm uppercase">Total:
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-xl text-[#F2CB07]">{{ selectedOrder.total |
+                                        currency }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- ================= ADD STOCK MODAL ================= -->
+    @if (selectedInventoryItem) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-[#F8FAFC] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+
+            <!-- Modal Header -->
+            <div class="bg-[#012E40] text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+                <div class="flex items-center gap-3">
+                    <div class="bg-[#F2CB07] text-[#012E40] w-10 h-10 rounded-lg flex items-center justify-center">
+                        <i class="ri-add-line text-2xl font-bold"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-lg">Añadir Stock</h2>
+                        <p class="text-xs text-gray-300">Actualizar inventario de producto</p>
+                    </div>
+                </div>
+                <button (click)="closeStockModal()"
+                    class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+
+                <!-- Product Info Card -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Producto</p>
+                            <h3 class="font-bold text-[#012E40] text-lg leading-tight">{{ selectedInventoryItem.name }}
+                            </h3>
+                            <p class="text-xs text-gray-400 mt-1">{{ selectedInventoryItem.description }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500 mb-1">Código</p>
+                            <p class="font-bold text-[#104D73]">{{ selectedInventoryItem.code }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 border-t border-gray-50 pt-4">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Stock Actual</p>
+                            <p class="text-2xl font-bold text-[#012E40]">{{ selectedInventoryItem.stock }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Stock Mínimo</p>
+                            <p class="text-2xl font-bold text-red-500">{{ selectedInventoryItem.min }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Stock Máximo</p>
+                            <p class="text-2xl font-bold text-green-500">{{ selectedInventoryItem.max }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="space-y-4">
+
+                    <!-- Quantity -->
+                    <div>
+                        <label class="block text-sm font-bold text-[#012E40] mb-2">Cantidad a Añadir <span
+                                class="text-red-500">*</span></label>
+                        <input type="number" [(ngModel)]="stockForm.quantity" placeholder="Ingrese la cantidad"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#104D73] focus:ring-1 focus:ring-[#104D73] outline-none text-[#012E40] placeholder-gray-400">
+                    </div>
+
+                    <!-- Reason -->
+                    <div>
+                        <label class="block text-sm font-bold text-[#012E40] mb-2">Motivo <span
+                                class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select [(ngModel)]="stockForm.reason"
+                                class="w-full px-4 py-3 border border-[#012E40] rounded-lg text-sm font-medium focus:outline-none appearance-none bg-white text-[#012E40] shadow-sm">
+                                <option *ngFor="let reason of stockReasons" [value]="reason">{{ reason }}</option>
+                            </select>
+                            <i
+                                class="ri-arrow-down-s-line absolute right-4 top-3.5 text-[#012E40] text-lg pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <!-- Provider -->
+                    @if (stockForm.reason === 'Compra a Proveedor') {
+                    <div>
+                        <label class="block text-sm font-bold text-[#012E40] mb-2">Proveedor</label>
+                        <input type="text" [(ngModel)]="stockForm.provider" placeholder="Nombre del proveedor"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#104D73] focus:ring-1 focus:ring-[#104D73] outline-none text-[#012E40] placeholder-gray-400">
+                    </div>
+                    }
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-sm font-bold text-[#012E40] mb-2">Notas Adicionales</label>
+                        <textarea [(ngModel)]="stockForm.notes" rows="3" maxlength="500"
+                            placeholder="Información adicional sobre esta entrada de stock..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#104D73] focus:ring-1 focus:ring-[#104D73] outline-none text-[#012E40] placeholder-gray-400 resize-none"></textarea>
+                        <div class="text-right mt-1">
+                            <span class="text-xs text-gray-400">{{ stockForm.notes.length }}/500 caracteres</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex gap-4 pt-2">
+                    <button (click)="closeStockModal()"
+                        class="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button (click)="saveStock()"
+                        class="flex-1 px-4 py-3 rounded-lg bg-[#F2CB07] text-[#012E40] font-bold text-sm hover:bg-[#d9b506] transition-colors flex items-center justify-center gap-2 shadow-sm">
+                        <i class="ri-save-line text-lg"></i> Guardar Cambios
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    }
+</div>

@@ -22,6 +22,14 @@ export interface Preferencias {
     acepta_boletin: boolean;
 }
 
+export interface DatosNegocio {
+    nombre_negocio: string;
+    ruc: string;
+    direccion_negocio: string;
+    ciudad: string;
+    telefono_negocio: string;
+}
+
 export interface Usuario {
     _id?: string;
     email: string;
@@ -32,9 +40,11 @@ export interface Usuario {
     tipo_cliente: 'MINORISTA' | 'MAYORISTA';
     role?: 'admin' | 'customer' | 'warehouse';
     estado?: 'ACTIVO' | 'INACTIVO';
+    datos_negocio?: DatosNegocio;
     datos_fiscales?: DatosFiscales;
     direcciones_entrega?: DireccionEntrega[];
     preferencias?: Preferencias;
     fecha_creacion?: Date | string;
     token?: string; // JWT token
+    carrito?: any[];
 }

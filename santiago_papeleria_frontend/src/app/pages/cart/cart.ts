@@ -34,6 +34,12 @@ export class Cart {
         this.cartService.removeFromCart(itemId);
     }
 
+    clearCart() {
+        if (confirm('¿Estás seguro de que deseas vaciar tu carrito?')) {
+            this.cartService.clearCart();
+        }
+    }
+
     onAddressChange(event: any) {
         // The value of event.target.value might be the index or ID. 
         // Let's use index for simplicity if no IDs, or passed value.
