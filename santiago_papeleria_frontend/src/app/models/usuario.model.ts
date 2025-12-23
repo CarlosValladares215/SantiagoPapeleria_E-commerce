@@ -11,6 +11,7 @@ export interface DireccionEntrega {
     calle_principal: string;
     ciudad: string;
     provincia?: string;
+    codigo_postal?: string;
     referencia?: string;
     location?: {
         lat: number;

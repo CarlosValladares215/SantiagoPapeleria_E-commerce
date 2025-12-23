@@ -83,6 +83,13 @@ export class Cart {
         const delivery = this.cartService.deliveryMethod();
         const payment = this.cartService.paymentMethod();
         const address = this.cartService.selectedAddress();
+        const user = this.authService.user();
+
+        if (!user) {
+            alert('Debes iniciar sesión para realizar un pedido.');
+            this.router.navigate(['/auth/login']);
+            return;
+        }
 
         if (delivery === 'shipping' && !address) {
             alert('Por favor selecciona una dirección de envío');
@@ -99,26 +106,85 @@ export class Cart {
             return;
         }
 
-        // 2. Simulation
+        // 2. Processing
         this.isProcessing = true;
 
-        setTimeout(() => {
-            this.isProcessing = false;
+        const processOrder = (transferUrl: string | null) => {
+            const items = this.cartService.cartItems().map(i => ({
+                codigo_dobranet: i.sku || 'GENERICO', // Fallback
+                nombre: i.name,
+                cantidad: i.quantity,
+                precio_unitario_aplicado: i.price,
+                subtotal: i.price * i.quantity,
+                impuesto_iva: 0 // Frontend doesn't calculate tax explicitly yet, send 0 or calc? Assuming inclusive or 0 for now.
+            }));
 
-            let message = '¡Pedido Confirmado!\n\n';
-            if (payment === 'transfer') {
-                message += 'Gracias. Hemos recibido tu comprobante. Lo verificaremos y procesaremos tu pedido.';
-            } else {
-                message += 'Gracias por tu compra. Tu pedido ha sido registrado. Pagarás al momento de la entrega/retiro.';
-            }
+            // Calculate totals
+            const subtotal = this.cartService.totalValue();
+            const shipping = this.cartService.shippingCost();
+            const total = this.cartService.finalTotal();
 
-            alert(message);
+            // Build Payload matching CreatePedidoDto
+            const orderPayload = {
+                usuario_id: user._id,
+                estado_pedido: payment === 'transfer' ? 'PENDIENTE_PAGO' : 'PENDIENTE',
+                fecha_compra: new Date().toISOString(),
+                items: items,
+                resumen_financiero: {
+                    subtotal_sin_impuestos: subtotal, // Assuming no tax separation for simplified frontend
+                    total_impuestos: 0,
+                    costo_envio: shipping,
+                    total_pagado: total,
+                    metodo_pago: payment === 'transfer' ? 'TRANSFERENCIA' : 'EFECTIVO',
+                    comprobante_pago: transferUrl
+                },
+                datos_envio: {
+                    courier: delivery === 'shipping' ? 'Propio' : null,
+                    guia_tracking: delivery === 'shipping' ? 'PENDIENTE' : null,
+                    direccion_destino: delivery === 'shipping' && address ? {
+                        calle: address.calle_principal,
+                        ciudad: address.ciudad,
+                        provincia: address.provincia,
+                        codigo_postal: address.codigo_postal,
+                        referencia: address.referencia
+                    } : null
+                }
+            };
 
-            // 3. Cleanup
-            this.cartService.clearCart();
-            this.router.navigate(['/products']);
+            console.log('Enviando Pedido:', orderPayload);
 
-        }, 2500);
+            this.cartService.createOrder(orderPayload).subscribe({
+                next: (res: any) => {
+                    this.isProcessing = false;
+                    const orderId = res.numero_pedido_web || '???';
+                    alert(`¡Pedido #${orderId} Confirmado con éxito!\nGracias por tu compra.`);
+                    this.cartService.clearCart();
+                    this.router.navigate(['/orders']); // Redirect to orders list
+                },
+                error: (err) => {
+                    console.error('Error creando pedido', err);
+                    this.isProcessing = false;
+                    // Show detailed error if available
+                    const msg = err.error?.message || (Array.isArray(err.error?.message) ? err.error.message.join(', ') : 'Ocurrió un error al procesar tu pedido.');
+                    alert('Error: ' + msg);
+                }
+            });
+        };
+
+        if (payment === 'transfer' && this.selectedFile) {
+            this.cartService.uploadTransferProof(this.selectedFile).subscribe({
+                next: (res) => {
+                    processOrder(res.url);
+                },
+                error: (err) => {
+                    console.error('Upload error', err);
+                    this.isProcessing = false;
+                    alert('Error al subir el comprobante. Inténtalo de nuevo.');
+                }
+            });
+        } else {
+            processOrder(null);
+        }
     }
 }
 

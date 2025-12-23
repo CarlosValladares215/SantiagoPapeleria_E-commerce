@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
+import { OrderService, Order as BackendOrder } from '../../services/order/order.service';
 
 interface ProductItem {
     name: string;
@@ -13,8 +14,8 @@ interface ProductItem {
 
 interface Order {
     id: string;
-    status: 'Pendiente' | 'Procesando' | 'Enviado' | 'Entregado';
-    date: string;
+    status: 'Pendiente' | 'Preparando' | 'Enviado' | 'Entregado' | 'Cancelado' | string;
+    date: Date;
     itemsCount: number;
     trackingId?: string;
     total: number;
@@ -29,77 +30,91 @@ interface Order {
     templateUrl: './orders.html',
     styleUrl: './orders.scss'
 })
-export class Orders {
+export class Orders implements OnInit {
     authService = inject(AuthService);
+    orderService = inject(OrderService);
+
     activeFilter: string = 'Todos';
     expandedOrderId: string | null = null; // Track expanded order
 
-    // Mock Data from Screenshots
-    mockOrders: Order[] = [
-        {
-            id: 'ORD-2024-001',
-            status: 'Entregado',
-            date: '14 de enero de 2024',
-            itemsCount: 8,
-            trackingId: 'TRK-2024-001',
-            total: 156.80,
-            deliveryDate: '17 de enero de 2024',
-            products: [
-                { name: 'Cuaderno Universitario 100 Hojas', quantity: 5, totalPrice: 12.50, unitPrice: 2.50, image: 'assets/products/cuaderno.png' },
-                { name: 'Bolígrafo BIC Cristal Azul (Caja 50 unidades)', quantity: 2, totalPrice: 50.00, unitPrice: 25.00, image: 'assets/products/boligrafo.png' },
-                { name: 'Resma Papel Bond A4 75g (500 hojas)', quantity: 10, totalPrice: 48.00, unitPrice: 4.80, image: 'assets/products/resma.png' }
-            ]
-        },
-        {
-            id: 'ORD-2024-002',
-            status: 'Enviado',
-            date: '19 de enero de 2024',
-            itemsCount: 4,
-            trackingId: 'TRK-2024-002',
-            total: 89.50,
-            deliveryDate: '22 de enero de 2024',
-            products: [
-                { name: 'Set Marcadores Sharpie 12 Colores', quantity: 3, totalPrice: 55.50, unitPrice: 18.50, image: 'assets/products/marcadores.png' },
-                { name: 'Calculadora Científica Casio FX-570', quantity: 1, totalPrice: 35.00, unitPrice: 35.00, image: 'assets/products/calculadora.png' }
-            ]
-        },
-        {
-            id: 'ORD-2024-003',
-            status: 'Procesando',
-            date: '21 de enero de 2024',
-            itemsCount: 12,
-            total: 234.75,
-            deliveryDate: '25 de enero de 2024',
-            products: [
-                { name: 'Acuarelas Pelikan 12 Colores', quantity: 5, totalPrice: 62.50, unitPrice: 12.50, image: 'assets/products/acuarelas.png' },
-                { name: 'Mochila Escolar Totto Reforzada', quantity: 3, totalPrice: 135.00, unitPrice: 45.00, image: 'assets/products/mochila.png' },
-                { name: 'Lápices de Colores Faber-Castell x24', quantity: 4, totalPrice: 66.00, unitPrice: 16.50, image: 'assets/products/lapices.png' }
-            ]
-        },
-        {
-            id: 'ORD-2024-004',
-            status: 'Pendiente',
-            date: '24 de enero de 2024',
-            itemsCount: 6,
-            total: 67.25,
-            deliveryDate: 'Por confirmar',
-            products: [
-                { name: 'Agenda Ejecutiva 2024', quantity: 2, totalPrice: 40.00, unitPrice: 20.00, image: 'assets/products/agenda.png' },
-                { name: 'Post-it Notas Adhesivas 3x3', quantity: 4, totalPrice: 27.25, unitPrice: 6.81, image: 'assets/products/postit.png' }
-            ]
-        }
+    orders: Order[] = [];
+
+    filters = [
+        { label: 'Todos', count: 0, value: 'Todos' },
+        { label: 'Pendientes', count: 0, value: 'Pendiente' },
+        { label: 'Preparando', count: 0, value: 'Preparando' },
+        { label: 'Enviados', count: 0, value: 'Enviado' },
+        { label: 'Entregados', count: 0, value: 'Entregado' },
+        { label: 'Cancelados', count: 0, value: 'Cancelado' }
     ];
 
-    /* 
-       Filters: Todos (4), Pendientes (1), Procesando (1), Enviados (1), Entregados (1)
-    */
-    filters = [
-        { label: 'Todos', count: 4, value: 'Todos' },
-        { label: 'Pendientes', count: 1, value: 'Pendiente' },
-        { label: 'Procesando', count: 1, value: 'Procesando' }, // Screenshot says Procesando
-        { label: 'Enviados', count: 1, value: 'Enviado' },
-        { label: 'Entregados', count: 1, value: 'Entregado' }
-    ];
+    ngOnInit() {
+        this.loadUserOrders();
+    }
+
+    loadUserOrders() {
+        const userId = this.authService.user()?._id;
+        if (!userId) return;
+
+        this.orderService.getOrdersByUser(userId).subscribe({
+            next: (data) => {
+                this.orders = data.map(order => this.mapBackendOrder(order));
+                this.updateFilters();
+            },
+            error: (err) => console.error('Error fetching user orders', err)
+        });
+    }
+
+    mapBackendOrder(backendOrder: BackendOrder): Order {
+        return {
+            id: `ORD-WEB-${backendOrder.numero_pedido_web}`,
+            status: this.mapStatus(backendOrder.estado_pedido),
+            date: new Date(backendOrder.fecha_compra),
+            itemsCount: backendOrder.items.length,
+            trackingId: backendOrder.datos_envio?.guia_tracking,
+            total: backendOrder.resumen_financiero.total_pagado,
+            deliveryDate: backendOrder.estado_pedido === 'ENTREGADO' ? 'Entregado' : 'Por confirmar',
+            products: backendOrder.items.map(item => ({
+                name: item.nombre,
+                quantity: item.cantidad,
+                totalPrice: item.subtotal,
+                unitPrice: item.precio_unitario_aplicado,
+                image: 'assets/products/placeholder.png' // Default image or fetch from product details if needed
+            }))
+        };
+    }
+
+    mapStatus(backendStatus: string): string {
+        const statusMap: { [key: string]: string } = {
+            'PAGADO': 'Pendiente', // Consolidated
+            'PENDIENTE': 'Pendiente',
+            'PENDIENTE_PAGO': 'Pendiente',
+            'EN_PREPARACION': 'Preparando',
+            'PREPARANDO': 'Preparando',
+            'ENVIADO': 'Enviado',
+            'ENTREGADO': 'Entregado',
+            'CANCELADO': 'Cancelado'
+        };
+        return statusMap[backendStatus] || backendStatus;
+    }
+
+    updateFilters() {
+        const allCount = this.orders.length;
+        const pendingCount = this.orders.filter(o => o.status === 'Pendiente').length;
+        const preparingCount = this.orders.filter(o => o.status === 'Preparando').length;
+        const sentCount = this.orders.filter(o => o.status === 'Enviado').length;
+        const deliveredCount = this.orders.filter(o => o.status === 'Entregado').length;
+        const cancelledCount = this.orders.filter(o => o.status === 'Cancelado').length;
+
+        this.filters = [
+            { label: 'Todos', count: allCount, value: 'Todos' },
+            { label: 'Pendientes', count: pendingCount, value: 'Pendiente' },
+            { label: 'Preparando', count: preparingCount, value: 'Preparando' },
+            { label: 'Enviados', count: sentCount, value: 'Enviado' },
+            { label: 'Entregados', count: deliveredCount, value: 'Entregado' },
+            { label: 'Cancelados', count: cancelledCount, value: 'Cancelado' }
+        ];
+    }
 
     toggleExpand(orderId: string) {
         if (this.expandedOrderId === orderId) {
@@ -111,9 +126,9 @@ export class Orders {
 
     get filteredOrders() {
         if (this.activeFilter === 'Todos') {
-            return this.mockOrders;
+            return this.orders;
         }
-        return this.mockOrders.filter(order => order.status === this.activeFilter);
+        return this.orders.filter(order => order.status === this.activeFilter);
     }
 
     setFilter(filter: string) {
@@ -124,9 +139,10 @@ export class Orders {
     getStatusColor(status: string): string {
         switch (status) {
             case 'Entregado': return 'bg-green-100 text-green-700';
-            case 'Enviado': return 'bg-purple-100 text-purple-700';
-            case 'Procesando': return 'bg-blue-100 text-blue-700';
-            case 'Pendiente': return 'bg-yellow-100 text-yellow-700';
+            case 'Enviado': return 'bg-yellow-100 text-yellow-800'; // Standardized yellow
+            case 'Preparando': return 'bg-blue-100 text-blue-700';
+            case 'Pendiente': return 'bg-orange-100 text-orange-700'; // Standardized orange
+            case 'Cancelado': return 'bg-gray-100 text-gray-700';
             default: return 'bg-gray-100 text-gray-700';
         }
     }
@@ -135,8 +151,9 @@ export class Orders {
         switch (status) {
             case 'Entregado': return 'ri-checkbox-circle-line';
             case 'Enviado': return 'ri-truck-line';
-            case 'Procesando': return 'ri-loader-4-line';
+            case 'Preparando': return 'ri-box-3-line'; // Standardized icon
             case 'Pendiente': return 'ri-time-line';
+            case 'Cancelado': return 'ri-close-circle-line';
             default: return 'ri-question-line';
         }
     }

@@ -66,75 +66,6 @@ export class Product implements OnDestroy {
   customMessage = signal<string>('');
   selections = signal<Record<string, string>>({}); // { "Color": "Rojo" }
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private productService: ProductService,
-    private cartService: CartService,
-    private authService: AuthService
-  ) {
-    // 1. Init Base Signals
-    this.product = this.productService.selectedProduct;
-    this.error = this.productService.error;
-
-    // 2. Handle Route Changes
-    this.route.paramMap.subscribe(params => {
-      const slug = params.get('slug') || params.get('id'); // Support slug (primary) or id (fallback)
-      console.log('Product Component: Route param changed, Slug/ID:', slug);
-      if (slug) {
-        this.productService.fetchProductById(slug);
-        this.startPolling(slug);
-
-        // Reset Local State
-        this.quantity.set(1);
-        this.selectedImage.set(0);
-        this.customMessage.set('');
-        this.selections.set({});
-      }
-    });
-
-    // 3. Effect: When Product Loads, fetch related and set defaults
-    effect(() => {
-      const p = this.product();
-      if (p) {
-        // Fetch Related
-        untracked(() => {
-          this.productService.fetchRelatedProducts(p.category, p._id).subscribe((related: ProductModel[]) => {
-            this.relatedProducts.set(related);
-          });
-        });
-
-        // Set Default Variant Options if not set
-        if (p.has_variants && p.variant_groups?.length) {
-          const current = untracked(this.selections);
-          const newSelections = { ...current };
-          let changed = false;
-
-          p.variant_groups.forEach(group => {
-            if (!newSelections[group.nombre] && group.opciones.length > 0) {
-              newSelections[group.nombre] = group.opciones[0];
-              changed = true;
-            }
-          });
-
-          if (changed) {
-            this.selections.set(newSelections);
-          }
-        }
-      }
-    });
-
-    // Dentro del constructor, después del effect:
-    effect(() => {
-      console.log('🔍 DEBUG STOCK:', {
-        product: this.product()?._id,
-        selectedVariant: this.selectedVariant(),
-        currentStock: this.currentStock(),
-        selections: this.selections()
-      });
-    });
-  }
-
   // --- COMPUTED STATE ---
 
   // All Product Data (Safe Access)
@@ -142,11 +73,8 @@ export class Product implements OnDestroy {
     const p = this.product();
     if (!p) return null;
 
-    // Merge enriched data into Specs for display
-    // Merge enriched data into Specs for display
     const mergedSpecs = [...(p.specs || [])];
 
-    // Priority to Enriched Weight_KG
     const weight = p.weight_kg !== undefined ? p.weight_kg : p.weight;
     if (weight && weight > 0) {
       mergedSpecs.push({ label: 'Peso', value: `${weight} kg` });
@@ -162,10 +90,8 @@ export class Product implements OnDestroy {
       }
     }
 
-    // Include dynamic attributes in specs
     if (p.attributes && p.attributes.length > 0) {
       p.attributes.forEach(attr => {
-        // Avoid duplicates if already in specs (simple check)
         const exists = mergedSpecs.some(s => s.label.toLowerCase() === attr.key.toLowerCase());
         if (!exists) {
           mergedSpecs.push({ label: attr.key, value: attr.value });
@@ -175,9 +101,8 @@ export class Product implements OnDestroy {
 
     return {
       ...p,
-      // Ensure we expose standard accessors for template
       weight_kg: weight,
-      description: p.descripcion_extendida || p.description, // Prefer enriched description
+      description: p.descripcion_extendida || p.description,
       allows_custom_message: p.allows_custom_message !== undefined ? p.allows_custom_message : p.allowCustomMessage,
       specs: mergedSpecs,
       reviews: p.reviews || [],
@@ -195,7 +120,6 @@ export class Product implements OnDestroy {
     const currentSelections = this.selections();
 
     return p.variants.find(v => {
-      // Check if every key in variant.combinacion matches currentSelections
       return Object.entries(v.combinacion).every(([key, val]) => currentSelections[key] === val);
     }) || null;
   });
@@ -217,16 +141,9 @@ export class Product implements OnDestroy {
     if (!p) return 0;
 
     const v = this.selectedVariant();
-    // 1. Variant specific price? matches selection
     let price = v && v.precio_especifico ? v.precio_especifico : (p.basePrice || p.price);
 
-    // 2. Override with Wholesale Price if applicable and no specific variant price override?
-    // Actually, usually Variants also have wholesale prices. But assuming simple product level wholesale for now or if p.wholesalePrice exists.
-    // If user is Mayorista, check if there is a wholesale price
     if (this.authService.isMayorista()) {
-      // If variant has specific price, we might need a specific wholesale price too. 
-      // For now assuming wholesalePrice is on main product.
-      // If p.wholesalePrice exists, use it.
       if (p.wholesalePrice) {
         price = p.wholesalePrice;
       }
@@ -241,13 +158,11 @@ export class Product implements OnDestroy {
   // Current Wholesale Tier
   currentTier = computed(() => {
     const p = this.productData();
-    // Only apply tiers if Mayorista
     if (!this.authService.isMayorista() || !p || !p.priceTiers || p.priceTiers.length === 0) {
       return { min: 1, max: Infinity, discount: 0, label: '1+' };
     }
 
     const qty = this.quantity();
-    // Validate we have enough stock for this tier? logic usually is "if you buy X amount", stock check is separate
     return p.priceTiers.find(tier => qty >= tier.min && qty <= tier.max) || p.priceTiers[0];
   });
 
@@ -270,10 +185,96 @@ export class Product implements OnDestroy {
     return base * this.quantity() * tier.discount;
   });
 
+  // --- COMPUTED: Cart Item Logic (Must be defined AFTER productData) ---
+  cartItem = computed(() => {
+    const p = this.productData();
+    if (!p) return null;
+
+    const items = this.cartService.cartItems();
+    const targetId = p._id; // The main product ID
+    return items.find(i => i.id === targetId) || null;
+  });
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private productService: ProductService,
+    private cartService: CartService,
+    private authService: AuthService
+  ) {
+    // 1. Init Base Signals
+    this.product = this.productService.selectedProduct;
+    this.error = this.productService.error;
+
+    // 2. Handle Route Changes
+    this.route.paramMap.subscribe(params => {
+      const slug = params.get('slug') || params.get('id');
+      if (slug) {
+        this.productService.fetchProductById(slug);
+        this.startPolling(slug);
+
+        // Reset Local State
+        this.quantity.set(1);
+        this.selectedImage.set(0);
+        this.customMessage.set('');
+        this.selections.set({});
+      }
+    });
+
+    // 3. Effect: Fetch Related
+    effect(() => {
+      const p = this.product();
+      if (p) {
+        untracked(() => {
+          this.productService.fetchRelatedProducts(p.category, p._id).subscribe((related: ProductModel[]) => {
+            this.relatedProducts.set(related);
+          });
+        });
+
+        if (p.has_variants && p.variant_groups?.length) {
+          const current = untracked(this.selections);
+          const newSelections = { ...current };
+          let changed = false;
+
+          p.variant_groups.forEach(group => {
+            if (!newSelections[group.nombre] && group.opciones.length > 0) {
+              newSelections[group.nombre] = group.opciones[0];
+              changed = true;
+            }
+          });
+
+          if (changed) {
+            this.selections.set(newSelections);
+          }
+        }
+      }
+    });
+
+    // 4. New Effect: Sync Cart -> Quantity Input
+    effect(() => {
+      const item = this.cartItem();
+      if (item) {
+        const currentQty = untracked(this.quantity);
+        if (currentQty !== item.quantity) {
+          this.quantity.set(item.quantity);
+        }
+      }
+    }, { allowSignalWrites: true });
+
+    // Debug Effect
+    effect(() => {
+      console.log('🔍 DEBUG STOCK:', {
+        product: this.product()?._id,
+        selectedVariant: this.selectedVariant(),
+        currentStock: this.currentStock(),
+        selections: this.selections()
+      });
+    });
+  }
+
   // --- ACTIONS ---
 
   categoryPath(category: string): string {
-    // Simplified path logic or same map
     return `/products?category=${category}`;
   }
 
@@ -287,7 +288,16 @@ export class Product implements OnDestroy {
   }
 
   onQuantityChange(qty: number): void {
+    const p = this.productData();
+    if (!p) return;
+
     this.quantity.set(qty);
+
+    // Sync to Cart if exists
+    const item = untracked(this.cartItem);
+    if (item) {
+      this.cartService.updateQuantity(item.id, qty);
+    }
   }
 
   onCustomMessageChange(message: string): void {
@@ -306,37 +316,36 @@ export class Product implements OnDestroy {
     const qty = this.quantity();
 
     if (stock < qty) {
-      this.onNotify('Stock insuficiente para la cantidad seleccionada.', 'error');
+      this.onNotify('Stock insuficiente.', 'error');
       return;
     }
 
-    // Format for Cart
     const variant = this.selectedVariant();
     const options = {
       customMessage: this.customMessage(),
       priceTier: this.currentTier(),
-      ...this.selections(), // Include raw selection map (Color: Rojo)
+      ...this.selections(),
       variantId: variant?.id
     };
 
-    // Override price in cart item if variant/tier affects it?
-    // CartService usually recalculates or takes snapshot. 
-    // We send a snapshot object if CartService allows.
-
-    // Construct a "Cart Product" snapshot
     const cartProduct = {
       ...p,
-      price: this.currentPrice(), // Price per unit PAID
+      price: this.currentPrice(),
       stock: stock
     };
 
-    this.cartService.addToCart(cartProduct, qty, options);
-    this.onNotify('Producto agregado al carrito', 'success');
+    const existing = this.cartItem();
+    if (existing) {
+      this.cartService.updateQuantity(existing.id, qty);
+      this.onNotify('Carrito actualizado', 'success');
+    } else {
+      this.cartService.addToCart(cartProduct, qty, options);
+      this.onNotify('Producto agregado al carrito', 'success');
+    }
   }
 
   onBuyNow(event: any): void {
     this.onAddToCart(event);
-    // Navigate to checkout
     this.router.navigate(['/cart']);
   }
 
@@ -344,14 +353,12 @@ export class Product implements OnDestroy {
     if (this.toast) {
       this.toast.add(message, type);
     } else {
-      // Fallback mainly for unit test environments or before view Init
       console.log(`[${type.toUpperCase()}] ${message}`);
     }
   }
 
   startPolling(id: string) {
     if (this.pollingSub) this.pollingSub.unsubscribe();
-    // Poll every 5 seconds for real-time stock updates
     this.pollingSub = interval(5000).subscribe(() => {
       this.productService.fetchProductById(id, true);
     });
