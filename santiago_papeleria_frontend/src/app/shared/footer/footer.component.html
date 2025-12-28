@@ -1,121 +1,223 @@
-<footer class="bg-gray-900 text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<footer class="bg-[#012E40] text-white relative">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-2">
+    
+    <!-- Círculo para subir en la parte superior derecha -->
+<button 
+  id="back-to-top" 
+  class="absolute -top-7 right-14 w-14 h-14 rounded-full bg-[#F2CB07] text-[#012E40] shadow-lg flex items-center justify-center z-50"
+  aria-label="Volver al principio"
+  onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+>
+  <i class="ri-arrow-up-s-fill text-[28px] text-white"></i>
+</button>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <!-- Company Info -->
+      <div class="space-y-4">
+        <img src="assets/Logo_Pie.png" alt="Santiago Papelería" class="h-12 w-auto" />
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="flex space-x-4">
+          <!-- Facebook -->
+          <a
+            href="https://www.facebook.com/megasantiago.ec/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Facebook Santiago Papelería"
+            class="text-gray-300 hover:text-[#F2CB07] transition-colors transform hover:scale-110"
+          >
+            <i class="ri-facebook-fill text-2xl"></i>
+          </a>
 
-            <!-- Company Info -->
-            <div class="space-y-4">
-                <img src="assets/Logo_Pie.png" alt="Santiago Papelería" class="h-12 w-auto" />
+          <!-- Instagram -->
+          <a
+            href="https://www.instagram.com/mega.santiago/?hl=es"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram Santiago Papelería"
+            class="text-gray-300 hover:text-[#F2CB07] transition-colors transform hover:scale-110"
+          >
+            <i class="ri-instagram-line text-2xl"></i>
+          </a>
 
-                <p class="text-gray-300 text-sm leading-relaxed">
-                    Tu tienda de confianza para artículos de papelería, útiles escolares y suministros de oficina.
-                    Más de 35,000 productos de las mejores marcas.
-                </p>
-
-                <div class="flex space-x-4">
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                        <i class="ri-facebook-fill text-xl"></i>
-                    </a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                        <i class="ri-instagram-line text-xl"></i>
-                    </a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                        <i class="ri-twitter-line text-xl"></i>
-                    </a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
-                        <i class="ri-whatsapp-line text-xl"></i>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Quick Links -->
-            <div>
-                <h3 class="text-lg font-semibold mb-4">Enlaces Rápidos</h3>
-
-                <ul class="space-y-2">
-                    <li><a routerLink="/" class="text-gray-300 hover:text-white transition-colors">Inicio</a></li>
-                    <li><a routerLink="/products" class="text-gray-300 hover:text-white transition-colors">Productos</a>
-                    </li>
-                    <li><a routerLink="/categories"
-                            class="text-gray-300 hover:text-white transition-colors">Categorías</a></li>
-                    <li><a routerLink="/contact" class="text-gray-300 hover:text-white transition-colors">Contacto</a>
-                    </li>
-                    <li><a routerLink="/tracking" class="text-gray-300 hover:text-white transition-colors">Rastrear
-                            Pedido</a></li>
-                </ul>
-            </div>
-
-            <!-- Categories -->
-            <div>
-                <h3 class="text-lg font-semibold mb-4">Categorías</h3>
-
-                <ul class="space-y-2">
-                    <li><a routerLink="/categories/utiles-escolares"
-                            class="text-gray-300 hover:text-white transition-colors">Útiles Escolares</a></li>
-                    <li><a routerLink="/categories/suministros-oficina"
-                            class="text-gray-300 hover:text-white transition-colors">Suministros de Oficina</a></li>
-                    <li><a routerLink="/categories/tecnologia"
-                            class="text-gray-300 hover:text-white transition-colors">Tecnología</a></li>
-                    <li><a routerLink="/categories/arte-manualidades"
-                            class="text-gray-300 hover:text-white transition-colors">Arte y Manualidades</a></li>
-                    <li><a routerLink="/categories/mobiliario"
-                            class="text-gray-300 hover:text-white transition-colors">Mobiliario</a></li>
-                </ul>
-            </div>
-
-            <!-- Contact Info -->
-            <div>
-                <h3 class="text-lg font-semibold mb-4">Contacto</h3>
-
-                <div class="space-y-3">
-                    <div class="flex items-start space-x-3">
-                        <i class="ri-map-pin-line text-blue-400 mt-1"></i>
-                        <span class="text-gray-300 text-sm">
-                            Av. 10 de Agosto N24-253 y Cordero<br />
-                            Quito, Ecuador
-                        </span>
-                    </div>
-
-                    <div class="flex items-center space-x-3">
-                        <i class="ri-phone-line text-blue-400"></i>
-                        <span class="text-gray-300 text-sm">+593 2 234-5678</span>
-                    </div>
-
-                    <div class="flex items-center space-x-3">
-                        <i class="ri-mail-line text-blue-400"></i>
-                        <span class="text-gray-300 text-sm">info@santiagopapeleria.com</span>
-                    </div>
-
-                    <div class="flex items-center space-x-3">
-                        <i class="ri-time-line text-blue-400"></i>
-                        <span class="text-gray-300 text-sm">Lun - Vie: 8:00 - 18:00</span>
-                    </div>
-                </div>
-            </div>
-
+          <!-- WhatsApp -->
+          <a
+            href="https://wa.me/593987667459"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="WhatsApp Santiago Papelería"
+            class="text-gray-300 hover:text-[#F2CB07] transition-colors transform hover:scale-110"
+          >
+            <i class="ri-whatsapp-line text-2xl"></i>
+          </a>
         </div>
 
-        <!-- Bottom Bar -->
-        <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p class="text-gray-400 text-sm">
-                © 2024 Santiago Papelería. Todos los derechos reservados.
-            </p>
-
-            <div class="flex items-center space-x-6 mt-4 md:mt-0">
-                <a routerLink="/privacy" class="text-gray-400 hover:text-white text-sm transition-colors">
-                    Política de Privacidad
-                </a>
-
-                <a routerLink="/terms" class="text-gray-400 hover:text-white text-sm transition-colors">
-                    Términos y Condiciones
-                </a>
-
-                <!-- REEMPLAZO: Imagen del pie -->
-                <img src="assets/Logo_Pie.png" alt="Logo Pie"
-                    class="h-8 w-auto object-contain opacity-80 hover:opacity-100 transition duration-200" />
+        <!-- Sección de Contacto - Actualizada -->
+        <div class="space-y-3 pt-2">
+          <div class="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors flex items-start">
+            <i class="ri-phone-line text-[#F2DF7E] mr-2 mt-0.5"></i>
+            <div>
+              <p class="font-semibold text-[#F2DF7E] text-sm">Atención Mayorista:</p>
+              <p class="text-gray-200 text-sm font-medium">0939826491 / 0939522690</p>
             </div>
+          </div>
+          
+          <div class="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors flex items-start">
+            <i class="ri-phone-line text-[#F2DF7E] mr-2 mt-0.5"></i>
+            <div>
+              <p class="font-semibold text-[#F2DF7E] text-sm">Atención Minorista:</p>
+              <p class="text-gray-200 text-sm font-medium">0987667459</p>
+            </div>
+          </div>
+          
+          <div class="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors flex items-start">
+            <i class="ri-mail-line text-[#F2DF7E] mr-2 mt-0.5"></i>
+            <div>
+              <p class="font-semibold text-[#F2DF7E] text-sm">Correo Electrónico:</p>
+              <a href="mailto:servicios@santiagopapeleria.com" class="text-gray-200 text-sm font-medium hover:text-[#F2DF7E] transition-colors">
+                servicios@santiagopapeleria.com
+              </a>
+            </div>
+          </div>
         </div>
+      </div>
 
+      <!-- Acerca de Nosotros -->
+      <div>
+        <h3 class="text-lg font-bold mb-4 text-[#F2DF7E] border-b-2 border-[#F2CB07] pb-2">
+          Acerca de Nosotros
+        </h3>
 
+        <ul class="space-y-2">
+          <li>
+            <a routerLink="/nuestra-historia" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Nuestra Historia
+            </a>
+          </li>
+          <li>
+            <a routerLink="/quienes-somos" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              ¿Quiénes Somos?
+            </a>
+          </li>
+          <li>
+            <a routerLink="/mision" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Nuestra Misión
+            </a>
+          </li>
+          <li>
+            <a routerLink="/trabaja-con-nosotros" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Trabaja con Nosotros
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Ayuda -->
+      <div>
+        <h3 class="text-lg font-bold mb-4 text-[#F2DF7E] border-b-2 border-[#F2CB07] pb-2">
+          Ayuda
+        </h3>
+
+        <ul class="space-y-2">
+          <li>
+            <a routerLink="/politicas-privacidad" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Políticas de privacidad
+            </a>
+          </li>
+          <li>
+            <a routerLink="/terminos-uso" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Términos de uso
+            </a>
+          </li>
+          <li>
+            <a routerLink="/como-comprar" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              ¿Cómo comprar?
+            </a>
+          </li>
+          <li>
+            <a routerLink="/metodos-pago" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Métodos de Pago
+            </a>
+          </li>
+          <li>
+            <a routerLink="/envios-entregas" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Envíos y Entregas
+            </a>
+          </li>
+          <li>
+            <a routerLink="/cambios-devoluciones" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Cambios y Devoluciones
+            </a>
+          </li>
+          <li>
+            <a routerLink="/contactanos" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Contáctanos
+            </a>
+          </li>
+          <li>
+            <a routerLink="/rastrear-pedido" class="text-gray-300 hover:text-[#F2CB07] transition-colors hover:translate-x-1 inline-block">
+              Rastrear Pedido
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Nuestras Tiendas -->
+      <div>
+        <h3 class="text-lg font-bold mb-4 text-[#F2DF7E] border-b-2 border-[#F2CB07] pb-2">
+          Nuestras Tiendas
+        </h3>
+
+        <div class="space-y-4">
+          <div class="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors flex items-start">
+            <i class="ri-map-pin-line text-[#F2DF7E] mr-2 mt-0.5"></i>
+            <div>
+              <p class="text-[#F2DF7E] font-semibold text-sm">Sucursal Matriz:</p>
+              <p class="text-gray-200 text-sm">
+                Calle Azuay 152-48 (entre 18 de Noviembre y Av. Universitaria).
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors flex items-start">
+            <i class="ri-map-pin-line text-[#F2DF7E] mr-2 mt-0.5"></i>
+            <div>
+              <p class="text-[#F2DF7E] font-semibold text-sm">Sucursal UTPL:</p>
+              <p class="text-gray-200 text-sm">
+                Almacén dentro del Campus Universitario.
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors flex items-start">
+            <i class="ri-map-pin-line text-[#F2DF7E] mr-2 mt-0.5"></i>
+            <div>
+              <p class="text-[#F2DF7E] font-semibold text-sm">Sucursal Norte:</p>
+              <p class="text-gray-200 text-sm">
+                Calle Guaranda y Av. Cuxibamba.
+              </p>
+            </div>
+          </div>
+
+          <!-- Horarios - También actualizado para mantener consistencia -->
+          <div class="bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors flex items-start">
+            <i class="ri-time-line text-[#F2DF7E] mr-2 mt-0.5"></i>
+            <div>
+              <p class="text-[#F2DF7E] font-semibold text-sm">Horarios:</p>
+              <p class="text-gray-200 text-sm font-medium">
+                Lunes a Viernes (08:30 - 19:00)<br>
+                Sábados (09:00 - 13:00)
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Bottom Bar - Delgada y compacta -->
+    <div class="border-t border-[#104D73] pt-3 mt-6">
+      <p class="text-[#F2DF7E] text-sm text-center font-medium">
+        © 2024 Santiago Papelería. Todos los derechos reservados.
+      </p>
+    </div>
+  </div>
 </footer>

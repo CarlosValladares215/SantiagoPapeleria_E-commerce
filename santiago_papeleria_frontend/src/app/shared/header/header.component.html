@@ -4,9 +4,7 @@
   <div class="header-top-bar">
     <div class="header-container">
       <div class="top-bar-content">
-        <span class="top-bar-text">
-
-        </span>
+        <span class="top-bar-text"></span>
         <div class="top-bar-links">
           <a routerLink="/sucursales"><i class="fas fa-store"></i> Sucursales</a>
           <a routerLink="/contact"><i class="fas fa-headset"></i> Ayuda</a>
@@ -20,14 +18,8 @@
   <div class="bg-white">
     <div class="header-container">
       <div class="header-main">
-        <!-- Logo y Menú Hamburguesa -->
+        <!-- Logo -->
         <div class="header-left">
-          <button class="menu-hamburger" (click)="toggleMobileMenu()" aria-label="Menú principal">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-          </button>
-
           <a routerLink="/" class="logo" aria-label="Santiago Papelería">
             <div class="logo-container">
               <img src="favicon.ico" alt="Santiago Papelería" class="logo-image" loading="eager">
@@ -47,15 +39,13 @@
                 <i class="fas fa-search"></i>
               </button>
               <input type="search" class="search-input" [(ngModel)]="searchQuery" name="search"
-                placeholder="¿Qué producto buscas hoy?" aria-label="Buscar productos">
-              <!-- Suggestions could go here -->
+                placeholder="Buscar..." aria-label="Buscar productos">
             </div>
           </form>
         </div>
 
         <!-- Acciones de Usuario -->
         <ng-container *ngIf="auth.user(); else guestActions">
-
           <!-- Usuario Dropdown Trigger (Avatar + Info) -->
           <div class="user-dropdown" (mouseleave)="closeProfileMenu()">
             <button class="user-info-trigger" aria-label="Menú de usuario" (click)="toggleProfileMenu()">
@@ -71,7 +61,7 @@
               </div>
             </button>
 
-            <!-- Card Menu (Misma estructura interna) -->
+            <!-- Card Menu -->
             <div class="user-card-dropdown" [class.show]="isProfileMenuOpen()">
               <div class="card-header">
                 <div class="card-avatar">
@@ -96,8 +86,7 @@
             </div>
           </div>
 
-
-          <!-- Carrito (Texto + Icono) -->
+          <!-- Carrito -->
           <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
             (click)="toggleCart()">
             <div class="relative inline-block">
@@ -110,7 +99,6 @@
             </div>
             <span class="ml-1 font-medium text-sm">Carrito</span>
           </button>
-
         </ng-container>
 
         <ng-template #guestActions>
@@ -121,8 +109,7 @@
               <a routerLink="/register" class="btn-register-header">Registrarse</a>
             </div>
 
-            <!-- Carrito Estilo Guest -->
-            <!-- Carrito Estilo Guest (Identico a Logueado) -->
+            <!-- Carrito Guest -->
             <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
               (click)="toggleCart()">
               <div class="relative inline-block">
@@ -189,7 +176,6 @@
           <a [routerLink]="['/offers']" class="nav-link highlight">
             <i class="fas fa-tag"></i>
             <span>OFERTAS ESPECIALES</span>
-            <span class="badge">50%</span>
           </a>
         </li>
 
@@ -197,7 +183,6 @@
           <a [routerLink]="['/products']" [queryParams]="{sort: 'newest'}" class="nav-link">
             <i class="fas fa-star"></i>
             <span>NUEVO</span>
-            <span class="badge new">NUEVO</span>
           </a>
         </li>
       </ul>
@@ -206,7 +191,6 @@
 
   <!-- MEGA MENÚS DESPLEGABLES -->
   <div class="mega-menu-container" (mouseenter)="cancelCloseMega()" (mouseleave)="scheduleCloseMega()">
-
     <!-- MEGA 1: Papelería & Oficina -->
     <div class="mega-menu" [class.active]="megaMenu() === 'papeleria'">
       <div class="mega-content">
@@ -215,15 +199,13 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-graduation-cap"></i> ESCOLAR</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'utiles-escolares'}">Útiles escolares</a>
-              </li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'utiles-escolares'}">Útiles escolares</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cuadernos'}">Cuadernos</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'libretas'}">Libretas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'forros'}">Forros</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'mochilas'}">Mochilas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cartucheras'}">Cartucheras</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'materiales-dibujo'}">Materiales de
-                  dibujo</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'materiales-dibujo'}">Materiales de dibujo</a></li>
             </ul>
           </div>
 
@@ -231,14 +213,11 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-briefcase"></i> OFICINA</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'suministros-oficina'}">Suministros de
-                  oficina</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-oficina'}">Accesorios de
-                  oficina</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'suministros-oficina'}">Suministros de oficina</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-oficina'}">Accesorios de oficina</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'carpetas'}">Carpetas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'sellos'}">Sellos</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'papeleria-especializada'}">Papelería
-                  especializada</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'papeleria-especializada'}">Papelería especializada</a></li>
             </ul>
           </div>
 
@@ -248,8 +227,7 @@
             <ul class="mega-list">
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'calculadoras'}">Calculadoras</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'sumadoras'}">Sumadoras</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'tecnologia-oficina'}">Tecnología de
-                  oficina</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'tecnologia-oficina'}">Tecnología de oficina</a></li>
             </ul>
           </div>
 
@@ -278,8 +256,7 @@
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'decoracion'}">Decoración</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'electromenor'}">Electromenor</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cocina'}">Cocina</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'organizacion-hogar'}">Organización del
-                  hogar</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'organizacion-hogar'}">Organización del hogar</a></li>
             </ul>
           </div>
 
@@ -289,8 +266,7 @@
             <ul class="mega-list">
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'aseo-personal'}">Aseo personal</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cosmeticos'}">Cosméticos</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-cabello'}">Accesorios de
-                  cabello</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-cabello'}">Accesorios de cabello</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'utiles-aseo'}">Útiles de aseo</a></li>
             </ul>
           </div>
@@ -299,8 +275,7 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-tshirt"></i> MODA & ACCESORIOS</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-moda'}">Accesorios de moda</a>
-              </li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-moda'}">Accesorios de moda</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'bisuteria'}">Bisutería</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'bolsos'}">Bolsos</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'relojes'}">Relojes</a></li>
@@ -311,8 +286,7 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-dumbbell"></i> DEPORTES & GYM</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'articulos-deportivos'}">Artículos
-                  deportivos</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'articulos-deportivos'}">Artículos deportivos</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'gimnasio'}">Gimnasio</a></li>
             </ul>
           </div>
@@ -328,13 +302,11 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-paint-brush"></i> ARTE & CREATIVIDAD</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'productos-arte'}">Productos de arte</a>
-              </li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'productos-arte'}">Productos de arte</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'pinturas'}">Pinturas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'manualidades'}">Manualidades</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'arquitectura'}">Arquitectura</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'herramientas-creativas'}">Herramientas
-                  creativas</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'herramientas-creativas'}">Herramientas creativas</a></li>
             </ul>
           </div>
 
@@ -347,8 +319,7 @@
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cumpleanos'}">Cumpleaños</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'tarjeteria'}">Tarjetería</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'navidad'}">Navidad</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'embalaje-regalos'}">Embalaje para
-                  regalos</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'embalaje-regalos'}">Embalaje para regalos</a></li>
             </ul>
           </div>
 
@@ -366,93 +337,4 @@
       </div>
     </div>
   </div>
-
-
-
 </header>
-
-<!-- Menú Móvil -->
-<nav class="mobile-menu" [class.active]="isMobileMenuOpen()">
-  <div class="mobile-menu-header">
-    <div class="mobile-user">
-      <i class="fas fa-user-circle"></i>
-      <div *ngIf="auth.user(); else mobileGuest">
-        <p class="welcome">Hola, {{ auth.user()!.nombres }}</p>
-        <p class="store-name">Santiago Papelería</p>
-      </div>
-      <ng-template #mobileGuest>
-        <p class="store-name">Santiago Papelería</p>
-      </ng-template>
-    </div>
-    <button class="mobile-close" (click)="closeMobileMenu()" aria-label="Cerrar menú">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-
-  <div class="mobile-menu-content">
-    <div class="mobile-search">
-      <input type="text" [(ngModel)]="searchQuery" placeholder="Buscar productos..." class="mobile-search-input">
-      <button class="mobile-search-btn" (click)="performSearch()"><i class="fas fa-search"></i></button>
-    </div>
-
-    <ul class="mobile-nav">
-      <li><a [routerLink]="['/']" (click)="closeMobileMenu()" class="mobile-nav-link active"><i class="fas fa-home"></i>
-          Inicio</a></li>
-
-      <!-- MOBILE PAPELERÍA -->
-      <li class="mobile-category-parent" [class.open]="mobileCatOpen === 'papeleria'">
-        <a (click)="mobileCatOpen = mobileCatOpen === 'papeleria' ? '' : 'papeleria'" class="mobile-nav-link">
-          <i class="fas fa-pen-nib"></i> Papelería & Oficina
-          <i class="fas fa-chevron-down mobile-arrow"></i>
-        </a>
-        <ul class="mobile-submenu" [style.display]="mobileCatOpen === 'papeleria' ? 'block' : 'none'">
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'utiles-escolares'}"
-              (click)="closeMobileMenu()">Útiles Escolares</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cuadernos'}"
-              (click)="closeMobileMenu()">Cuadernos</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'suministros-oficina'}"
-              (click)="closeMobileMenu()">Oficina</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'calculadoras'}"
-              (click)="closeMobileMenu()">Tecnología</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'papel-bond'}"
-              (click)="closeMobileMenu()">Papeles</a></li>
-        </ul>
-      </li>
-
-      <!-- MOBILE HOGAR -->
-      <li class="mobile-category-parent" [class.open]="mobileCatOpen === 'hogar'">
-        <a (click)="mobileCatOpen = mobileCatOpen === 'hogar' ? '' : 'hogar'" class="mobile-nav-link">
-          <i class="fas fa-store"></i> Hogar & Lifestyle
-          <i class="fas fa-chevron-down mobile-arrow"></i>
-        </a>
-        <ul class="mobile-submenu" [style.display]="mobileCatOpen === 'hogar' ? 'block' : 'none'">
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'decoracion'}"
-              (click)="closeMobileMenu()">Decoración</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'aseo-personal'}"
-              (click)="closeMobileMenu()">Personal</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'moda-accesorios'}"
-              (click)="closeMobileMenu()">Moda</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'articulos-deportivos'}"
-              (click)="closeMobileMenu()">Deportes</a></li>
-        </ul>
-      </li>
-
-      <!-- MOBILE CREATIVIDAD -->
-      <li class="mobile-category-parent" [class.open]="mobileCatOpen === 'creatividad'">
-        <a (click)="mobileCatOpen = mobileCatOpen === 'creatividad' ? '' : 'creatividad'" class="mobile-nav-link">
-          <i class="fas fa-palette"></i> Creatividad & Regalos
-          <i class="fas fa-chevron-down mobile-arrow"></i>
-        </a>
-        <ul class="mobile-submenu" [style.display]="mobileCatOpen === 'creatividad' ? 'block' : 'none'">
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'productos-arte'}"
-              (click)="closeMobileMenu()">Arte</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'regalos'}"
-              (click)="closeMobileMenu()">Regalos</a></li>
-          <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'comida'}"
-              (click)="closeMobileMenu()">Comida</a></li>
-        </ul>
-      </li>
-    </ul>
-  </div>
-</nav>
-<div class="mobile-overlay" [class.active]="isMobileMenuOpen()" (click)="closeMobileMenu()"></div>
