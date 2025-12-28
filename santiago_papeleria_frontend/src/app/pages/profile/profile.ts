@@ -68,6 +68,7 @@ export class Profile implements OnInit {
             calle_principal: ['', Validators.required],
             ciudad: ['', Validators.required],
             provincia: ['', Validators.required],
+            codigo_postal: [''],
             referencia: [''],
             lat: [null, Validators.required],
             lng: [null, Validators.required]
@@ -176,6 +177,7 @@ export class Profile implements OnInit {
             calle_principal: addr.calle_principal,
             ciudad: addr.ciudad,
             provincia: addr.provincia,
+            codigo_postal: addr.codigo_postal || '',
             referencia: addr.referencia,
             lat: addr.location?.lat,
             lng: addr.location?.lng
@@ -247,6 +249,7 @@ export class Profile implements OnInit {
                 calle_principal: val.calle_principal,
                 ciudad: val.ciudad,
                 provincia: val.provincia,
+                codigo_postal: val.codigo_postal,
                 referencia: val.referencia,
                 location: {
                     lat: val.lat,

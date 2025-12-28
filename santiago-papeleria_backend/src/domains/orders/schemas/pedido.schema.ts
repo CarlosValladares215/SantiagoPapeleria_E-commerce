@@ -44,26 +44,38 @@ class ResumenFinanciero {
 
   @Prop({ required: true })
   metodo_pago: string; // Ejemplo: 'TRANSFERENCIA'
+
+  @Prop({ required: false, default: null })
+  comprobante_pago: string; // URL del archivo subido (Solo para transferencias)
 }
 
 // 3. Dirección de Destino (Parte de Datos Envío)
 class DireccionDestino {
-  @Prop({ required: true })
+  @Prop({ required: false })
   calle: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   ciudad: string;
+
+  @Prop({ required: false })
+  provincia: string;
+
+  @Prop({ required: false })
+  codigo_postal: string;
+
+  @Prop({ required: false })
+  referencia: string;
 }
 
 // 4. Datos de Envío
 class DatosEnvio {
-  @Prop({ required: true })
+  @Prop({ required: false, default: null })
   courier: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false, default: null })
   guia_tracking: string;
 
-  @Prop({ type: DireccionDestino, required: true })
+  @Prop({ type: DireccionDestino, required: false, default: null })
   direccion_destino: DireccionDestino;
 }
 

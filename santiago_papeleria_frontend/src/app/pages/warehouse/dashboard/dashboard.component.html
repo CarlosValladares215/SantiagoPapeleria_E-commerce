@@ -14,15 +14,20 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <button
-                class="bg-[#104D73] hover:bg-[#0f4c75] px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors border border-[#1E5D87]">
-                <i class="ri-dashboard-line"></i> Sincronizar DobraNet
+            <button (click)="syncDobranet()" [disabled]="isSyncing"
+                class="bg-[#104D73] hover:bg-[#0f4c75] disabled:bg-gray-400 disabled:cursor-not-allowed px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors border border-[#1E5D87] text-white shadow-sm">
+                <i class="ri-refresh-line" [class.animate-spin]="isSyncing" *ngIf="isSyncing"></i>
+                <i class="ri-dashboard-line" *ngIf="!isSyncing"></i>
+                {{ isSyncing ? 'Sincronizando...' : 'Sincronizar DobraNet' }}
             </button>
 
-            <div
-                class="bg-[#064e3b] text-[#34d399] px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 border border-[#059669]">
-                <span class="w-2 h-2 bg-[#34d399] rounded-full animate-pulse"></span>
-                Sistema Activo
+            <div [ngClass]="{
+                    'bg-[#064e3b] text-[#34d399] border-[#059669]': isConnected,
+                    'bg-[#7f1d1d] text-[#fca5a5] border-[#b91c1c]': !isConnected
+                }" class="px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 border transition-colors">
+                <span [ngClass]="{'bg-[#34d399]': isConnected, 'bg-[#fca5a5]': !isConnected}"
+                    class="w-2 h-2 rounded-full animate-pulse"></span>
+                {{ isConnected ? 'Sistema Activo' : 'Sistema Inactivo' }}
             </div>
 
             <div class="h-8 w-px bg-gray-600 mx-2"></div>
@@ -73,26 +78,26 @@
                 <span class="text-3xl font-bold text-red-500">{{ stats.pending }}</span>
             </div>
 
-            <!-- Card: En Preparación -->
+            <!-- Card: Preparando -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
                 <div>
                     <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 mb-3">
                         <i class="ri-box-3-line text-xl"></i>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-sm">En Preparación</h3>
+                    <h3 class="font-bold text-gray-800 text-sm">Preparando</h3>
                     <p class="text-xs text-gray-500 mt-1">Siendo procesados en bodega</p>
                 </div>
                 <span class="text-3xl font-bold text-blue-500">{{ stats.preparing }}</span>
             </div>
 
-            <!-- Card: En Tránsito -->
+            <!-- Card: Enviado -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
                 <div>
                     <div
                         class="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600 mb-3">
                         <i class="ri-truck-line text-xl"></i>
                     </div>
-                    <h3 class="font-bold text-gray-800 text-sm">En Tránsito</h3>
+                    <h3 class="font-bold text-gray-800 text-sm">Enviado</h3>
                     <p class="text-xs text-gray-500 mt-1">Camino al cliente</p>
                 </div>
                 <span class="text-3xl font-bold text-yellow-500">{{ stats.transit }}</span>
@@ -139,11 +144,11 @@
                     <select
                         class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:border-[#F2CB07] outline-none bg-white">
                         <option>Todos los estados</option>
-                        <option>Confirmado</option>
-                        <option>En Preparación</option>
-                        <option>Enviado</option>
                         <option>Pendiente</option>
+                        <option>Preparando</option>
+                        <option>Enviado</option>
                         <option>Entregado</option>
+                        <option>Cancelado</option>
                     </select>
                 </div>
 
@@ -165,20 +170,20 @@
             <!-- Filter Tags -->
             <div class="flex gap-2 mt-4">
                 <span
-                    class="bg-red-50 text-red-600 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-red-100">
-                    <i class="ri-alert-line"></i> Confirmados
-                </span>
-                <span
                     class="bg-orange-50 text-orange-600 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-orange-100">
-                    <i class="ri-time-line"></i> Pendientes
+                    <i class="ri-time-line"></i> Pendiente
                 </span>
                 <span
                     class="bg-blue-50 text-blue-600 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-blue-100">
-                    <i class="ri-loader-4-line"></i> En Preparación
+                    <i class="ri-loader-4-line"></i> Preparando
                 </span>
                 <span
                     class="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-yellow-100">
-                    <i class="ri-truck-line"></i> Enviados
+                    <i class="ri-truck-line"></i> Enviado
+                </span>
+                <span
+                    class="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-green-100">
+                    <i class="ri-checkbox-circle-line"></i> Entregado
                 </span>
             </div>
         </div>
@@ -219,7 +224,10 @@
                             <!-- Cliente -->
                             <td class="px-6 py-4">
                                 <div class="font-bold text-gray-800 text-sm">{{ order.client.name }}</div>
-                                <div class="text-xs text-gray-500 mt-0.5">{{ order.client.ruc }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5 mb-1">{{ order.client.ruc }}</div>
+                                <span
+                                    class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-100 uppercase tracking-wide">{{
+                                    order.client.type }}</span>
                             </td>
 
                             <!-- Fecha -->
@@ -486,12 +494,19 @@
                         <i class="ri-download-line text-lg"></i> Descargar Guía
                     </button>
                     <button
-                        class="bg-[#F2CB07] hover:bg-[#d9b506] text-[#012E40] px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
-                        <i class="ri-printer-line text-lg"></i> Imprimir
+                        class="bg-[#F59E0B] hover:bg-[#d97706] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
+                        <i class="ri-printer-line"></i> Imprimir
                     </button>
-                    <button
-                        class="bg-[#22C55E] hover:bg-[#1ea34d] text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
-                        <i class="ri-truck-line text-lg"></i> Generar Guía
+
+                    <!-- Dynamic Button: Generar Guía vs Marcar Entregado -->
+                    <button *ngIf="selectedOrder.status !== 'Enviado' && selectedOrder.status !== 'Entregado'"
+                        class="bg-[#10B981] hover:bg-[#059669] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
+                        <i class="ri-truck-line"></i> Generar Guía
+                    </button>
+
+                    <button *ngIf="selectedOrder.status === 'Enviado'" (click)="selectStatus('Entregado')"
+                        class="bg-[#10B981] hover:bg-[#059669] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
+                        <i class="ri-checkbox-circle-line"></i> Marcar Entregado
                     </button>
                 </div>
 
@@ -510,16 +525,22 @@
                                 <p class="text-gray-800 font-medium">{{ selectedOrder.client.name }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">RUC</p>
+                                <p class="text-xs text-gray-500 font-bold mb-1">RUC/Cédula</p>
                                 <p class="text-gray-800 font-medium">{{ selectedOrder.client.ruc }}</p>
                             </div>
                             <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Tipo de Cliente</p>
+                                <p
+                                    class="text-gray-800 font-medium bg-gray-100 px-2 py-1 rounded inline-block text-xs uppercase">
+                                    {{ selectedOrder.client.type }}</p>
+                            </div>
+                            <div>
                                 <p class="text-xs text-gray-500 font-bold mb-1">Teléfono</p>
-                                <p class="text-gray-800 font-medium">+593 99 123 4567</p>
+                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.phone }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 font-bold mb-1">Email</p>
-                                <p class="text-gray-800 font-medium">ventas&#64;elestudiante.com</p>
+                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.email }}</p>
                             </div>
                         </div>
                     </div>
@@ -533,16 +554,24 @@
                         <div class="space-y-4">
                             <div>
                                 <p class="text-xs text-gray-500 font-bold mb-1">Dirección Completa</p>
-                                <p class="text-gray-800 font-medium">Av. Amazonas N24-156 y Colón</p>
+                                <p class="text-gray-800 font-medium">{{ selectedOrder.shippingAddress.full }}</p>
+                                <p *ngIf="selectedOrder.shippingAddress.reference && selectedOrder.shippingAddress.reference !== 'N/A'"
+                                    class="text-xs text-gray-500 italic mt-1">
+                                    "{{ selectedOrder.shippingAddress.reference }}"
+                                </p>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p class="text-xs text-gray-500 font-bold mb-1">Ciudad</p>
-                                    <p class="text-gray-800 font-medium">Quito</p>
+                                    <p class="text-xs text-gray-500 font-bold mb-1">Ciudad / Provincia</p>
+                                    <p class="text-gray-800 font-medium">
+                                        {{ selectedOrder.shippingAddress.city }}, {{
+                                        selectedOrder.shippingAddress.province }}
+                                    </p>
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-500 font-bold mb-1">Código Postal</p>
-                                    <p class="text-gray-800 font-medium">170515</p>
+                                    <p class="text-gray-800 font-medium">{{ selectedOrder.shippingAddress.postalCode }}
+                                    </p>
                                 </div>
                             </div>
                             <div>
@@ -578,13 +607,6 @@
                             <div *ngIf="isStatusDropdownOpen"
                                 class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-20 py-1 overflow-hidden">
 
-                                <!-- Confirmado -->
-                                <button (click)="selectStatus('Confirmado')"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                    <i class="ri-alert-fill text-red-500 text-lg"></i>
-                                    <span class="font-bold text-gray-700 text-sm">Confirmado</span>
-                                </button>
-
                                 <!-- Pendiente -->
                                 <button (click)="selectStatus('Pendiente')"
                                     class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
@@ -592,11 +614,11 @@
                                     <span class="font-bold text-gray-700 text-sm">Pendiente</span>
                                 </button>
 
-                                <!-- En Preparación -->
-                                <button (click)="selectStatus('En Preparación')"
+                                <!-- Preparando -->
+                                <button (click)="selectStatus('Preparando')"
                                     class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
                                     <i class="ri-box-3-line text-blue-500 text-lg"></i>
-                                    <span class="font-bold text-gray-700 text-sm">En Preparación</span>
+                                    <span class="font-bold text-gray-700 text-sm">Preparando</span>
                                 </button>
 
                                 <!-- Enviado -->
@@ -622,20 +644,21 @@
 
                             </div>
                         </div>
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <p class="text-xs text-gray-500 font-bold mb-2">Historial de Cambios</p>
-                            <div class="flex gap-2 text-xs text-gray-600">
-                                <i class="ri-history-line"></i>
-                                <span>Confirmado • {{ selectedOrder.date | date:'dd/MM/yyyy, h:mm a' }}</span>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Payment Info -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
-                            <i class="ri-bank-card-line text-lg"></i>
-                            <h3 class="font-bold text-sm">Método de Pago</h3>
+                        <div class="flex items-center justify-between mb-4 text-[#012E40]">
+                            <div class="flex items-center gap-2">
+                                <i class="ri-bank-card-line text-lg"></i>
+                                <h3 class="font-bold text-sm">Método de Pago</h3>
+                            </div>
+                            <!-- View Proof Button -->
+                            <a *ngIf="selectedOrder.paymentMethod === 'TRANSFERENCIA' && selectedOrder.paymentProofUrl"
+                                [href]="selectedOrder.paymentProofUrl" target="_blank"
+                                class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors flex items-center gap-1 font-medium">
+                                <i class="ri-file-search-line"></i> Ver Comprobante
+                            </a>
                         </div>
                         <div class="space-y-4">
                             <div>
@@ -650,7 +673,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 font-bold mb-1">Observaciones</p>
-                                <p class="text-gray-600 text-sm">Entrega urgente - Cliente preferencial</p>
+                                <p class="text-gray-600 text-sm">{{ selectedOrder.observations }}</p>
                             </div>
                         </div>
                     </div>
@@ -668,7 +691,7 @@
                             <thead
                                 class="bg-gray-50 text-xs text-gray-500 uppercase font-bold tracking-wider text-left">
                                 <tr>
-                                    <th class="px-6 py-4">Código</th>
+                                    <th class="px-6 py-4">COD</th>
                                     <th class="px-6 py-4">Producto</th>
                                     <th class="px-6 py-4">Cantidad</th>
                                     <th class="px-6 py-4">Precio Unit.</th>

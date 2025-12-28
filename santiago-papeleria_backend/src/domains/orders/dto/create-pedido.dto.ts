@@ -7,6 +7,7 @@ import {
   IsArray,
   ValidateNested,
   IsMongoId,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ItemDto } from './item.dto';
@@ -29,16 +30,23 @@ class ResumenFinancieroDto {
 
   @IsString()
   metodo_pago: string;
+
+  @IsOptional()
+  @IsString()
+  comprobante_pago?: string;
 }
 
 class DatosEnvioDto {
+  @IsOptional()
   @IsString()
   courier: string;
 
   // En la creación, la guía podría ser 'PENDIENTE' o no enviarse, pero la incluimos para completitud.
+  @IsOptional()
   @IsString()
   guia_tracking: string;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => DireccionDestinoDto)
   direccion_destino: DireccionDestinoDto;

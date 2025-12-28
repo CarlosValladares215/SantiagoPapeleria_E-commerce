@@ -1,113 +1,60 @@
-/* ============================================
-   HEADER PROFESIONAL - ESTILO COREANO/JAPONÉS
-   ============================================ */
-
-/* 1. RESET Y VARIABLES (Sistema de Diseño) */
 :host {
     display: block;
-    /* Colores Principales */
+    /* Colores que realmente se usan */
     --primary-dark: #012e40;
     --primary-blue: #104d73;
     --accent-yellow: #f2cb07;
     --accent-yellow-hover: #d4b100;
-
-    /* Escala de Grises (Japonés Minimalista) */
+    
+    /* Grises que se usan */
     --gray-50: #fafafa;
     --gray-100: #f5f5f5;
-    --gray-200: #eeeeee;
-    --gray-300: #e0e0e0;
-    --gray-400: #bdbdbd;
+    --gray-200: #e0e0e0;
+    --gray-300: #bdbdbd;
     --gray-500: #9e9e9e;
     --gray-600: #757575;
-    --gray-700: #616161;
-    --gray-800: #424242;
-    --gray-900: #212121;
-
-    /* Blanco y Negro */
-    --white: #ffffff;
-    --black: #000000;
-
-    /* Estados */
-    --success: #4caf50;
-    --warning: #ff9800;
-    --error: #f44336;
-    --info: #2196f3;
-
-    /* Sombras (Coreano Style) */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-
-    /* Transiciones (Suaves) */
+    --gray-700: #424242;
+    --gray-800: #212121;
+    
+    /* Sombras que se usan */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+    
+    /* Transiciones que se usan */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-
-    /* Tipografía */
-    --font-primary: 'Poppins', 'Noto Sans KR', sans-serif;
-    --font-weight-light: 300;
-    --font-weight-regular: 400;
-    --font-weight-medium: 500;
-    --font-weight-semibold: 600;
-    --font-weight-bold: 700;
-
+    
     /* Layout */
     --header-height: 140px;
     --header-height-mobile: 70px;
     --container-max: 1400px;
-    --border-radius-sm: 4px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-    --border-radius-xl: 20px;
-    --border-radius-full: 9999px;
 }
 
-/* 2. RESET Y BASE */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* 3. HEADER PRINCIPAL */
+/* HEADER PRINCIPAL */
 .header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    background: var(--white);
+    background: #fff;
     box-shadow: var(--shadow-sm);
-    transition: transform var(--transition-normal),
-        box-shadow var(--transition-normal);
-    will-change: transform;
-}
-
-.header.hidden {
-    transform: translateY(-100%);
-}
-
-.header.scrolled {
-    box-shadow: var(--shadow-lg);
 }
 
 .header-container {
     max-width: var(--container-max);
     margin: 0 auto;
     padding: 0 20px;
-    /* Add padding here so inner content doesn't touch edges on small screens */
 }
 
-/* 4. TOP BAR (Coreano Style) */
+/* TOP BAR */
 .header-top-bar {
     width: 100%;
     background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
-    color: var(--white);
+    color: #fff;
     padding: 8px 0;
-    /* Remove horizontal padding, let container handle it */
     font-size: 0.875rem;
 }
 
@@ -115,18 +62,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* max-width removed here as it's now in header-container wrapper */
-}
-
-.top-bar-text {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: var(--font-weight-medium);
-}
-
-.top-bar-text i {
-    font-size: 0.75rem;
 }
 
 .top-bar-links {
@@ -137,7 +72,6 @@
 .top-bar-links a {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
-    font-weight: var(--font-weight-medium);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -148,18 +82,16 @@
     color: var(--accent-yellow);
 }
 
-/* 5. HEADER MAIN (Contenido Principal) */
+/* HEADER MAIN */
 .header-main {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
     gap: 30px;
-    max-width: var(--container-max);
-    margin: 0 auto;
 }
 
-/* 5.1 Header Left - Logo y Hamburguesa */
+/* Header Left */
 .header-left {
     display: flex;
     align-items: center;
@@ -185,20 +117,7 @@
     height: 2px;
     background: var(--primary-dark);
     border-radius: 2px;
-    transition: transform var(--transition-fast),
-        opacity var(--transition-fast);
-}
-
-.menu-hamburger.active .hamburger-line:nth-child(1) {
-    transform: translateY(9px) rotate(45deg);
-}
-
-.menu-hamburger.active .hamburger-line:nth-child(2) {
-    opacity: 0;
-}
-
-.menu-hamburger.active .hamburger-line:nth-child(3) {
-    transform: translateY(-9px) rotate(-45deg);
+    transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 /* Logo */
@@ -218,11 +137,6 @@
     height: 45px;
     width: auto;
     object-fit: contain;
-    transition: transform var(--transition-normal);
-}
-
-.logo:hover .logo-image {
-    transform: scale(1.05);
 }
 
 .logo-text {
@@ -233,29 +147,21 @@
 
 .logo-title {
     font-size: 1.5rem;
-    font-weight: var(--font-weight-bold);
     color: var(--primary-dark);
     letter-spacing: -0.5px;
 }
 
 .logo-subtitle {
     font-size: 0.875rem;
-    font-weight: var(--font-weight-medium);
     color: var(--primary-blue);
     letter-spacing: 1.5px;
 }
 
-/* 5.2 Header Center - Búsqueda (Coreano Style) */
+/* Header Center - Búsqueda */
 .header-center {
     flex: 1;
     max-width: 600px;
     min-width: 0;
-}
-
-.search-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
 }
 
 .search-input-wrapper {
@@ -268,17 +174,16 @@
     height: 48px;
     padding: 0 52px 0 20px;
     font-size: 0.9375rem;
-    font-weight: var(--font-weight-regular);
     color: var(--gray-800);
     background: var(--gray-100);
     border: 2px solid transparent;
-    border-radius: var(--border-radius-full);
+    border-radius: 50px;
     outline: none;
     transition: all var(--transition-fast);
 }
 
 .search-input:focus {
-    background: var(--white);
+    background: #fff;
     border-color: var(--accent-yellow);
     box-shadow: 0 0 0 3px rgba(242, 203, 7, 0.1);
 }
@@ -290,9 +195,9 @@
     bottom: 4px;
     width: 40px;
     background: var(--primary-blue);
-    color: var(--white);
+    color: #fff;
     border: none;
-    border-radius: var(--border-radius-full);
+    border-radius: 50px;
     cursor: pointer;
     transition: background var(--transition-fast);
     display: flex;
@@ -304,119 +209,125 @@
     background: var(--primary-dark);
 }
 
-.search-suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--white);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-xl);
-    margin-top: 4px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all var(--transition-fast);
-    z-index: 1001;
-}
-
-.search-input:focus+.search-suggestions,
-.search-suggestions:hover {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.search-quick-tags {
+/* Guest Actions */
+.guest-actions {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 0 4px;
+    align-items: center;
+    gap: 24px;
 }
 
-.tag {
-    font-size: 0.75rem;
-    color: var(--gray-600);
+.session-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-login-header,
+.btn-register-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    font-size: 0.9375rem;
+    border-radius: 24px;
     text-decoration: none;
-    padding: 4px 10px;
-    background: var(--gray-100);
-    border-radius: var(--border-radius-full);
     transition: all var(--transition-fast);
+    white-space: nowrap;
 }
 
-.tag:hover {
-    background: var(--primary-blue);
-    color: var(--white);
-}
-
-/* 5.3 Header Right - Acciones (Japonés Minimalista) */
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-shrink: 0;
-}
-
-.header-action-btn {
-    position: relative;
-    width: 40px;
-    height: 40px;
-    border: none;
+.btn-login-header {
     background: transparent;
-    color: var(--gray-700);
-    border-radius: var(--border-radius-full);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-}
-
-.header-action-btn:hover {
-    background: var(--gray-100);
+    border: 1px solid var(--primary-blue);
     color: var(--primary-blue);
-    transform: translateY(-2px);
 }
 
-.header-action-btn[data-badge]::after {
-    content: attr(data-badge);
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    min-width: 18px;
-    height: 18px;
-    background: var(--error);
-    color: var(--white);
-    font-size: 0.625rem;
-    font-weight: var(--font-weight-bold);
-    border-radius: var(--border-radius-full);
+.btn-login-header:hover {
+    background: var(--gray-50);
+}
+
+.btn-register-header {
+    background: var(--accent-yellow);
+    border: 1px solid var(--accent-yellow);
+    color: var(--primary-dark);
+}
+
+.btn-register-header:hover {
+    background: var(--accent-yellow-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* User Info Trigger */
+.user-info-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background var(--transition-fast);
+}
+
+.user-info-trigger:hover {
+    background: var(--gray-50);
+}
+
+.avatar-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--primary-dark);
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 4px;
+    font-weight: bold;
+    font-size: 1.125rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* User Dropdown */
+.user-text-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.2;
+}
+
+.u-name {
+    font-size: 0.9375rem;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.u-name i {
+    font-size: 0.75rem;
+    color: var(--gray-300);
+}
+
+.u-role {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+/* User Card Dropdown */
 .user-dropdown {
     position: relative;
 }
 
-.user-dropdown:hover .dropdown-content {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.dropdown-content {
+.user-card-dropdown {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 12px);
     right: 0;
-    width: 240px;
-    background: var(--white);
-    border-radius: var(--border-radius-md);
+    width: 280px;
+    background: #fff;
+    border-radius: 8px;
     box-shadow: var(--shadow-xl);
-    padding: 12px 0;
-    margin-top: 8px;
+    border: 1px solid var(--gray-200);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -424,52 +335,162 @@
     z-index: 1001;
 }
 
-.dropdown-content a {
+.user-card-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.card-header {
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+}
+
+.card-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary-dark);
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name {
+    color: var(--primary-dark);
+    font-size: 0.9375rem;
+    line-height: 1.2;
+}
+
+.user-email {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.user-role-badge {
+    display: inline-block;
+    background: var(--accent-yellow);
+    color: var(--primary-dark);
+    font-size: 0.6875rem;
+    padding: 2px 8px;
+    border-radius: 50px;
+    margin-top: 4px;
+    align-self: flex-start;
+}
+
+.card-menu {
+    list-style: none;
+    padding: 8px 0;
+}
+
+.card-menu li a {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 20px;
+    padding: 10px 20px;
     color: var(--gray-700);
     text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    transition: all var(--transition-fast);
+    font-size: 0.875rem;
+    transition: background var(--transition-fast);
+    cursor: pointer;
 }
 
-.dropdown-content a:hover {
+.card-menu li a:hover {
     background: var(--gray-50);
     color: var(--primary-blue);
 }
 
-.dropdown-divider {
-    height: 1px;
-    background: var(--gray-200);
-    margin: 8px 0;
+.card-footer {
+    padding: 8px 0;
+    border-top: 1px solid var(--gray-200);
 }
 
-.login-btn {
-    color: var(--primary-blue) !important;
+.logout-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 20px;
+    color: #ff0000;
+    text-decoration: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background var(--transition-fast);
 }
 
-.register-btn {
-    color: var(--accent-yellow) !important;
+.logout-link:hover {
+    background: #ffeeee;
 }
 
-/* 6. NAVEGACIÓN PRINCIPAL */
+/* Header Action Button - Carrito */
+.header-action-btn.cart-btn-logged {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all var(--transition-fast);
+}
+
+.header-action-btn.cart-btn-logged:hover {
+    background: var(--gray-50);
+}
+
+.header-action-btn.cart-btn-logged i {
+    font-size: 1.25rem;
+    color: var(--gray-800);
+}
+
+.header-action-btn.cart-btn-logged span {
+    font-size: 0.9375rem;
+    color: var(--gray-800);
+}
+
+/* Badge del carrito */
+.header-action-btn.cart-btn-logged .relative.inline-block {
+    position: relative;
+}
+
+.header-action-btn.cart-btn-logged .absolute {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #ff0000;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    height: 20px;
+    min-width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+/* NAVEGACIÓN PRINCIPAL */
 .header-navigation {
     width: 100%;
     border-top: 1px solid var(--gray-200);
-    background: var(--white);
-}
-
-.nav-list {
-    display: flex;
-    list-style: none;
-    /* justify-content: center; REMOVED to align with container, or keep if centered design preferred. 
-       If previous design was completely centered, we might want to keep the inner ul centered. 
-       Let's keep justify-content: center unless specific left align requested. 
-       Previous code had justify-content: center. */
-    justify-content: center;
-    gap: 2px;
+    background: #fff;
 }
 
 .nav-list {
@@ -490,7 +511,6 @@
     padding: 16px 24px;
     color: var(--gray-700);
     text-decoration: none;
-    font-weight: var(--font-weight-medium);
     font-size: 0.9375rem;
     transition: all var(--transition-fast);
     position: relative;
@@ -521,27 +541,13 @@
     right: 20px;
     height: 2px;
     background: var(--accent-yellow);
-    border-radius: 1px;
 }
 
 .nav-link.highlight {
-    color: var(--error);
+    color: #ff0000;
 }
 
-.nav-link.highlight .badge {
-    background: var(--error);
-    color: var(--white);
-    font-size: 0.625rem;
-    padding: 2px 6px;
-    border-radius: var(--border-radius-full);
-    margin-left: 4px;
-}
-
-.nav-link .badge.new {
-    background: var(--success);
-}
-
-/* 7. MEGA MENUS (Coreano Style) */
+/* MEGA MENUS */
 .mega-menu-container {
     position: absolute;
     top: 100%;
@@ -556,7 +562,7 @@
     top: 0;
     left: 0;
     right: 0;
-    background: var(--white);
+    background: #fff;
     border-top: 1px solid var(--gray-200);
     box-shadow: var(--shadow-xl);
     opacity: 0;
@@ -564,7 +570,6 @@
     transform: translateY(-20px);
     transition: all var(--transition-normal);
     pointer-events: none;
-    overflow: hidden;
 }
 
 .mega-menu.active {
@@ -582,7 +587,7 @@
 
 .mega-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 40px;
 }
 
@@ -595,7 +600,6 @@
     align-items: center;
     gap: 10px;
     font-size: 1rem;
-    font-weight: var(--font-weight-bold);
     color: var(--primary-dark);
     margin-bottom: 20px;
     padding-bottom: 10px;
@@ -616,7 +620,6 @@
     gap: 10px;
     color: var(--gray-700);
     text-decoration: none;
-    font-weight: var(--font-weight-medium);
     font-size: 0.9375rem;
     transition: all var(--transition-fast);
     padding: 4px 0;
@@ -627,685 +630,104 @@
     transform: translateX(5px);
 }
 
-.mega-list a i {
-    font-size: 0.625rem;
-    color: var(--gray-400);
-}
-
-.mega-highlight {
-    padding: 0 20px;
-}
-
-.mega-promo {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
-    border-radius: var(--border-radius-lg);
-    overflow: hidden;
-    color: var(--white);
-    position: relative;
-}
-
-.mega-promo-img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    opacity: 0.9;
-}
-
-.mega-promo-content {
-    padding: 20px;
-    position: relative;
-    z-index: 1;
-}
-
-.mega-promo-content h4 {
-    font-size: 1.25rem;
-    font-weight: var(--font-weight-bold);
-    margin-bottom: 8px;
-}
-
-.mega-promo-content p {
-    font-size: 0.875rem;
-    opacity: 0.9;
-    margin-bottom: 16px;
-}
-
-.btn-promo {
-    display: inline-block;
-    padding: 8px 20px;
-    background: var(--accent-yellow);
-    color: var(--primary-dark);
-    text-decoration: none;
-    font-weight: var(--font-weight-bold);
-    border-radius: var(--border-radius-full);
-    font-size: 0.875rem;
-    transition: all var(--transition-fast);
-}
-
-.btn-promo:hover {
-    background: var(--white);
-    transform: translateY(-2px);
-}
-
-/* 8. MENÚ MÓVIL (Coreano Style) */
-.mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    visibility: hidden;
-    transition: all var(--transition-normal);
-}
-
-.mobile-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.mobile-menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 320px;
-    background: var(--white);
-    z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform var(--transition-normal);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-}
-
-.mobile-menu.active {
-    transform: translateX(0);
-}
-
-.mobile-menu-header {
-    padding: 20px;
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
-    color: var(--white);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.mobile-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.mobile-user i {
-    font-size: 2rem;
-}
-
-.welcome {
-    font-size: 0.875rem;
-    opacity: 0.9;
-}
-
-.store-name {
-    font-size: 1.125rem;
-    font-weight: var(--font-weight-bold);
-}
-
-.mobile-close {
-    background: transparent;
-    border: none;
-    color: var(--white);
-    font-size: 1.25rem;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--border-radius-full);
-    transition: background var(--transition-fast);
-}
-
-.mobile-close:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.mobile-menu-content {
-    flex: 1;
-    padding: 20px 0;
-}
-
-.mobile-search {
-    padding: 0 20px 20px;
-    display: flex;
-    gap: 10px;
-}
-
-.mobile-search-input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 2px solid var(--gray-200);
-    border-radius: var(--border-radius-md);
-    font-size: 0.9375rem;
-    outline: none;
-    transition: border-color var(--transition-fast);
-}
-
-.mobile-search-input:focus {
-    border-color: var(--accent-yellow);
-}
-
-.mobile-search-btn {
-    width: 48px;
-    background: var(--primary-blue);
-    color: var(--white);
-    border: none;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.mobile-nav {
-    list-style: none;
-    margin-bottom: 20px;
-}
-
-.mobile-nav-link {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 20px;
-    color: var(--gray-800);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    font-size: 1rem;
-    transition: all var(--transition-fast);
-    border-left: 4px solid transparent;
-}
-
-.mobile-nav-link i {
-    width: 20px;
-    text-align: center;
-    font-size: 1.125rem;
-    color: var(--gray-600);
-}
-
-.mobile-nav-link.active,
-.mobile-nav-link:hover {
-    background: var(--gray-50);
-    border-left-color: var(--accent-yellow);
-    color: var(--primary-blue);
-}
-
-.mobile-nav-link.active i,
-.mobile-nav-link:hover i {
-    color: var(--primary-blue);
-}
-
-.mobile-nav-link.highlight {
-    color: var(--error);
-}
-
-.mobile-actions {
-    padding: 20px;
-    background: var(--gray-50);
-    margin: 20px;
-    border-radius: var(--border-radius-lg);
-}
-
-.mobile-action-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    color: var(--gray-800);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    border-radius: var(--border-radius-md);
-    transition: all var(--transition-fast);
-    margin-bottom: 8px;
-}
-
-.mobile-action-btn:last-child {
-    margin-bottom: 0;
-}
-
-.mobile-action-btn:hover {
-    background: var(--white);
-    color: var(--primary-blue);
-    transform: translateX(4px);
-}
-
-.mobile-action-btn.cart {
-    position: relative;
-}
-
-.mobile-action-btn .badge {
-    position: absolute;
-    right: 16px;
-    background: var(--error);
-    color: var(--white);
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: var(--border-radius-full);
-}
-
-.mobile-footer {
-    padding: 20px;
-    border-top: 1px solid var(--gray-200);
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-.mobile-footer-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: var(--gray-600);
-    text-decoration: none;
-    font-size: 0.75rem;
-    text-align: center;
-}
-
-.mobile-footer-link i {
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
-
-.mobile-footer-link:hover {
-    color: var(--primary-blue);
-}
-
-/* 9. CARRITO LATERAL (Japonés Minimalista) */
-.cart-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 380px;
-    background: var(--white);
-    z-index: 1001;
-    transform: translateX(100%);
-    transition: transform var(--transition-normal);
-    display: flex;
-    flex-direction: column;
-    box-shadow: var(--shadow-2xl);
-}
-
-.cart-sidebar.active {
-    transform: translateX(0);
-}
-
-.cart-header {
-    padding: 24px;
-    border-bottom: 1px solid var(--gray-200);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.cart-header h3 {
-    font-size: 1.25rem;
-    font-weight: var(--font-weight-bold);
-    color: var(--primary-dark);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.cart-close {
-    background: transparent;
-    border: none;
-    color: var(--gray-600);
-    font-size: 1.25rem;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--border-radius-full);
-    transition: all var(--transition-fast);
-}
-
-.cart-close:hover {
-    background: var(--gray-100);
-    color: var(--primary-blue);
-}
-
-.cart-content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.cart-footer {
-    padding: 24px;
-    border-top: 1px solid var(--gray-200);
-    background: var(--gray-50);
-}
-
-.cart-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.125rem;
-    font-weight: var(--font-weight-bold);
-    color: var(--primary-dark);
-    margin-bottom: 20px;
-}
-
-.total-price {
-    font-size: 1.5rem;
-    color: var(--primary-blue);
-}
-
-.cart-checkout-btn {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    background: var(--accent-yellow);
-    color: var(--primary-dark);
-    text-decoration: none;
-    font-weight: var(--font-weight-bold);
-    text-align: center;
-    border-radius: var(--border-radius-md);
-    margin-bottom: 12px;
-    transition: all var(--transition-fast);
-}
-
-.cart-checkout-btn:hover {
-    background: var(--accent-yellow-hover);
-    transform: translateY(-2px);
-}
-
-.cart-view-btn {
-    display: block;
-    width: 100%;
-    padding: 14px;
-    background: transparent;
-    color: var(--primary-blue);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    text-align: center;
-    border: 2px solid var(--primary-blue);
-    border-radius: var(--border-radius-md);
-    transition: all var(--transition-fast);
-}
-
-.cart-view-btn:hover {
-    background: var(--primary-blue);
-    color: var(--white);
-}
-
-/* 10. PÁGINAS */
-.page {
-    padding-top: calc(var(--header-height) + 40px);
-    min-height: 100vh;
-    display: none;
-}
-
-.page.active {
-    display: block;
-}
-
-.page-title {
-    font-size: 2.5rem;
-    font-weight: var(--font-weight-bold);
-    color: var(--primary-dark);
-    margin-bottom: 16px;
-    text-align: center;
-}
-
-.page-subtitle {
-    font-size: 1.125rem;
-    color: var(--gray-600);
-    text-align: center;
-    max-width: 600px;
-    margin: 0 auto 40px;
-}
-
-.container {
-    max-width: var(--container-max);
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* 11. RESPONSIVE DESIGN */
-/* Tablet (768px - 1024px) */
+/* RESPONSIVE DESIGN */
 @media (max-width: 1024px) {
     :host {
         --header-height: 120px;
     }
-
+    
     .mega-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-
-    .mega-highlight {
-        grid-column: span 2;
-    }
-
+    
     .nav-link {
         padding: 16px 18px;
         font-size: 0.875rem;
     }
-
-    .search-quick-tags {
-        display: none;
-    }
 }
 
-/* Mobile Large (576px - 768px) */
 @media (max-width: 768px) {
     :host {
         --header-height: var(--header-height-mobile);
     }
-
+    
     .header-top-bar {
         display: none;
     }
-
+    
     .menu-hamburger {
         display: flex;
     }
-
+    
     .header-main {
         padding: 12px 16px;
         gap: 16px;
     }
-
+    
     .logo-container {
         gap: 8px;
     }
-
+    
     .logo-image {
         height: 36px;
     }
-
+    
     .logo-title {
         font-size: 1.25rem;
     }
-
+    
     .logo-subtitle {
         font-size: 0.75rem;
     }
-
+    
     .search-input {
         height: 44px;
         padding: 0 48px 0 16px;
         font-size: 0.875rem;
     }
-
+    
     .search-submit {
         width: 36px;
     }
-
-    .header-right {
-        gap: 12px;
-    }
-
-    .header-action-btn {
-        width: 36px;
-        height: 36px;
-    }
-
-    .header-action-btn i {
-        font-size: 0.9375rem;
-    }
-
+    
     .header-navigation {
         display: none;
     }
-
+    
     .mega-menu-container {
         display: none;
     }
-
-    .page-title {
-        font-size: 2rem;
-    }
-
-    .page-subtitle {
-        font-size: 1rem;
-    }
 }
 
-/* Mobile Small (320px - 576px) */
 @media (max-width: 576px) {
     .header-main {
         gap: 12px;
     }
-
+    
     .logo-text {
         display: none;
     }
-
-    .search-container {
-        flex: 1;
-    }
-
-    .header-action-btn:nth-child(2),
-    .header-action-btn:nth-child(3) {
-        display: none;
-    }
-
-    .mobile-menu {
-        width: 280px;
-    }
-
-    .cart-sidebar {
-        width: 100%;
-    }
-
-    .page {
-        padding-top: calc(var(--header-height-mobile) + 20px);
-    }
-
-    .page-title {
-        font-size: 1.75rem;
-    }
 }
 
-/* 12. ANIMACIONES Y EFECTOS */
+/* ANIMACIONES */
 @keyframes fadeIn {
     from {
         opacity: 0;
         transform: translateY(10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* 13. ESTADOS DE CARGA */
-.loading-skeleton {
-    background: linear-gradient(90deg,
-            var(--gray-200) 25%,
-            var(--gray-300) 50%,
-            var(--gray-200) 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-    border-radius: var(--border-radius-md);
-}
-
-@keyframes loading {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* 14. UTILIDADES */
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-.text-truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .fade-in {
     animation: fadeIn 0.5s ease-out;
 }
 
-.slide-in-left {
-    animation: slideInLeft 0.5s ease-out;
-}
-
-.slide-in-right {
-    animation: slideInRight 0.5s ease-out;
-}
-
-/* 15. SCROLLBAR PERSONALIZADA */
+/* SCROLLBAR */
 ::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -1313,778 +735,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--gray-400);
-    border-radius: var(--border-radius-full);
+    background: var(--gray-300);
+    border-radius: 50px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--gray-500);
-}
-
-/* 16. ESTILOS ADICIONALES PARA MENÚ MÓVIL ACORDEÓN */
-
-.mobile-category-parent {
-    position: relative;
-}
-
-.mobile-submenu {
-    display: none;
-    opacity: 0;
-    transform: translateY(-10px);
-    max-height: 0;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    list-style: none;
-    background: var(--gray-50);
-    margin: 0;
-    padding-left: 20px;
-}
-
-.mobile-submenu li {
-    margin: 0;
-}
-
-.mobile-submenu a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    color: var(--gray-700);
-    text-decoration: none;
-    font-weight: var(--font-weight-regular);
-    font-size: 0.9375rem;
-    border-left: 2px solid transparent;
-    transition: all var(--transition-fast);
-}
-
-.mobile-submenu a:hover {
-    background: var(--white);
-    color: var(--primary-blue);
-    border-left-color: var(--accent-yellow);
-    padding-left: 24px;
-}
-
-.mobile-submenu a i {
-    font-size: 0.875rem;
-    width: 20px;
-    text-align: center;
-}
-
-.mobile-arrow {
-    margin-left: auto;
-    font-size: 0.75rem;
-    transition: transform var(--transition-fast);
-}
-
-.mobile-category-parent.open .mobile-arrow {
-    transform: rotate(180deg);
-}
-
-/* 17. NOTIFICACIONES TOAST */
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: var(--white);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-xl);
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    z-index: 2000;
-    transform: translateX(120%);
-    transition: transform var(--transition-normal);
-    max-width: 350px;
-    border-left: 4px solid var(--info);
-}
-
-.notification.show {
-    transform: translateX(0);
-}
-
-.notification-success {
-    border-left-color: var(--success);
-}
-
-.notification-error {
-    border-left-color: var(--error);
-}
-
-.notification-warning {
-    border-left-color: var(--warning);
-}
-
-.notification-info {
-    border-left-color: var(--info);
-}
-
-.notification i:first-child {
-    font-size: 1.25rem;
-}
-
-.notification-success i:first-child {
-    color: var(--success);
-}
-
-.notification-error i:first-child {
-    color: var(--error);
-}
-
-.notification-warning i:first-child {
-    color: var(--warning);
-}
-
-.notification-info i:first-child {
-    color: var(--info);
-}
-
-.notification span {
-    flex: 1;
-    font-weight: var(--font-weight-medium);
-    color: var(--gray-800);
-    font-size: 0.9375rem;
-}
-
-.notification-close {
-    background: transparent;
-    border: none;
-    color: var(--gray-500);
-    cursor: pointer;
-    font-size: 0.875rem;
-    padding: 4px;
-    border-radius: var(--border-radius-sm);
-    transition: all var(--transition-fast);
-}
-
-.notification-close:hover {
-    background: var(--gray-100);
-    color: var(--gray-700);
-}
-
-/* 18. MEJORAS PARA LOS SUGERENCIAS DE BÚSQUEDA */
-.suggestion-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    color: var(--gray-800);
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    border-bottom: 1px solid var(--gray-100);
-}
-
-.suggestion-item:last-child {
-    border-bottom: none;
-}
-
-.suggestion-item:hover {
-    background: var(--gray-50);
-}
-
-.suggestion-item i:first-child {
-    color: var(--primary-blue);
-    font-size: 0.875rem;
-    width: 20px;
-    text-align: center;
-}
-
-.suggestion-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-.suggestion-title {
-    font-weight: var(--font-weight-medium);
-    font-size: 0.9375rem;
-}
-
-.suggestion-category {
-    font-size: 0.75rem;
-    color: var(--gray-500);
-    margin-top: 2px;
-}
-
-.suggestion-item i:last-child {
-    color: var(--gray-400);
-    font-size: 0.75rem;
-}
-
-.suggestion-item.no-results {
-    color: var(--gray-500);
-    justify-content: center;
-}
-
-.suggestion-item.see-all {
-    background: var(--gray-50);
-    color: var(--primary-blue);
-    font-weight: var(--font-weight-medium);
-    justify-content: center;
-}
-
-.suggestion-item.see-all:hover {
-    background: var(--primary-blue);
-    color: var(--white);
-}
-
-/* 19. MEJORAS PARA EL CARRITO */
-.cart-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px 0;
-    border-bottom: 1px solid var(--gray-200);
-    transition: all var(--transition-fast);
-}
-
-.cart-item:last-child {
-    border-bottom: none;
-}
-
-.cart-item-img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: var(--border-radius-md);
-}
-
-.cart-item-info {
-    flex: 1;
-}
-
-.cart-item-title {
-    font-size: 0.9375rem;
-    font-weight: var(--font-weight-medium);
-    color: var(--gray-800);
-    margin-bottom: 4px;
-}
-
-.cart-item-price {
-    font-size: 0.875rem;
-    font-weight: var(--font-weight-bold);
-    color: var(--primary-blue);
-    margin-bottom: 8px;
-}
-
-.cart-item-quantity {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.quantity-btn {
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--gray-300);
-    background: var(--white);
-    border-radius: var(--border-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    color: var(--gray-700);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.quantity-btn:hover {
-    background: var(--gray-100);
-    border-color: var(--gray-400);
-}
-
-.quantity {
-    min-width: 24px;
-    text-align: center;
-    font-weight: var(--font-weight-medium);
-}
-
-.cart-item-remove {
-    background: transparent;
-    border: none;
-    color: var(--gray-400);
-    cursor: pointer;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--border-radius-full);
-    transition: all var(--transition-fast);
-}
-
-.cart-item-remove:hover {
-    background: var(--gray-100);
-    color: var(--error);
-}
-
-.cart-empty {
-    text-align: center;
-    padding: 40px 20px;
-}
-
-.cart-empty i {
-    font-size: 3rem;
-    color: var(--gray-300);
-    margin-bottom: 16px;
-}
-
-.cart-empty p {
-    color: var(--gray-600);
-    margin-bottom: 24px;
-    font-size: 1.125rem;
-}
-
-.btn-shop {
-    display: inline-block;
-    padding: 12px 24px;
-    background: var(--primary-blue);
-    color: var(--white);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    border-radius: var(--border-radius-md);
-    transition: all var(--transition-fast);
-}
-
-.btn-shop:hover {
-    background: var(--primary-dark);
-    transform: translateY(-2px);
-}
-
-/* 20. RESPONSIVE ADICIONAL PARA ACORDEÓN */
-@media (max-width: 768px) {
-    .mobile-submenu a {
-        padding: 10px 20px;
-        font-size: 0.875rem;
-    }
-
-    .notification {
-        left: 20px;
-        right: 20px;
-        max-width: none;
-    }
-}
-
-/* 9. GUEST HEADER ACTIONS (New Requirement) */
-.guest-actions {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
-
-.session-buttons {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Button Reset/Base */
-.btn-login-header,
-.btn-register-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 24px;
-    font-size: 0.9375rem;
-    font-weight: var(--font-weight-medium);
-    border-radius: var(--border-radius-md);
-    text-decoration: none;
-    transition: all var(--transition-fast);
-    white-space: nowrap;
-}
-
-/* Login Button - Outlined */
-.btn-login-header {
-    background: transparent;
-    border: 1px solid var(--primary-blue);
-    color: var(--primary-blue);
-}
-
-.btn-login-header:hover {
-    background: var(--gray-50);
-}
-
-/* Register Button - Solid Yellow */
-.btn-register-header {
-    background: var(--accent-yellow);
-    border: 1px solid var(--accent-yellow);
-    color: var(--primary-dark);
-}
-
-.btn-register-header:hover {
-    background: var(--accent-yellow-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-/* Guest Cart Button */
-.cart-btn-guest {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font-primary);
-    position: relative;
-    padding: 8px;
-    border-radius: var(--border-radius-md);
-    transition: background var(--transition-fast);
-}
-
-.cart-btn-guest:hover {
-    background: var(--gray-50);
-}
-
-.cart-btn-guest i {
-    font-size: 1.5rem;
-    color: var(--primary-blue);
-}
-
-.cart-text {
-    font-size: 1rem;
-    font-weight: var(--font-weight-medium);
-    color: var(--primary-blue);
-}
-
-.cart-badge {
-    position: absolute;
-    top: 0;
-    right: -5px;
-    background: var(--error);
-    color: var(--white);
-    font-size: 0.75rem;
-    font-weight: bold;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--white);
-    box-shadow: var(--shadow-xs);
-}
-
-/* 10. USER CARD DROPDOWN (Logged-in) */
-
-/* Avatar Trigger in Navbar */
-.avatar-trigger {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--primary-dark);
-    color: var(--white);
-    font-weight: bold;
-    font-size: 1rem;
-    border: 2px solid var(--white);
-    box-shadow: var(--shadow-sm);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform var(--transition-fast);
-}
-
-.avatar-trigger:hover {
-    transform: scale(1.05);
-}
-
-/* Dropdown Card Container */
-.user-card-dropdown {
-    position: absolute;
-    top: calc(100% + 12px);
-    right: 0;
-    width: 280px;
-    background: var(--white);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-xl);
-    border: 1px solid var(--gray-200);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all var(--transition-fast);
-    z-index: 1001;
-    overflow: visible;
-    /* Changed from hidden to allow ::before to stick out */
-}
-
-/* Invisible bridge to prevent closing when moving from button to dropdown */
-.user-card-dropdown::before {
-    content: '';
-    position: absolute;
-    top: -15px;
-    left: 0;
-    width: 100%;
-    height: 15px;
-    background: transparent;
-}
-
-.user-card-dropdown.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-/* Card Header */
-.card-header {
-    padding: 20px;
-    display: flex;
-    align-items: flex-start;
-    /* Align top for multi-line info */
-    gap: 16px;
-    border-bottom: 1px solid var(--gray-200);
-    background: var(--gray-50);
-}
-
-.card-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--primary-dark);
-    color: var(--white);
-    font-size: 1.25rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.card-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.user-name {
-    font-weight: var(--font-weight-bold);
-    color: var(--primary-dark);
-    font-size: 0.9375rem;
-    line-height: 1.2;
-}
-
-.user-email {
-    font-size: 0.75rem;
-    color: var(--gray-500);
-    word-break: break-word;
-}
-
-.user-role-badge {
-    display: inline-block;
-    background: var(--accent-yellow);
-    color: var(--primary-dark);
-    font-size: 0.6875rem;
-    font-weight: bold;
-    padding: 2px 8px;
-    border-radius: var(--border-radius-full);
-    margin-top: 4px;
-    align-self: flex-start;
-    text-transform: capitalize;
-}
-
-/* Card Menu */
-.card-menu {
-    list-style: none;
-    padding: 8px 0;
-}
-
-.card-menu li a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 20px;
-    color: var(--gray-700);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    font-size: 0.875rem;
-    transition: background var(--transition-fast);
-    cursor: pointer;
-}
-
-.card-menu li a:hover {
-    background: var(--gray-50);
-    color: var(--primary-blue);
-}
-
-.card-menu li a i {
-    width: 16px;
-    text-align: center;
-    color: var(--primary-blue);
-}
-
-/* Card Footer */
-.card-footer {
-    padding: 8px 0;
-    border-top: 1px solid var(--gray-200);
-}
-
-.logout-link {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 20px;
-    color: var(--error);
-    text-decoration: none;
-    font-weight: var(--font-weight-medium);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: background var(--transition-fast);
-}
-
-.logout-link:hover {
-    background: #ffeeee;
-}
-
-.logout-link i {
-    width: 16px;
-    text-align: center;
-}
-
-/* 11. NEW LOGGED-IN HEADER DESIGN (Refactored) */
-
-.user-info-trigger {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    padding: 4px 8px;
-    border-radius: var(--border-radius-md);
-    transition: background var(--transition-fast);
-}
-
-.user-info-trigger:hover {
-    background: var(--gray-50);
-}
-
-.avatar-circle {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: #012E40;
-    /* Dark Blue from Image */
-    color: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1.125rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.user-text-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    line-height: 1.2;
-}
-
-.u-name {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.u-name i {
-    font-size: 0.75rem;
-    color: var(--gray-400);
-}
-
-.u-role {
-    font-size: 0.75rem;
-    color: var(--gray-500);
-    font-weight: 400;
-}
-
-/* Track Order Button */
-.track-order-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--gray-600);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9375rem;
-    padding: 8px 12px;
-    border-radius: var(--border-radius-md);
-    transition: all var(--transition-fast);
-    margin-left: 16px;
-    background: transparent;
-    border: none;
-}
-
-.track-order-btn:hover {
-    color: var(--primary-blue);
-    background: var(--gray-50);
-}
-
-.track-order-btn i {
-    font-size: 1.125rem;
-    color: #012E40;
-}
-
-/* Logged-in Cart Button */
-.cart-btn-logged {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    margin-left: 0;
-    position: relative;
-    padding: 8px 12px;
-    border-radius: var(--border-radius-md);
-    transition: all var(--transition-fast);
-}
-
-.cart-btn-logged:hover {
-    background: var(--gray-50);
-}
-
-.cart-btn-logged i {
-    font-size: 1.25rem;
-    color: var(--text-dark);
-}
-
-.cart-btn-logged span {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: var(--text-dark);
-}
-
-.cart-btn-logged .badge-count {
-    background: var(--error);
-    /* Red Badge */
-    color: var(--white);
-    font-size: 0.75rem;
-    font-weight: bold;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 0;
-    right: 0;
-    transform: translate(25%, -25%);
-    border: 2px solid var(--white);
-}
-
-/* Adjust Dropdown Position */
-.user-dropdown {
-    position: relative;
-}
-
-.user-card-dropdown {
-    /* Existing styles are fine, just ensuring it aligns right */
-    right: 0;
-    width: 300px;
-    /* Slightly wider for better card feel */
 }

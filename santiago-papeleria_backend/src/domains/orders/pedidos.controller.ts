@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   NotFoundException,
@@ -14,7 +15,7 @@ import { CreatePedidoDto } from './dto/create-pedido.dto'; // Tendrás que crear
 
 @Controller('pedidos') // Ruta base: /pedidos
 export class PedidosController {
-  constructor(private readonly pedidosService: PedidosService) {}
+  constructor(private readonly pedidosService: PedidosService) { }
 
   // POST /pedidos (Para crear un nuevo pedido)
   @Post()
@@ -41,5 +42,18 @@ export class PedidosController {
       throw new NotFoundException(`Pedido con ID ${id} no encontrado.`);
     }
     return pedido;
+  }
+  // GET /pedidos/user/:userId
+  @Get('user/:userId')
+  async findByUser(@Param('userId') userId: string): Promise<PedidoDocument[]> {
+    return this.pedidosService.findByUser(userId);
+  }
+  // PATCH /pedidos/:id/status
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ): Promise<PedidoDocument> {
+    return this.pedidosService.updateStatus(id, status);
   }
 }

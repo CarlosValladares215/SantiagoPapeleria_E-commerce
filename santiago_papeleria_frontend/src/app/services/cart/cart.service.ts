@@ -30,6 +30,8 @@ export class CartService {
     private http = inject(HttpClient);
     private authService = inject(AuthService); // Inject AuthService
     private apiUrl = 'http://localhost:3000/api/usuarios';
+    private ordersUrl = 'http://localhost:3000/api/pedidos';
+    private filesUrl = 'http://localhost:3000/api/files';
 
     // Sync with UiService observables
     private _isOpen = toSignal(this.uiService.isCartOpen$, { initialValue: false });
@@ -186,6 +188,16 @@ export class CartService {
 
     clearCart() {
         this.cartItemsSignal.set([]);
+    }
+
+    createOrder(orderData: any) {
+        return this.http.post(this.ordersUrl, orderData);
+    }
+
+    uploadTransferProof(file: File) {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<{ url: string }>(`${this.filesUrl}/upload`, formData);
     }
 
     // --- Shipping Logic ---

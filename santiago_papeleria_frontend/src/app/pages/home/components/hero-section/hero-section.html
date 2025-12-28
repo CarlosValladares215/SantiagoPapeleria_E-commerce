@@ -1,43 +1,41 @@
-<section class="relative min-h-[600px] flex items-center bg-cover bg-center"
-  style="background-image: linear-gradient(rgba(1, 46, 64, 0.7), rgba(16, 77, 115, 0.7)), url('assets/home/hero/hero-bg.jpg')">
-  <div class="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-20">
-    <div class="max-w-4xl">
-      <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-        <span class="text-[#F2CB07]">30,000+</span> Productos de <br />
-        <span class="text-[#F2CB07]">Papelería</span> y Oficina
-      </h1>
-      <p class="text-xl text-gray-200 mb-8 max-w-2xl">
-        Encuentra todo lo que necesitas para tu oficina, escuela o negocio.
-        Precios mayoristas y minoristas con envío a todo Ecuador.
-      </p>
-      <!-- BOTONES CON CLASE CUSTOM -->
-      <div class="button-container flex flex-col sm:flex-row sm:items-center mb-8">
-        <a routerLink="/products">
-          <button
-            class="w-full sm:w-60 bg-[#F2CB07] text-[#012E40] px-6 py-3 rounded-lg font-semibold shadow hover:bg-[#F2DF7E] transition flex items-center justify-center">
-            <i class="ri-shopping-bag-line mr-2"></i>
-            Ver Productos
-          </button>
-        </a>
+<!-- Hero Section Slider Simple - Solo Imágenes -->
+<section class="relative w-full hero-slider-simple">
+  <div class="banner-container">
+    <div class="banner-wrapper">
+      <!-- Hero Banner con Carrusel - 1920x500 -->
+      <div class="hero-banner">
+        <div class="carousel">
+          <div class="carousel-track-container">
+            <div #carouselTrack class="carousel-track">
+              <!-- Slide 1 -->
+              <div class="carousel-slide active cursor-pointer" (click)="navigateToProducts()">
+                <img src="assets/home/hero/slide1.png" alt="Productos de papelería y oficina - 30,000+ productos disponibles">
+              </div>
+              
+              <!-- Slide 2 -->
+              <div class="carousel-slide cursor-pointer" (click)="navigateToProducts()">
+                <img src="assets/home/hero/slide2.png" alt="Material escolar y educativo para estudiantes">
+              </div>
+              
+              <!-- Slide 3 -->
+              <div class="carousel-slide cursor-pointer" (click)="navigateToProducts()">
+                <img src="assets/home/hero/slide3.png" alt="Suministros de oficina moderna y tecnología">
+              </div>
+              
+              <!-- Slide 4 -->
+              <div class="carousel-slide cursor-pointer" (click)="navigateToProducts()">
+                <img src="assets/home/hero/slide4.png" alt="Arte y creatividad para proyectos únicos">
+              </div>
+            </div>
+          </div>
 
-      </div>
-      <!-- QUICK STATS -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-        <div class="text-center">
-          <div class="text-3xl font-bold text-[#F2CB07] mb-2">30K+</div>
-          <div class="text-sm text-gray-300">Productos</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-[#F2CB07] mb-2">24h</div>
-          <div class="text-sm text-gray-300">Envío Rápido</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-[#F2CB07] mb-2">15+</div>
-          <div class="text-sm text-gray-300">Años Experiencia</div>
-        </div>
-        <div class="text-center">
-          <div class="text-3xl font-bold text-[#F2CB07] mb-2">100%</div>
-          <div class="text-sm text-gray-300">Pago Seguro</div>
+          <!-- Botones de navegación simples -->
+          <button class="carousel-nav prev" (click)="prevSlide()">
+            <i class="ri-arrow-left-s-line text-2xl"></i>
+          </button>
+          <button class="carousel-nav next" (click)="nextSlide()">
+            <i class="ri-arrow-right-s-line text-2xl"></i>
+          </button>
         </div>
       </div>
     </div>

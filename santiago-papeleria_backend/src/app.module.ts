@@ -11,6 +11,7 @@ import { UsuariosModule } from './domains/users/usuarios.module';
 import { ContadoresModule } from './core/counters/contadores.module';
 import { PromocionesModule } from './domains/promotions/promociones.module';
 import { ErpSyncModule } from './domains/erp/sync/erp-sync.module';
+import { FilesModule } from './shared/files/files.module';
 @Module({
   imports: [
     // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
@@ -21,6 +22,7 @@ import { ErpSyncModule } from './domains/erp/sync/erp-sync.module';
     ContadoresModule,
     PromocionesModule,
     ErpSyncModule,
+    FilesModule,
     ConfigModule.forRoot({
       isGlobal: true,
     })

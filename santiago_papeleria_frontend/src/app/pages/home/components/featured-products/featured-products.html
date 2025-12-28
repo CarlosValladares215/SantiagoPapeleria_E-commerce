@@ -1,107 +1,99 @@
-<section class="py-16 bg-[#F2F2F2]">
-  <div class="container mx-auto px-4">
-
-    <div class="text-center mb-12">
-      <h2 class="text-4xl font-bold text-[#104D73] mb-4">
-        Productos <span class="text-[#F2CB07]">Destacados</span>
+<section class="py-10 bg-[#F2F2F2]">
+  <div class="container mx-auto px-4 max-w-6xl">
+    <div class="text-center mb-8">
+      <h2 class="text-2xl font-bold text-[#104D73] mb-2">
+        ¡Productos más <span class="text-[#F2CB07]">Vendidos!</span>
       </h2>
-      <p class="text-gray-600 text-lg max-w-2xl mx-auto">
-        Los productos más vendidos con precios especiales para mayoristas
-      </p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
       <div *ngFor="let product of products"
-        class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+        class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 w-full max-w-xs">
 
+        <!-- Imagen más pequeña -->
         <div class="relative">
-          <img [src]="product.image" [alt]="product.name" class="w-full h-48 object-cover" />
+          <img [src]="product.image" [alt]="product.name" class="w-full h-32 object-cover" />
 
+          <!-- Etiqueta de stock baja -->
           <div *ngIf="product.isLowStock && product.stock > 0"
-            class="absolute top-3 left-3 bg-[#F2CB07] text-[#012E40] px-3 py-1 rounded-full text-sm font-bold animate-pulse">
-            ¡Pocas unidades! Solo {{ product.stock }} disponibles
+            class="absolute top-2 left-2 bg-[#F2CB07] text-[#012E40] px-2 py-0.5 rounded-full text-xs font-bold">
+            ¡Pocas! {{ product.stock }}
           </div>
 
-          <div *ngIf="product.stock === 0" class="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold">
+          <!-- Etiqueta agotado -->
+          <div *ngIf="product.stock === 0" class="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <span class="bg-red-600 text-white px-3 py-1 rounded-xl text-xs font-bold">
               AGOTADO
             </span>
           </div>
         </div>
 
-        <div class="p-6">
-          <div class="text-sm text-gray-500 mb-2">{{ product.brand }}</div>
-
-          <h3 class="text-lg font-bold text-[#104D73] mb-3 line-clamp-2">
+        <!-- Contenido más compacto -->
+        <div class="p-3">
+          <!-- Marca y nombre -->
+          <div class="text-xs text-gray-500 mb-1">{{ product.brand }}</div>
+          <h3 class="text-sm font-bold text-[#104D73] mb-2 line-clamp-2">
             {{ product.name }}
           </h3>
 
-          <div class="mb-4">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-2xl font-bold text-[#104D73]">
-                ${{ product | displayPrice | number:'1.2-2' }}
+          <!-- Precios compactos -->
+          <div class="mb-2">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-lg font-bold text-[#104D73]">
+                ${{ product.price | number:'1.2-2' }}
               </span>
-              <span class="text-sm text-gray-500">PVP (inc. IVA)</span>
             </div>
 
-            <div class="bg-[#F2DF7E] p-2 rounded-lg" *ngIf="!authService.isMayorista()">
+            <!-- Precio mayorista reducido -->
+            <div *ngIf="!authService.isMayorista()" class="bg-[#F2DF7E] p-1 rounded-lg">
               <div class="flex items-center justify-between">
-                <span class="text-sm text-[#012E40] font-semibold">
-                  Precio Mayorista: ${{ product.wholesalePrice.toFixed(2) }}
+                <span class="text-xs text-[#012E40] font-semibold">
+                  Mayorista: ${{ product.wholesalePrice.toFixed(2) }}
                 </span>
-                <a routerLink="/login" class="text-xs text-[#104D73] hover:underline" *ngIf="!authService.user()">
+                <a *ngIf="!authService.user()" routerLink="/login" class="text-[10px] text-[#104D73] hover:underline">
                   Iniciar Sesión
                 </a>
               </div>
             </div>
           </div>
 
-          <div class="mb-4">
-            <span *ngIf="product.stock > 5" class="text-green-600 text-sm font-medium">
-              <i class="ri-check-line mr-1"></i>
-              En Stock - Envío Inmediato
+          <!-- Estado de stock compacto -->
+          <div class="mb-3">
+            <span *ngIf="product.stock > 5" class="text-green-600 text-xs font-medium">
+              ✓ En Stock
             </span>
-
-            <span *ngIf="product.stock > 0 && product.stock <= 5" class="text-[#F2CB07] text-sm font-medium">
-              <i class="ri-error-warning-line mr-1"></i>
-              ¡Pocas unidades! Solo {{ product.stock }} disponibles
+            <span *ngIf="product.stock > 0 && product.stock <= 5" class="text-[#F2CB07] text-xs font-medium">
+              ⚠ Solo {{ product.stock }}
             </span>
-
-            <span *ngIf="product.stock === 0" class="text-red-600 text-sm font-medium">
-              <i class="ri-close-line mr-1"></i>
-              Producto Agotado
+            <span *ngIf="product.stock === 0" class="text-red-600 text-xs font-medium">
+              ✗ Agotado
             </span>
           </div>
 
-          <div class="flex gap-2">
+          <!-- Botones compactos -->
+          <div class="flex gap-1">
             <a [routerLink]="['/product', product.id]" class="flex-1">
-              <button
-                class="w-full border border-[#104D73] text-[#104D73] px-4 py-2 rounded-lg hover:bg-[#104D73] hover:text-white transition">
-                Ver Detalles
+              <button class="w-full border border-[#104D73] text-[#104D73] px-2 py-1 rounded-lg text-xs hover:bg-[#104D73] hover:text-white transition">
+                Ver
               </button>
             </a>
-
-            <button class="flex-1 px-4 py-2 rounded-lg"
+            <button class="flex-1 px-2 py-1 rounded-lg text-xs"
               [ngClass]="product.stock === 0 ? 'border border-gray-400 text-gray-400 cursor-not-allowed' : 'bg-[#104D73] text-white hover:bg-[#0d3d5a]'"
               [disabled]="product.stock === 0">
-              {{ product.stock === 0 ? 'Agotado' : 'Agregar al Carrito' }}
+              {{ product.stock === 0 ? 'Agotado' : 'Agregar' }}
             </button>
           </div>
         </div>
-
       </div>
     </div>
 
-    <div class="text-center mt-12">
+    <!-- Botón más pequeño -->
+    <div class="text-center mt-8">
       <a routerLink="/products">
-        <button
-          class="bg-[#F2CB07] text-[#012E40] px-8 py-3 rounded-lg font-semibold shadow hover:bg-[#F2DF7E] transition inline-flex items-center">
-          Ver Todos los Productos
-          <i class="ri-arrow-right-line ml-2"></i>
+        <button class="bg-[#F2CB07] text-[#012E40] px-6 py-2 rounded-lg font-semibold text-sm hover:bg-[#F2DF7E] transition">
+          VER TODOS LOS PRODUCTOS
         </button>
       </a>
     </div>
-
   </div>
 </section>

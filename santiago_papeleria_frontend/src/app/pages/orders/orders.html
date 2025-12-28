@@ -44,7 +44,7 @@
                         <p class="text-sm text-gray-500">Historial completo de tus compras</p>
                     </div>
                     <div class="text-center">
-                        <span class="block text-2xl font-bold text-[#012e40]">{{ mockOrders.length }}</span>
+                        <span class="block text-2xl font-bold text-[#012e40]">{{ orders.length }}</span>
                         <span class="text-xs text-gray-500 font-medium">Pedidos Totales</span>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
 
                                 <div class="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
                                     <div class="flex items-center gap-1.5">
-                                        <i class="ri-calendar-line"></i> {{ order.date }}
+                                        <i class="ri-calendar-line"></i> {{ order.date | date:'mediumDate' }}
                                     </div>
                                     <div class="flex items-center gap-1.5">
                                         <i class="ri-shopping-bag-3-fill"></i> {{ order.itemsCount }} productos
@@ -195,8 +195,8 @@
                                     </button>
                                 </ng-container>
 
-                                <!-- Status: Procesando / Pendiente -->
-                                <ng-container *ngIf="order.status === 'Procesando' || order.status === 'Pendiente'">
+                                <!-- Status: Preparando / Pendiente -->
+                                <ng-container *ngIf="order.status === 'Preparando' || order.status === 'Pendiente'">
                                     <button
                                         class="bg-white border border-red-500 text-red-500 font-bold py-2.5 px-6 rounded-md hover:bg-red-50 transition-colors text-sm flex items-center gap-2">
                                         <i class="ri-close-line"></i> Cancelar Pedido

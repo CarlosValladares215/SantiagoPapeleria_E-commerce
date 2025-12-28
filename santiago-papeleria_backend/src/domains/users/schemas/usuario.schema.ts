@@ -40,6 +40,9 @@ class DireccionEntrega {
   ciudad: string;
 
   @Prop()
+  codigo_postal: string;
+
+  @Prop()
   referencia: string;
 
   @Prop({ type: Geo })
