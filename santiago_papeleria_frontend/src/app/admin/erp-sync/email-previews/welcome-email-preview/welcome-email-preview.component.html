@@ -1,0 +1,85 @@
+<div class="email-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">📦</div>
+        <h1>¡Bienvenido a Santiago Papelería!</h1>
+        <p>Estás a un paso de completar tu registro</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <p class="greeting">¡Hola {{ userName }}!</p>
+
+        <p class="message">
+            Gracias por registrarte en Santiago Papelería. Para completar tu registro y activar tu cuenta,
+            necesitamos verificar tu dirección de correo electrónico.
+        </p>
+
+        <!-- Verification Code Box -->
+        <div class="verification-box">
+            <div class="verification-label">Tu código de verificación</div>
+            <div class="verification-code">{{ verificationCode }}</div>
+            <p style="font-size: 14px; color: #012E40; margin: 0;">
+                Ingresa este código en la página de verificación
+            </p>
+        </div>
+
+        <!-- Verify Button -->
+        <div class="button-container">
+            <a [href]="verificationLink" class="verify-button">
+                ✓ Verificar mi Cuenta
+            </a>
+        </div>
+
+        <p class="alternative-text">O copia y pega este enlace en tu navegador:</p>
+        <div class="link-box">
+            {{ verificationLink }}
+        </div>
+
+        <!-- Important Info -->
+        <div class="info-box">
+            <p>
+                <strong>⏰ Importante:</strong> Este código expirará en 24 horas.
+                Si no verificas tu cuenta en este tiempo, deberás registrarte nuevamente.
+            </p>
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="message">
+            Una vez verificada tu cuenta, podrás:
+        </p>
+        <ul style="color: #666666; font-size: 15px; line-height: 1.8; margin-left: 20px; margin-bottom: 20px;">
+            <li>Acceder a más de 30,000 productos</li>
+            <li>Disfrutar de precios especiales</li>
+            <li>Realizar seguimiento de tus pedidos</li>
+            <li>Guardar tus productos favoritos</li>
+            <li>Recibir ofertas exclusivas</li>
+        </ul>
+
+        <p class="message" style="font-size: 14px; color: #999999;">
+            Si no creaste esta cuenta, puedes ignorar este correo de forma segura.
+        </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p style="font-weight: 600; color: #104D73; margin-bottom: 15px;">Santiago Papelería</p>
+        <p>Tu aliado en útiles escolares y de oficina</p>
+        <p style="font-size: 12px; color: #999999; margin-top: 15px;">
+            📍 Dirección de la tienda<br>
+            📞 Teléfono: (123) 456-7890<br>
+            ✉️ Email: info@santiagopapeleria.com
+        </p>
+
+        <div class="social-links">
+            <a href="#" title="Facebook">📘</a>
+            <a href="#" title="Instagram">📷</a>
+            <a href="#" title="WhatsApp">💬</a>
+        </div>
+
+        <p style="font-size: 12px; color: #999999; margin-top: 20px;">
+            © 2024 Santiago Papelería. Todos los derechos reservados.
+        </p>
+    </div>
+</div>
