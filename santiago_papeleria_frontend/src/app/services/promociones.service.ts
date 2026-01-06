@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
     providedIn: 'root'
 })
 export class PromocionesService {
-    private apiUrl = `http://localhost:3000/api/promociones`;
+    private apiUrl = `${environment.baseApiUrl}/promociones`;
 
     constructor(private http: HttpClient) { }
 

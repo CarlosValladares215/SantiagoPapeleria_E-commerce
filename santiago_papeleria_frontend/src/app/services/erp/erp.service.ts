@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, delay, forkJoin, map } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface SyncLog {
     id: string;
@@ -20,7 +21,7 @@ export interface SyncLog {
     providedIn: 'root'
 })
 export class ErpService {
-    private apiUrl = 'http://localhost:3000/api'; // Direct connection to NestJS
+    private apiUrl = environment.baseApiUrl; // Direct connection to NestJS
 
     constructor(private http: HttpClient) { }
 
