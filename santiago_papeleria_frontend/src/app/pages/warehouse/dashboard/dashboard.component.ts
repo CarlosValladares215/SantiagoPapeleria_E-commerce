@@ -1,6 +1,7 @@
 import { Component, ChangeDetectorRef, OnInit, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { delay, timeout, finalize } from 'rxjs/operators';
 import { ErpService } from '../../../services/erp/erp.service';
 import { OrderService, Order as BackendOrder } from '../../../services/order/order.service';
@@ -31,6 +32,8 @@ interface Order {
     total: number;
     paymentMethod: string;
     paymentProofUrl?: string;
+    shippingCost: number;
+    subtotal: number;
     status: 'Pendiente' | 'Preparando' | 'Enviado' | 'Entregado' | 'Cancelado';
     products: any[];
 }
@@ -45,6 +48,8 @@ interface Order {
 })
 export class WarehouseDashboardComponent implements OnInit {
 
+    private router = inject(Router);
+
     activeTab: 'orders' | 'inventory' = 'orders';
     isStatusDropdownOpen = false;
     // KPI Data
@@ -52,7 +57,8 @@ export class WarehouseDashboardComponent implements OnInit {
         pending: 0,
         preparing: 0,
         transit: 0,
-        delivered: 0
+        delivered: 0,
+        cancelled: 0
     };
 
     // Mock Orders Data
@@ -115,6 +121,15 @@ export class WarehouseDashboardComponent implements OnInit {
         });
     }
 
+    downloadGuide(order: Order) {
+        if (!order) return;
+        // Use _id (Mongo ID) which works with backend findOne
+        const url = this.router.serializeUrl(
+            this.router.createUrlTree(['/orders/guide', order._id])
+        );
+        window.open(url, '_blank');
+    }
+
     mapBackendOrder(backendOrder: BackendOrder): Order {
         // Safe check for client data if populated or not
         const user = backendOrder.usuario_id as any;
@@ -152,7 +167,9 @@ export class WarehouseDashboardComponent implements OnInit {
             date: new Date(backendOrder.fecha_compra),
             itemsCount: backendOrder.items.length,
             totalUnits: backendOrder.items.reduce((acc, item) => acc + item.cantidad, 0),
+            subtotal: (backendOrder.resumen_financiero as any).subtotal || (backendOrder.resumen_financiero.total_pagado - (backendOrder.resumen_financiero.costo_envio || 0)),
             total: backendOrder.resumen_financiero.total_pagado,
+            shippingCost: backendOrder.resumen_financiero.costo_envio || 0,
             paymentMethod: backendOrder.resumen_financiero.metodo_pago,
             paymentProofUrl: backendOrder.resumen_financiero.comprobante_pago ? `http://localhost:3000${backendOrder.resumen_financiero.comprobante_pago}` : undefined,
             status: this.mapStatus(backendOrder.estado_pedido),
@@ -207,6 +224,7 @@ export class WarehouseDashboardComponent implements OnInit {
             preparing: this.orders.filter(o => o.status === 'Preparando').length,
             transit: this.orders.filter(o => o.status === 'Enviado').length,
             delivered: this.orders.filter(o => o.status === 'Entregado').length,
+            cancelled: this.orders.filter(o => o.status === 'Cancelado').length,
         };
     }
 
@@ -251,19 +269,51 @@ export class WarehouseDashboardComponent implements OnInit {
         return Math.min((current / max) * 100, 100);
     }
 
+    // ================= FILTERS & FILTERING LOGIC =================
+    searchTerm: string = '';
+    filterStatus: string = 'Todos los estados';
+    startDate: string = '';
+    endDate: string = '';
+
+    get filteredOrders(): Order[] {
+        return this.orders.filter(order => {
+            // 1. Text Search (ID, Guide, Client Name)
+            const term = this.searchTerm.toLowerCase();
+            const matchesText = !term ||
+                order.id.toLowerCase().includes(term) ||
+                (order.guide && order.guide.toLowerCase().includes(term)) ||
+                order.client.name.toLowerCase().includes(term);
+
+            // 2. Status Filter
+            const matchesStatus = this.filterStatus === 'Todos los estados' || order.status === this.filterStatus;
+
+            // 3. Date Range Filter
+            let matchesDate = true;
+            if (this.startDate) {
+                matchesDate = matchesDate && new Date(order.date) >= new Date(this.startDate);
+            }
+            if (this.endDate) {
+                const end = new Date(this.endDate);
+                end.setHours(23, 59, 59, 999); // End of day
+                matchesDate = matchesDate && new Date(order.date) <= end;
+            }
+
+            return matchesText && matchesStatus && matchesDate;
+        });
+    }
+
     // Modal Logic
     selectedOrder: Order | null = null;
-
-    // Data for Modal
     orderProducts: any[] = [];
-
     viewOrder(order: Order) {
         this.selectedOrder = order;
+        this.pendingStatus = null; // Reset pending status
         this.orderProducts = order.products || [];
     }
 
     closeModal() {
         this.selectedOrder = null;
+        this.pendingStatus = null; // Reset pending status
         this.isStatusDropdownOpen = false;
     }
 
@@ -271,27 +321,66 @@ export class WarehouseDashboardComponent implements OnInit {
         this.isStatusDropdownOpen = !this.isStatusDropdownOpen;
     }
 
+    // Status Management
+    pendingStatus: string | null = null;
     selectStatus(status: any) {
-        if (this.selectedOrder) {
-            this.selectedOrder.status = status;
-            this.isStatusDropdownOpen = false;
+        if (!this.selectedOrder) return;
 
-            // Reverse Map for Backend
-            const backendStatusMap: { [key: string]: string } = {
-                'Pendiente': 'PENDIENTE',
-                'Preparando': 'PREPARANDO',
-                'Enviado': 'ENVIADO',
-                'Entregado': 'ENTREGADO',
-                'Cancelado': 'CANCELADO'
-            };
-
-            const backendStatus = backendStatusMap[status] || status;
-
-            this.orderService.updateOrderStatus(this.selectedOrder._id, backendStatus).subscribe({
-                next: () => console.log('Estado actualizado exitosamente'),
-                error: (err) => console.error('Error actualizando estado', err)
-            });
+        // HU58: Validate Transitions
+        const current = this.selectedOrder.status;
+        if (current === 'Cancelado') {
+            alert('No se puede cambiar el estado de un pedido cancelado.');
+            return;
         }
+        if (current === 'Entregado' && status !== 'Entregado') {
+            // Optional: Allow reverting only if admin, but for warehouse usually restricted or warns.
+            // letting it strict for now as per "Validar transiciones"
+            const confirmRevert = confirm('El pedido ya está entregado. ¿Seguro que desea cambiar su estado?');
+            if (!confirmRevert) return;
+        }
+
+        this.pendingStatus = status;
+        this.isStatusDropdownOpen = false;
+    }
+
+    confirmStatusUpdate() {
+        if (this.selectedOrder && this.pendingStatus) {
+            this.updateStatus(this.selectedOrder, this.pendingStatus);
+        }
+    }
+
+    // HU61: Mark as Delivered Action
+    markAsDelivered(order: Order) {
+        if (order.status === 'Entregado') return;
+        if (confirm(`¿Marcar pedido ${order.id} como ENTREGADO?`)) {
+            this.updateStatus(order, 'Entregado');
+        }
+    }
+
+    private updateStatus(order: Order, newStatus: string) {
+        const backendStatusMap: { [key: string]: string } = {
+            'Pendiente': 'PENDIENTE',
+            'Preparando': 'PREPARANDO',
+            'Enviado': 'ENVIADO',
+            'Entregado': 'ENTREGADO',
+            'Cancelado': 'CANCELADO'
+        };
+
+        const backendStatus = backendStatusMap[newStatus] || newStatus;
+
+        this.orderService.updateOrderStatus(order._id, backendStatus).subscribe({
+            next: () => {
+                console.log(`Estado actualizado a ${newStatus}`);
+                order.status = newStatus as any; // Commit change locally
+                this.pendingStatus = null; // Clear pending
+                this.updateOrderStats(); // Refresh KPIs
+                this.cd.detectChanges();
+            },
+            error: (err) => {
+                console.error('Error actualizando estado', err);
+                alert('Error al actualizar estado');
+            }
+        });
     }
 
     // ================= ADD STOCK MODAL LOGIC =================

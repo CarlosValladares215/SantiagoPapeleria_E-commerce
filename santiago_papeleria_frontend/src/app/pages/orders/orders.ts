@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
 import { OrderService, Order as BackendOrder } from '../../services/order/order.service';
 
@@ -14,6 +14,7 @@ interface ProductItem {
 
 interface Order {
     id: string;
+    orderNumber: number; // Raw number for linking
     status: 'Pendiente' | 'Preparando' | 'Enviado' | 'Entregado' | 'Cancelado' | string;
     date: Date;
     itemsCount: number;
@@ -21,6 +22,19 @@ interface Order {
     total: number;
     deliveryDate?: string;
     products: ProductItem[];
+    address?: {
+        calle: string;
+        ciudad: string;
+        provincia?: string;
+        codigo_postal?: string;
+        referencia?: string;
+    };
+    paymentInfo?: {
+        metodo: string;
+        subtotal: number;
+        costo_envio: number;
+        total: number;
+    };
 }
 
 @Component({
@@ -33,6 +47,7 @@ interface Order {
 export class Orders implements OnInit {
     authService = inject(AuthService);
     orderService = inject(OrderService);
+    router = inject(Router);
 
     activeFilter: string = 'Todos';
     expandedOrderId: string | null = null; // Track expanded order
@@ -58,7 +73,11 @@ export class Orders implements OnInit {
 
         this.orderService.getOrdersByUser(userId).subscribe({
             next: (data) => {
-                this.orders = data.map(order => this.mapBackendOrder(order));
+                // Sort by date desc
+                const sorted = (data as BackendOrder[]).sort((a, b) =>
+                    new Date(b.fecha_compra).getTime() - new Date(a.fecha_compra).getTime()
+                );
+                this.orders = sorted.map(order => this.mapBackendOrder(order));
                 this.updateFilters();
             },
             error: (err) => console.error('Error fetching user orders', err)
@@ -68,25 +87,34 @@ export class Orders implements OnInit {
     mapBackendOrder(backendOrder: BackendOrder): Order {
         return {
             id: `ORD-WEB-${backendOrder.numero_pedido_web}`,
+            orderNumber: backendOrder.numero_pedido_web,
             status: this.mapStatus(backendOrder.estado_pedido),
             date: new Date(backendOrder.fecha_compra),
             itemsCount: backendOrder.items.length,
             trackingId: backendOrder.datos_envio?.guia_tracking,
             total: backendOrder.resumen_financiero.total_pagado,
-            deliveryDate: backendOrder.estado_pedido === 'ENTREGADO' ? 'Entregado' : 'Por confirmar',
+            deliveryDate: backendOrder.estado_pedido.toLowerCase() === 'entregado' ? 'Entregado' : 'Por confirmar',
+            address: backendOrder.datos_envio?.direccion_destino,
+            paymentInfo: {
+                metodo: backendOrder.resumen_financiero.metodo_pago,
+                subtotal: backendOrder.resumen_financiero.subtotal_sin_impuestos,
+                costo_envio: backendOrder.resumen_financiero.costo_envio,
+                total: backendOrder.resumen_financiero.total_pagado
+            },
             products: backendOrder.items.map(item => ({
                 name: item.nombre,
                 quantity: item.cantidad,
                 totalPrice: item.subtotal,
                 unitPrice: item.precio_unitario_aplicado,
-                image: 'assets/products/placeholder.png' // Default image or fetch from product details if needed
+                image: 'assets/products/placeholder.png'
             }))
         };
     }
 
     mapStatus(backendStatus: string): string {
+        const status = backendStatus.toUpperCase().trim();
         const statusMap: { [key: string]: string } = {
-            'PAGADO': 'Pendiente', // Consolidated
+            'PAGADO': 'Pendiente',
             'PENDIENTE': 'Pendiente',
             'PENDIENTE_PAGO': 'Pendiente',
             'EN_PREPARACION': 'Preparando',
@@ -95,7 +123,7 @@ export class Orders implements OnInit {
             'ENTREGADO': 'Entregado',
             'CANCELADO': 'Cancelado'
         };
-        return statusMap[backendStatus] || backendStatus;
+        return statusMap[status] || 'Pendiente';
     }
 
     updateFilters() {
@@ -156,5 +184,52 @@ export class Orders implements OnInit {
             case 'Cancelado': return 'ri-close-circle-line';
             default: return 'ri-question-line';
         }
+    }
+
+    openInvoice(orderNumber: number) {
+        const url = this.router.serializeUrl(
+            this.router.createUrlTree(['/orders/invoice', orderNumber])
+        );
+        window.open(url, '_blank');
+    }
+
+    // --- Cancellation Logic ---
+    showCancelModal = false;
+    orderToCancel: Order | null = null;
+    isCancelling = false;
+
+    initiateCancel(order: Order) {
+        this.orderToCancel = order;
+        this.showCancelModal = true;
+    }
+
+    closeCancelModal() {
+        this.showCancelModal = false;
+        this.orderToCancel = null;
+    }
+
+    confirmCancel() {
+        if (!this.orderToCancel) return;
+
+        const userId = this.authService.user()?._id;
+        if (!userId) return;
+
+        this.isCancelling = true;
+        this.orderService.cancelOrder(this.orderToCancel.id.replace('ORD-WEB-', ''), userId).subscribe({
+            next: () => {
+                this.isCancelling = false;
+                this.closeCancelModal();
+                // Refresh list
+                this.loadUserOrders();
+                // Optional: Show success toast/alert
+                alert('Pedido cancelado correctamente');
+            },
+            error: (err) => {
+                this.isCancelling = false;
+                console.error('Error cancelling order', err);
+                alert('No se pudo cancelar el pedido. Intente nuevamente.');
+                this.closeCancelModal();
+            }
+        });
     }
 }

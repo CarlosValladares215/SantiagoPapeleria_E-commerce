@@ -1,5 +1,3 @@
-// src/pedidos/pedidos.controller.ts
-
 import {
   Controller,
   Get,
@@ -7,13 +5,15 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PedidosService } from './pedidos.service';
 import { PedidoDocument } from './schemas/pedido.schema';
-import { CreatePedidoDto } from './dto/create-pedido.dto'; // Tendrás que crear este DTO
+import { CreatePedidoDto } from './dto/create-pedido.dto';
 
-@Controller('pedidos') // Ruta base: /pedidos
+@Controller('pedidos')
 export class PedidosController {
   constructor(private readonly pedidosService: PedidosService) { }
 
@@ -22,9 +22,6 @@ export class PedidosController {
   async create(
     @Body() createPedidoDto: CreatePedidoDto,
   ): Promise<PedidoDocument> {
-    // Aquí podrías agregar lógica para:
-    // 1. Validar stock de items.
-    // 2. Generar el numero_pedido_web (usando la colección 'contadores').
     return this.pedidosService.create(createPedidoDto);
   }
 
@@ -36,18 +33,33 @@ export class PedidosController {
 
   // GET /pedidos/:id
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<PedidoDocument> {
+  async findOne(@Param('id') id: string, @Query('userId') userId?: string): Promise<PedidoDocument> {
     const pedido = await this.pedidosService.findOne(id);
     if (!pedido) {
       throw new NotFoundException(`Pedido con ID ${id} no encontrado.`);
     }
+
+    // Security Check: If userId is provided, ensure it matches the order's user
+    if (userId) {
+      // Handle populated vs unpopulated usuario_id
+      const userObj = pedido.usuario_id as any;
+      const orderUserId = (userObj && userObj._id) ? userObj._id.toString() : userObj.toString();
+
+      if (orderUserId !== userId) {
+        console.log(`⛔ [Backend] Permiso denegado. OrderUser: ${orderUserId}, RequestUser: ${userId}`);
+        throw new ForbiddenException('No tienes permiso para ver este pedido.');
+      }
+    }
+
     return pedido;
   }
+
   // GET /pedidos/user/:userId
   @Get('user/:userId')
   async findByUser(@Param('userId') userId: string): Promise<PedidoDocument[]> {
     return this.pedidosService.findByUser(userId);
   }
+
   // PATCH /pedidos/:id/status
   @Patch(':id/status')
   async updateStatus(
@@ -55,5 +67,17 @@ export class PedidosController {
     @Body('status') status: string,
   ): Promise<PedidoDocument> {
     return this.pedidosService.updateStatus(id, status);
+  }
+
+  // PATCH /pedidos/:id/cancel
+  @Patch(':id/cancel')
+  async cancelOrder(
+    @Param('id') id: string,
+    @Body('userId') userId: string,
+  ): Promise<PedidoDocument> {
+    if (!userId) {
+      throw new ForbiddenException('UserId es requerido para cancelar.');
+    }
+    return this.pedidosService.requestCancellation(id, userId);
   }
 }

@@ -95,7 +95,7 @@ export class ProductosService {
 
   // --- 1. Get Merged Products (Admin List & Catalog Base) ---
   async getMergedProducts(filterDto: ProductFilterDto): Promise<any> {
-    const { searchTerm, status, category, brand, minPrice, maxPrice, inStock, sortBy, page = 1, limit = 50 } = filterDto;
+    const { searchTerm, status, category, brand, minPrice, maxPrice, inStock, sortBy, page = 1, limit = 50, excludeId } = filterDto;
 
     // A. Construir Query para ERP (Mongo)
     // El ERP es la fuente principal. Si no está en ERP, no existe.
@@ -107,6 +107,11 @@ export class ProductosService {
         { codigo: { $regex: searchTerm, $options: 'i' } },
         { nombre: { $regex: searchTerm, $options: 'i' } }
       ];
+    }
+
+    if (excludeId) {
+      // Excluir por código o ID (si es SKU)
+      erpQuery.codigo = { $ne: excludeId };
     }
 
     if (brand) erpQuery.marca = brand;
@@ -214,11 +219,16 @@ export class ProductosService {
       // stock: { $gt: 0 } // Descomentar si solo queremos productos con stock
     };
 
+    if (filterDto.excludeId) {
+      erpQuery.codigo = { $ne: filterDto.excludeId };
+    }
+
     // Aplicar filtros de categoria/marca al ERP
     if (filterDto.category) erpQuery.categoria_g2 = filterDto.category;
     if (filterDto.brand) erpQuery.marca = filterDto.brand;
 
-    const erpProducts = await this.productErpModel.find(erpQuery).limit(1000).lean().exec();
+    const limit = filterDto.limit ? Number(filterDto.limit) : 1000;
+    const erpProducts = await this.productErpModel.find(erpQuery).limit(limit).lean().exec();
 
     // Paso 3: Traer los documentos completos enriched (ahora sí con todos los campos)
     // Optimización: Ya tenemos los SKUs visibles, pero necesitamos el doc completo para fusionar (fotos, etc)

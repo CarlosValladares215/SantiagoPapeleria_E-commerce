@@ -38,6 +38,18 @@ export class ProductActions implements OnChanges {
     return !isNaN(s) && s > 0;
   }
 
+  increaseQuantity() {
+    if (this.hasStock && this.quantity < this.stock) {
+      this.quantityChange.emit(this.quantity + 1);
+    }
+  }
+
+  decreaseQuantity() {
+    if (this.quantity > 1) {
+      this.quantityChange.emit(this.quantity - 1);
+    }
+  }
+
   // Handle dynamic input changes (e.g. Variant switch changes stock)
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['stock']) {

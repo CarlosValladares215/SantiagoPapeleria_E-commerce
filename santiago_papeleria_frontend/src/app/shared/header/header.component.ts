@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
 import { UiService } from '../../services/ui/ui.service';
 import { CartService } from '../../services/cart/cart.service';
+import { NotificationsService } from '../../services/notifications/notifications.service';
 
 @Component({
   selector: 'app-header',
@@ -20,6 +21,7 @@ import { CartService } from '../../services/cart/cart.service';
 export class Header {
 
   isProfileMenuOpen = signal(false);
+  isNotificationsOpen = signal(false); // New signal for notifications dropdown
   megaMenu = signal<'none' | 'papeleria' | 'hogar' | 'creatividad'>('none');
   private megaHideTimeout: any;
   searchQuery: string = '';
@@ -28,11 +30,22 @@ export class Header {
     public auth: AuthService,
     private router: Router,
     public uiService: UiService,
-    public cartService: CartService
+    public cartService: CartService,
+    public notificationsService: NotificationsService // Inject
   ) { }
 
   toggleCart() {
     this.uiService.toggleCart();
+    this.isNotificationsOpen.set(false); // Close notifications if cart opens
+  }
+
+  toggleNotifications() {
+    this.isNotificationsOpen.update(v => !v);
+    this.isProfileMenuOpen.set(false); // Close profile if notifications open
+  }
+
+  closeNotifications() {
+    this.isNotificationsOpen.set(false);
   }
 
   toggleProfileMenu() {

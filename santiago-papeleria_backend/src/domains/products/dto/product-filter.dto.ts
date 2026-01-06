@@ -57,5 +57,13 @@ export class ProductFilterDto {
   @IsString()
   // Validamos que el valor de ordenación sea uno de los permitidos
   @IsIn(['name', '-name', 'price', '-price', 'stock', '-stock'])
+  @IsOptional()
+  @IsString()
+  // Validamos que el valor de ordenación sea uno de los permitidos
+  @IsIn(['name', '-name', 'price', '-price', 'stock', '-stock'])
   sortBy?: string; // Mapea a 'sortBy'
+
+  @IsOptional()
+  @IsString()
+  excludeId?: string; // Nuevo campo para excluir un producto específico (por SKU o ID)
 }

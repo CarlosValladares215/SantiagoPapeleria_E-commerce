@@ -38,67 +38,119 @@
               <button type="submit" class="search-submit" aria-label="Buscar">
                 <i class="fas fa-search"></i>
               </button>
-              <input type="search" class="search-input" [(ngModel)]="searchQuery" name="search"
-                placeholder="Buscar..." aria-label="Buscar productos">
+              <input type="search" class="search-input" [(ngModel)]="searchQuery" name="search" placeholder="Buscar..."
+                aria-label="Buscar productos">
             </div>
           </form>
         </div>
 
         <!-- Acciones de Usuario -->
         <ng-container *ngIf="auth.user(); else guestActions">
-          <!-- Usuario Dropdown Trigger (Avatar + Info) -->
-          <div class="user-dropdown" (mouseleave)="closeProfileMenu()">
-            <button class="user-info-trigger" aria-label="Menú de usuario" (click)="toggleProfileMenu()">
-              <div class="avatar-circle">
-                {{ getInitials(auth.user()?.nombres || '') }}
-              </div>
-              <div class="user-text-info">
-                <span class="u-name">
-                  {{ auth.user()?.nombres?.split(' ')?.[0] }} {{ auth.user()?.nombres?.split(' ')?.[1] || '' }}
-                  <i class="fas fa-chevron-down"></i>
-                </span>
-                <span class="u-role">{{ auth.user()?.tipo_cliente || 'Minorista' | titlecase }}</span>
-              </div>
-            </button>
-
-            <!-- Card Menu -->
-            <div class="user-card-dropdown" [class.show]="isProfileMenuOpen()">
-              <div class="card-header">
-                <div class="card-avatar">
+          <div class="logged-user-actions">
+            <!-- Usuario Dropdown Trigger (Avatar + Info) -->
+            <div class="user-dropdown" (mouseleave)="closeProfileMenu()">
+              <button class="user-info-trigger" aria-label="Menú de usuario" (click)="toggleProfileMenu()">
+                <div class="avatar-circle">
                   {{ getInitials(auth.user()?.nombres || '') }}
                 </div>
-                <div class="card-info">
-                  <span class="user-name">{{ auth.user()?.nombres }}</span>
-                  <span class="user-email">{{ auth.user()?.email }}</span>
-                  <span class="user-role-badge">
-                    {{ auth.user()?.tipo_cliente || 'Cliente' }}
+                <div class="user-text-info">
+                  <span class="u-name">
+                    {{ auth.user()?.nombres?.split(' ')?.[0] }} {{ auth.user()?.nombres?.split(' ')?.[1] || '' }}
+                    <i class="fas fa-chevron-down"></i>
                   </span>
+                  <span class="u-role">{{ auth.user()?.tipo_cliente || 'Minorista' | titlecase }}</span>
+                </div>
+              </button>
+
+              <!-- Card Menu -->
+              <div class="user-card-dropdown" [class.show]="isProfileMenuOpen()">
+                <div class="card-header">
+                  <div class="card-avatar">
+                    {{ getInitials(auth.user()?.nombres || '') }}
+                  </div>
+                  <div class="card-info">
+                    <span class="user-name">{{ auth.user()?.nombres }}</span>
+                    <span class="user-email">{{ auth.user()?.email }}</span>
+                    <span class="user-role-badge">
+                      {{ auth.user()?.tipo_cliente || 'Cliente' }}
+                    </span>
+                  </div>
+                </div>
+                <ul class="card-menu">
+                  <li><a (click)="goToProfile()"><i class="far fa-user"></i> Mi Perfil</a></li>
+                  <li><a routerLink="/orders"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a></li>
+                  <li><a routerLink="/favorites"><i class="far fa-heart"></i> Favoritos</a></li>
+                </ul>
+                <div class="card-footer">
+                  <a (click)="logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
                 </div>
               </div>
-              <ul class="card-menu">
-                <li><a (click)="goToProfile()"><i class="far fa-user"></i> Mi Perfil</a></li>
-                <li><a routerLink="/orders"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a></li>
-                <li><a routerLink="/favorites"><i class="far fa-heart"></i> Favoritos</a></li>
-              </ul>
-              <div class="card-footer">
-                <a (click)="logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+            </div>
+
+            <!-- Carrito -->
+            <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
+              (click)="toggleCart()">
+              <div class="relative inline-block">
+                <i class="fas fa-shopping-cart text-lg"></i>
+                <span *ngIf="cartService.cartCount() > 0"
+                  class="absolute -top-2 -right-2 bg-[#ff0000] text-white text-[11px] font-bold h-[20px] min-w-[20px] flex items-center justify-center rounded-full border-[2px] border-white shadow-sm transform scale-100 transition-transform duration-200"
+                  style="color: #ffffff !important; background-color: #ff0000 !important;">
+                  {{ cartService.cartCount() }}
+                </span>
+              </div>
+              <span class="ml-1 font-medium text-sm">Carrito</span>
+            </button>
+
+            <!-- Notificaciones -->
+            <div class="header-dropdown-wrapper relative" (mouseleave)="closeNotifications()">
+              <button class="header-action-btn notification-btn relative" aria-label="Notificaciones"
+                (click)="toggleNotifications()">
+                <div class="relative inline-block">
+                  <i class="far fa-bell text-xl"></i>
+                  <!-- Badge -->
+                  <span *ngIf="notificationsService.unreadCount() > 0"
+                    class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-[16px] h-4 flex items-center justify-center rounded-full border border-white">
+                    {{ notificationsService.unreadCount() }}
+                  </span>
+                </div>
+              </button>
+
+              <!-- Notifications Dropdown -->
+              <div class="notifications-dropdown" [class.show]="isNotificationsOpen()">
+                <div class="noti-header">
+                  <h3 class="text-sm font-bold text-gray-800">Notificaciones</h3>
+                  <button *ngIf="notificationsService.unreadCount() > 0"
+                    class="text-xs text-blue-600 hover:text-blue-800"
+                    (click)="notificationsService.markAllAsRead(auth.user()?._id || '')">
+                    Marcar todo como leído
+                  </button>
+                </div>
+
+                <div class="noti-list max-h-80 overflow-y-auto">
+                  @if (notificationsService.notifications().length === 0) {
+                  <div class="p-4 text-center text-gray-500 text-xs">
+                    No tienes notificaciones
+                  </div>
+                  } @else {
+                  @for (notification of notificationsService.notifications(); track notification._id) {
+                  <div class="noti-item" [class.unread]="!notification.leido"
+                    (click)="notificationsService.markAsRead(notification._id)">
+                    <div class="noti-icon">
+                      <i class="fas fa-box-open text-blue-500"></i>
+                    </div>
+                    <div class="noti-content">
+                      <p class="text-xs text-gray-800 leading-snug">{{ notification.mensaje }}</p>
+                      <span class="text-[10px] text-gray-400 mt-1 block">{{ notification.createdAt | date:'short'
+                        }}</span>
+                    </div>
+                    <div *ngIf="!notification.leido" class="w-2 h-2 bg-blue-500 rounded-full ml-2"></div>
+                  </div>
+                  }
+                  }
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- Carrito -->
-          <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
-            (click)="toggleCart()">
-            <div class="relative inline-block">
-              <i class="fas fa-shopping-cart text-lg"></i>
-              <span *ngIf="cartService.cartCount() > 0"
-                class="absolute -top-2 -right-2 bg-[#ff0000] text-white text-[11px] font-bold h-[20px] min-w-[20px] flex items-center justify-center rounded-full border-[2px] border-white shadow-sm transform scale-100 transition-transform duration-200"
-                style="color: #ffffff !important; background-color: #ff0000 !important;">
-                {{ cartService.cartCount() }}
-              </span>
-            </div>
-            <span class="ml-1 font-medium text-sm">Carrito</span>
-          </button>
         </ng-container>
 
         <ng-template #guestActions>
@@ -199,13 +251,15 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-graduation-cap"></i> ESCOLAR</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'utiles-escolares'}">Útiles escolares</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'utiles-escolares'}">Útiles escolares</a>
+              </li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cuadernos'}">Cuadernos</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'libretas'}">Libretas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'forros'}">Forros</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'mochilas'}">Mochilas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cartucheras'}">Cartucheras</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'materiales-dibujo'}">Materiales de dibujo</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'materiales-dibujo'}">Materiales de
+                  dibujo</a></li>
             </ul>
           </div>
 
@@ -213,11 +267,14 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-briefcase"></i> OFICINA</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'suministros-oficina'}">Suministros de oficina</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-oficina'}">Accesorios de oficina</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'suministros-oficina'}">Suministros de
+                  oficina</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-oficina'}">Accesorios de
+                  oficina</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'carpetas'}">Carpetas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'sellos'}">Sellos</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'papeleria-especializada'}">Papelería especializada</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'papeleria-especializada'}">Papelería
+                  especializada</a></li>
             </ul>
           </div>
 
@@ -227,7 +284,8 @@
             <ul class="mega-list">
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'calculadoras'}">Calculadoras</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'sumadoras'}">Sumadoras</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'tecnologia-oficina'}">Tecnología de oficina</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'tecnologia-oficina'}">Tecnología de
+                  oficina</a></li>
             </ul>
           </div>
 
@@ -256,7 +314,8 @@
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'decoracion'}">Decoración</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'electromenor'}">Electromenor</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cocina'}">Cocina</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'organizacion-hogar'}">Organización del hogar</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'organizacion-hogar'}">Organización del
+                  hogar</a></li>
             </ul>
           </div>
 
@@ -266,7 +325,8 @@
             <ul class="mega-list">
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'aseo-personal'}">Aseo personal</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cosmeticos'}">Cosméticos</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-cabello'}">Accesorios de cabello</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-cabello'}">Accesorios de
+                  cabello</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'utiles-aseo'}">Útiles de aseo</a></li>
             </ul>
           </div>
@@ -275,7 +335,8 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-tshirt"></i> MODA & ACCESORIOS</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-moda'}">Accesorios de moda</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'accesorios-moda'}">Accesorios de moda</a>
+              </li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'bisuteria'}">Bisutería</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'bolsos'}">Bolsos</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'relojes'}">Relojes</a></li>
@@ -286,7 +347,8 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-dumbbell"></i> DEPORTES & GYM</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'articulos-deportivos'}">Artículos deportivos</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'articulos-deportivos'}">Artículos
+                  deportivos</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'gimnasio'}">Gimnasio</a></li>
             </ul>
           </div>
@@ -302,11 +364,13 @@
           <div class="mega-section">
             <h3 class="mega-title"><i class="fas fa-paint-brush"></i> ARTE & CREATIVIDAD</h3>
             <ul class="mega-list">
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'productos-arte'}">Productos de arte</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'productos-arte'}">Productos de arte</a>
+              </li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'pinturas'}">Pinturas</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'manualidades'}">Manualidades</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'arquitectura'}">Arquitectura</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'herramientas-creativas'}">Herramientas creativas</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'herramientas-creativas'}">Herramientas
+                  creativas</a></li>
             </ul>
           </div>
 
@@ -319,7 +383,8 @@
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'cumpleanos'}">Cumpleaños</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'tarjeteria'}">Tarjetería</a></li>
               <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'navidad'}">Navidad</a></li>
-              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'embalaje-regalos'}">Embalaje para regalos</a></li>
+              <li><a [routerLink]="['/products']" [queryParams]="{categoria: 'embalaje-regalos'}">Embalaje para
+                  regalos</a></li>
             </ul>
           </div>
 

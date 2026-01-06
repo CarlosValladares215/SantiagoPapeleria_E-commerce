@@ -1,29 +1,32 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProductPrice } from '../product-price/product-price';
-
-export interface RelatedProduct {
-  id: number;
-  name: string;
-  brand: string;
-  price: number;
-  originalPrice?: number;
-  discount?: number;
-  isOffer: boolean;
-  isNew: boolean;
-  image: string;
-  stock: number;
-  category: string;
-}
+import { Router } from '@angular/router';
+import { Product } from '../../../../models/product.model';
+import { ProductCard } from '../../../products/components/product-card/product-card';
+import { CartService } from '../../../../services/cart/cart.service';
 
 @Component({
   selector: 'app-product-related',
   standalone: true,
-  imports: [CommonModule, ProductPrice],
+  imports: [CommonModule, ProductCard],
   templateUrl: './product-related.html',
   styleUrls: ['./product-related.scss'],
 })
 export class ProductRelated {
-  @Input() related: RelatedProduct[] = [];
-  @Input() products: any[] = [];
+  @Input() products: Product[] = [];
+
+  private router = inject(Router);
+  private cartService = inject(CartService);
+
+  handleViewDetails(slugOrId: string) {
+    this.router.navigate(['/product', slugOrId]);
+  }
+
+  handleAddToCart(product: Product) {
+    this.cartService.addToCart(product, 1);
+    // Optional: Show toast via a service or parent?
+    // For now, CartService usually handles basics, but notification might be needed.
+    // Assuming CartService or Global Toast handles it, or acceptable silent add for related.
+    // Let's verify CartService later if it notifies.
+  }
 }
