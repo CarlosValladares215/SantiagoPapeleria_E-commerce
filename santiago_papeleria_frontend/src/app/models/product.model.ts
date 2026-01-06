@@ -49,6 +49,15 @@ export interface PriceTier {
   badge?: string;
 }
 
+export interface PromocionActiva {
+  promocion_id: string;
+  precio_original: number;
+  precio_descuento: number;
+  tipo_descuento: string;
+  valor_descuento: number;
+  calculado_at: Date | string;
+}
+
 export interface Product {
   _id: string;         // ID de Mongo
   internal_id: string; // codigo_interno de DobraNet
@@ -67,6 +76,7 @@ export interface Product {
   wholesalePrice?: number; // precio mayorista
   originalPrice?: number; // precio antes del descuento
   discount?: number;      // porcentaje
+  promocion_activa?: PromocionActiva; // Nueva promoción activa
   isOffer: boolean;       // true si tiene oferta
   vat_included: boolean;
 

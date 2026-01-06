@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
@@ -8,6 +8,7 @@ import { ProductERP } from '../../products/schemas/product-erp.schema';
 import { Producto } from '../../products/schemas/producto.schema';
 import { SyncLog } from './schemas/sync-log.schema';
 import { ErpConfig } from './schemas/erp-config.schema';
+import { EmailService } from '../../users/services/email.service';
 
 @Injectable()
 export class ErpSyncService {
@@ -21,6 +22,8 @@ export class ErpSyncService {
         @InjectModel(SyncLog.name) private syncLogModel: Model<SyncLog>,
         @InjectModel(ErpConfig.name) private erpConfigModel: Model<ErpConfig>,
         private readonly httpService: HttpService,
+        @Inject(forwardRef(() => EmailService))
+        private emailService: EmailService,
     ) { }
 
     /**
@@ -106,6 +109,10 @@ export class ErpSyncService {
             };
 
             this.logger.log(`✅ Sincronización completada en ${durationSec}s`);
+
+            // Send email notification based on config
+            await this.sendSyncNotification(result, triggeredBy);
+
             return result;
 
         } catch (error) {
@@ -117,7 +124,57 @@ export class ErpSyncService {
             logEntry.errors.push(error.message);
             await logEntry.save();
 
+            // Send error notification
+            await this.sendSyncNotification(
+                { status: 'error', errorMessage: error.message, errorDetails: error.stack },
+                triggeredBy
+            );
+
             throw error;
+        }
+    }
+
+    /**
+     * Send email notification based on sync result and config
+     */
+    private async sendSyncNotification(result: any, triggeredBy: string): Promise<void> {
+        try {
+            const config = await this.getConfig();
+
+            // Check if notifications are enabled
+            const isSuccess = result.status === 'success';
+            const isError = result.status === 'error';
+            const hasWarnings = (result.stockBajo > 0 || result.stockAgotado > 0);
+
+            // Determine if we should send based on config
+            const shouldSendSuccess = isSuccess && !hasWarnings && config.notifySuccess;
+            const shouldSendWarning = isSuccess && hasWarnings && (config.notifySuccess || config.notifyErrors);
+            const shouldSendError = isError && config.notifyErrors;
+
+            if (!shouldSendSuccess && !shouldSendWarning && !shouldSendError) {
+                this.logger.debug('Email notification skipped based on config');
+                return;
+            }
+
+            const alertEmail = config.alertEmail;
+            if (!alertEmail) {
+                this.logger.warn('alertEmail not configured, skipping notification');
+                return;
+            }
+
+            // Determine type
+            let type: 'success' | 'warning' | 'error' = 'success';
+            if (isError) type = 'error';
+            else if (hasWarnings) type = 'warning';
+
+            // Add triggeredBy to result for email template
+            const emailResult = { ...result, triggeredBy };
+
+            await this.emailService.sendErpSyncNotification(alertEmail, emailResult, type);
+            this.logger.log(`📧 Email de sincronización (${type}) enviado a ${alertEmail}`);
+        } catch (error) {
+            this.logger.error('Error sending sync notification email:', error.message);
+            // Don't throw - email failure shouldn't break sync
         }
     }
 
@@ -133,6 +190,10 @@ export class ErpSyncService {
                 update: {
                     $set: {
                         nombre: product.NOM,
+                        descripcion: product.NOT || '',
+                        imagen: product.FOT || '',
+                        linea_codigo: product.LIN || '',
+                        row_id: product.ROW || 0,
                         marca: product.MRK || '',
                         categoria_g1: product.G1 || '',
                         categoria_g2: product.G2 || '',
@@ -144,6 +205,9 @@ export class ErpSyncService {
                         codigo_barras: product.BAR || '',
                         ultima_sync: new Date(),
                         activo: true,
+                        peso_erp: product.PES || 0,
+                        dimensiones_erp: product.DIM || { L: 0, A: 0, H: 0 },
+                        specs_erp: product.SPC || [],
                     },
                 },
                 upsert: true,
@@ -164,11 +228,15 @@ export class ErpSyncService {
         let created = 0;
         let updated = 0;
         let skipped = 0;
+        let stockBajo = 0; // HU78: Contador de productos con stock bajo
+        let stockAgotado = 0; // HU78: Contador de productos agotados
 
         for (const erpProduct of erpProducts) {
             const existingProduct = await this.productoModel.findOne({
                 codigo_interno: erpProduct.codigo,
             });
+
+            const imageUrl = erpProduct.imagen ? `http://localhost:4000/data/photos/${erpProduct.imagen}` : '';
 
             if (!existingProduct) {
                 // CREATE new enriched product
@@ -179,6 +247,7 @@ export class ErpSyncService {
                         nombre: erpProduct.nombre,
                         slug: this.generateSlug(erpProduct.nombre) + '-' + erpProduct.codigo,
                         activo: true,
+                        es_publico: true, // Requisito: Visibilidad Automática
                         palabras_clave: [],
 
                         clasificacion: {
@@ -198,10 +267,12 @@ export class ErpSyncService {
                             total_disponible: erpProduct.stock,
                             controlar_stock: true,
                             bodegas: [],
+                            estado_stock: this.calculateStockStatus(erpProduct.stock, 5),
+                            umbral_stock_alerta: 5,
                         },
 
                         multimedia: {
-                            principal: '',
+                            principal: imageUrl,
                             galeria: [],
                         },
 
@@ -210,28 +281,58 @@ export class ErpSyncService {
                             ultima_sincronizacion_dobranet: new Date(),
                         },
 
-                        priceTiers: [],
-                        peso_kg: this.calculateWeightInKg((erpProduct as any).weight_erp),
+
+                        priceTiers: this.generatePriceTiers(erpProduct.precio_pvp, erpProduct.precio_pvm),
+                        peso_kg: (erpProduct as any).peso_erp || 0,
+                        dimensiones: {
+                            largo: (erpProduct as any).dimensiones_erp?.L || 0,
+                            ancho: (erpProduct as any).dimensiones_erp?.A || 0,
+                            alto: (erpProduct as any).dimensiones_erp?.H || 0,
+                        },
+                        descripcion_extendida: erpProduct.descripcion || '',
+                        specs: (erpProduct as any).specs_erp || [],
                     });
                     created++;
                 } catch (err) {
                     this.logger.error(`Error creating enriched product ${erpProduct.codigo}: ${err.message}`);
                 }
             } else {
-                // UPDATE only prices, stock, and sync date
+                // Get current threshold or use default
+                const umbral = existingProduct.stock?.umbral_stock_alerta || 5;
+                const nuevoEstadoStock = this.calculateStockStatus(erpProduct.stock, umbral);
+
+                // HU78: Detectar cambios de estado de stock para alertas
+                const estadoAnterior = existingProduct.stock?.estado_stock || 'normal';
+                if (nuevoEstadoStock !== estadoAnterior) {
+                    if (nuevoEstadoStock === 'bajo') {
+                        stockBajo++;
+                        this.logger.warn(`⚠️ Stock bajo detectado: ${erpProduct.codigo} - ${erpProduct.nombre} (${erpProduct.stock} unidades)`);
+                    } else if (nuevoEstadoStock === 'agotado') {
+                        stockAgotado++;
+                        this.logger.warn(`🚨 Producto agotado: ${erpProduct.codigo} - ${erpProduct.nombre}`);
+                    }
+                }
+
+                // UPDATE
                 const updateDoc = {
+                    'nombre': erpProduct.nombre,
+                    'descripcion_extendida': erpProduct.descripcion || '',
+                    'multimedia.principal': imageUrl,
                     'precios.pvp': erpProduct.precio_pvp,
                     'precios.pvm': erpProduct.precio_pvm,
                     'precios.incluye_iva': erpProduct.iva,
+                    'priceTiers': this.generatePriceTiers(erpProduct.precio_pvp, erpProduct.precio_pvm),
                     'stock.total_disponible': erpProduct.stock,
-                    // We can update classification if we want, or lets keep it in sync
+                    'stock.estado_stock': nuevoEstadoStock, // HU78
                     'clasificacion.marca': erpProduct.marca,
                     'clasificacion.grupo': erpProduct.categoria_g2,
                     'clasificacion.linea': erpProduct.categoria_g1,
                     'auditoria.ultima_sincronizacion_dobranet': new Date(),
-                    // Update weight if needed (careful not to overwrite manual enrichment if we don't want to, 
-                    // but for this task we assume Sync updates base data)
-                    // 'peso_kg': this.calculateWeightInKg((erpProduct as any).weight_erp), // Uncomment if we want strict sync
+                    'specs': (erpProduct as any).specs_erp || [],
+                    'peso_kg': (erpProduct as any).peso_erp || 0,
+                    'dimensiones.largo': (erpProduct as any).dimensiones_erp?.L || 0,
+                    'dimensiones.ancho': (erpProduct as any).dimensiones_erp?.A || 0,
+                    'dimensiones.alto': (erpProduct as any).dimensiones_erp?.H || 0,
                 };
 
                 await this.productoModel.updateOne(
@@ -244,8 +345,23 @@ export class ErpSyncService {
 
         this.logger.log(`📝 Productos Enriquecidos: ${created} creados, ${updated} actualizados`);
 
-        return { created, updated, total: erpProducts.length };
+        // HU78: Log de alertas de stock
+        if (stockBajo > 0 || stockAgotado > 0) {
+            this.logger.warn(`📦 Alertas de Stock: ${stockBajo} bajo stock, ${stockAgotado} agotados`);
+        }
+
+        return { created, updated, total: erpProducts.length, stockBajo, stockAgotado };
     }
+
+    /**
+     * HU78: Calcula el estado del stock basado en cantidad y umbral
+     */
+    private calculateStockStatus(cantidad: number, umbral: number): string {
+        if (cantidad <= 0) return 'agotado';
+        if (cantidad <= umbral) return 'bajo';
+        return 'normal';
+    }
+
 
     /**
      * Generate URL-friendly slug from product name
@@ -357,6 +473,35 @@ export class ErpSyncService {
     }
 
     /**
+     * Send product update (restriction: NOM and NOT only) to ERP
+     */
+    async updateProductInErp(codigo: string, data: { nombre?: string; descripcion?: string }): Promise<any> {
+        try {
+            const payload = {
+                COD: codigo,
+                ...(data.nombre && { NOM: data.nombre }),
+                ...(data.descripcion && { NOT: data.descripcion })
+            };
+
+            this.logger.log(`📤 Enviando actualización al ERP para ${codigo}...`);
+            const response = await firstValueFrom(
+                this.httpService.post(`${this.erpUrl}?CMD=STO_MTX_UPD_PRO`, payload)
+            );
+
+            if (response.data.STA === 'OK') {
+                this.logger.log(`✅ Producto ${codigo} actualizado en ERP`);
+            } else {
+                this.logger.warn(`⚠️ ERP rechazó actualización: ${response.data.MSG}`);
+            }
+
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Error updating product ${codigo} in ERP:`, error.message);
+            throw error;
+        }
+    }
+
+    /**
      * Simulate Admin enrichment
      */
     async simulateEnrichment(codigo: string): Promise<any> {
@@ -440,10 +585,41 @@ export class ErpSyncService {
         return config;
     }
 
+    async syncCategories(): Promise<any> {
+        this.logger.log('🔄 Sincronizando árbol de categorías...');
+        try {
+            const response = await firstValueFrom(
+                this.httpService.get(`${this.erpUrl}?CMD=STO_MTX_CAT_LIN`)
+            );
+            this.logger.log(`✅ Categorías recibidas: ${response.data.length || 'Estructura árbol'}`);
+            return response.data;
+        } catch (error) {
+            this.logger.error('❌ Error sincronizando categorías:', error.message);
+            throw error;
+        }
+    }
+
     async updateConfig(configData: any): Promise<any> {
         // Update the singleton config
         // upsert: true ensures it creates if it doesn't exist
         return this.erpConfigModel.findOneAndUpdate({}, configData, { new: true, upsert: true }).exec();
+    }
+
+    /**
+     * Helper to generate price tiers automatically if Wholesale Price < Public Price
+     */
+    private generatePriceTiers(pvp: number, pvm: number): any[] {
+        if (pvm > 0 && pvm < pvp) {
+            return [{
+                min: 12,
+                max: 999999,
+                price: pvm,
+                label: 'Mayorista (12+)',
+                discount: 1 - (pvm / pvp),
+                badge: 'PRECIO MAYORISTA'
+            }];
+        }
+        return [];
     }
 }
 

@@ -12,6 +12,8 @@ export class ErpController {
                 return this.erpService.getCatalogo(params);
             case 'STO_MTX_FIC_PRO':
                 return this.erpService.getProducto(params.COD);
+            case 'STO_MTX_CAT_LIN':
+                return this.erpService.getCategorias(params);
             default:
                 return { error: 'Comando no reconocido' };
         }
@@ -19,9 +21,13 @@ export class ErpController {
 
     @Post()
     handlePost(@Query('CMD') cmd: string, @Body() data: any) {
-        if (cmd === 'STO_MTX_ORD_VEN') {
-            return this.erpService.createOrder(data);
+        switch (cmd) {
+            case 'STO_MTX_ORD_VEN':
+                return this.erpService.createOrder(data);
+            case 'STO_MTX_UPD_PRO':
+                return this.erpService.updateProduct(data);
+            default:
+                return { STA: 'ERROR', MSG: 'Comando no válido' };
         }
-        return { STA: 'ERROR', MSG: 'Comando no válido' };
     }
 }

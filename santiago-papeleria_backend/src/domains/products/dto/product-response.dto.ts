@@ -106,9 +106,19 @@ export class ProductResponseDto {
   tags?: string[];
 
   // Campos de estado requeridos por Angular
-  @Expose() isOffer: boolean = false;
+  @Expose()
+  @Transform(({ obj }) => {
+    // Si tiene tiers de precio, es una oferta (al menos para mayoristas)
+    if (obj.priceTiers && obj.priceTiers.length > 0) return true;
+    return false;
+  })
+  isOffer: boolean;
   @Expose() isNew: boolean = true;
-  @Expose() specs: any[] = [];
+
+  @Expose()
+  @Transform(({ obj }) => obj.specs || [])
+  specs: any[];
+
   @Expose() reviews: any[] = [];
 
   // --- NUEVO CAMPO: PRICE TIERS ---

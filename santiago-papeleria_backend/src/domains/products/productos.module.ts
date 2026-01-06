@@ -9,9 +9,13 @@ import { ProductERP, ProductERPSchema } from './schemas/product-erp.schema';
 
 import { HttpModule } from '@nestjs/axios';
 
+import { forwardRef } from '@nestjs/common';
+import { ErpSyncModule } from '../erp/sync/erp-sync.module'; // Adjust path if needed
+
 @Module({
   imports: [
     HttpModule,
+    forwardRef(() => ErpSyncModule), // Circular dependency resolution
     MongooseModule.forFeature([
       {
         name: Producto.name, // enriched
@@ -25,6 +29,6 @@ import { HttpModule } from '@nestjs/axios';
   ],
   controllers: [ProductosController],
   providers: [ProductosService],
-  exports: [ProductosService]
+  exports: [ProductosService, MongooseModule] // Export MongooseModule so ErpSyncService can use models
 })
 export class ProductosModule { }

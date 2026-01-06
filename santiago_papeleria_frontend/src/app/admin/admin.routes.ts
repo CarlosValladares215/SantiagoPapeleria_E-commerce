@@ -15,6 +15,17 @@ export const ADMIN_ROUTES: Routes = [
     { path: 'products/enrich/:sku', loadComponent: () => import('./products/product-enrich/product-enrich.component').then(m => m.ProductEnrichComponent) },
     { path: 'products', loadComponent: () => import('./products/products-list/admin-products-list.component').then(m => m.AdminProductsListComponent), pathMatch: 'full' },
 
+
+    // Shipping Config
+    { path: 'shipping', loadComponent: () => import('./shipping/shipping-config/shipping-config.component').then(m => m.ShippingConfigComponent) },
+
+    // Promociones
+    { path: 'promociones', loadChildren: () => import('./promociones/promociones.module').then(m => m.PromocionesModule) },
+
+
+    // Reports
+    { path: 'reports', loadComponent: () => import('./pages/reports/sales-dashboard/sales-dashboard.component').then(m => m.SalesDashboardComponent) },
+
     // Settings
     { path: 'settings', loadComponent: () => import('../pages/profile/profile').then(m => m.Profile) },
 ];

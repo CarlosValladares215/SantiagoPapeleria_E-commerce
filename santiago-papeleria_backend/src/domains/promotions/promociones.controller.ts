@@ -1,32 +1,34 @@
-// src/promociones/promociones.controller.ts
-
-import { Controller, Get, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { PromocionesService } from './promociones.service';
-import { PromocionDocument } from './schemas/promocion.schema';
+import { CreatePromocionDto } from './dto/create-promocion.dto';
+import { UpdatePromocionDto } from './dto/update-promocion.dto';
 
-@Controller('promociones') // Ruta base: /promociones
+@Controller('promociones')
 export class PromocionesController {
-  constructor(private readonly promocionesService: PromocionesService) {}
+  constructor(private readonly promocionesService: PromocionesService) { }
 
-  // GET /promociones (Obtiene todas las promociones vigentes)
-  @Get()
-  async findAllActive(): Promise<PromocionDocument[]> {
-    return this.promocionesService.findActiveAndValid();
+  @Post()
+  create(@Body() createPromocionDto: CreatePromocionDto) {
+    return this.promocionesService.create(createPromocionDto);
   }
 
-  // GET /promociones/codigo?code=XXX (Obtiene una promoción por su código)
-  @Get('codigo')
-  async findByCode(@Query('code') code: string): Promise<PromocionDocument> {
-    const promocion = await this.promocionesService.findByCode(
-      code.toUpperCase(),
-    );
+  @Get()
+  findAll(@Query() query: any) {
+    return this.promocionesService.findAll(query);
+  }
 
-    if (!promocion) {
-      throw new NotFoundException(
-        `Código promocional ${code} no válido o expirado.`,
-      );
-    }
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.promocionesService.findOne(id);
+  }
 
-    return promocion;
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updatePromocionDto: UpdatePromocionDto) {
+    return this.promocionesService.update(id, updatePromocionDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.promocionesService.remove(id);
   }
 }

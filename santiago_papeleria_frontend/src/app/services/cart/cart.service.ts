@@ -1,9 +1,12 @@
+
 import { Injectable, signal, computed, inject, effect, Injector } from '@angular/core';
 import { UiService } from '../ui/ui.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DireccionEntrega } from '../../models/usuario.model';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
+import { ShippingService } from '../../services/shipping.service';
+import { environment } from '../../../environments/environment';
 
 export interface CartItem {
     id: string;
@@ -16,13 +19,14 @@ export interface CartItem {
     image: string;
     stock: number;
     options?: any;
-    vat_included?: boolean; // Re-added VAT flag
+    vat_included?: boolean;
     weight_kg?: number;
     dimensions?: {
         largo: number;
         ancho: number;
         alto: number;
     };
+    promocion_id?: string;
 }
 
 @Injectable({
@@ -32,9 +36,13 @@ export class CartService {
     private uiService = inject(UiService);
     private http = inject(HttpClient);
     private authService = inject(AuthService);
+    private shippingService = inject(ShippingService);
+
+    // API URLs
     private apiUrl = 'http://localhost:3000/api/usuarios';
     private ordersUrl = 'http://localhost:3000/api/pedidos';
     private filesUrl = 'http://localhost:3000/api/files';
+    private shippingUrl = 'http://localhost:3000/api/shipping';
 
     // Sync with UiService
     private _isOpen = toSignal(this.uiService.isCartOpen$, { initialValue: false });
@@ -56,11 +64,6 @@ export class CartService {
     ];
     selectedBranch = signal(this.branches[0]);
 
-    // Constants
-    private readonly STORE_LOCATION = { lat: -3.99313, lng: -79.20422 };
-    private readonly RATE_BASE = 2.50;
-    private readonly RATE_PER_KM = 0.35;
-    private readonly RATE_PER_KG = 0.25;
     private readonly IVA_RATE = 0.15;
 
     // Computed Values
@@ -96,7 +99,7 @@ export class CartService {
     });
 
     // 3. Final Totals
-    totalValue = computed(() => this.subTotal() + this.totalIva()); // Should match itemsTotal if all vat_included
+    totalValue = computed(() => this.subTotal() + this.totalIva());
     finalTotal = computed(() => this.totalValue() + this.shippingCost());
 
     cartCount = this.totalItems;
@@ -125,49 +128,29 @@ export class CartService {
         effect(() => {
             const user = this.authService.user();
             if (user) {
-                // User Logged In: Load their cart (overwrite local)
-                // Note: We might want to merge, but user asked for "appear their data", implying server state wins.
-                // However, user.carrito might be null/undefined initially or empty.
+                // User Logged In: Load their cart
                 if (user.carrito && Array.isArray(user.carrito)) {
-                    // Map backend schema to CartItem if needed, or assume match
-                    // Mongoose might return _id, frontend uses id. existingItemIndex check uses .id
-                    // Let's ensure compatibility.
                     const mappedCart = user.carrito.map((c: any) => ({
                         ...c,
-                        id: c.id || c._id // Ensure ID exists
+                        id: c.id || c._id
                     }));
-                    // Allow writes to update signal from within effect
-                    // We use untracked to avoid loop?? No, we want this to run only when USER changes.
-                    // But setting cartItemsSignal triggers Effect #1 which saves back to backend.
-                    // This loop (Load -> Set -> Save) is slight redundancy but harmless usually.
-                    // To avoid infinite loop (Save -> User Update -> Load...), we need to be careful.
-                    // Ideally, updateCart endpoint shouldn't trigger a full user reload that changes the object reference heavily.
-                    // Or we can check deep equality.
-                    // For now, let's just set it.
-                    // We need allowSignalWrites because we are writing to cartItemsSignal inside an effect.
-
-                    // CRITICAL: Only set if different to avoid cycle/flicker?
-                    // Just setting it.
-
-                    // To avoid the cycle of "Set Signal -> Save to Backend -> Update User -> Set Signal",
-                    // The "Save to Backend" doesn't necessarily update the local `authService.user` signal unless we explicity do so.
-                    // `saveCartToBackend` just sends PUT. It returns the new cart. We usually ignore it or update local state?
-                    // If we don't update `authService.user` with the response, the effect watching `authService.user` won't re-fire.
-                    // So it stops the loop.
-
                     this.cartItemsSignal.set(mappedCart);
+                }
+
+                // Auto-select Default Address if available and none selected
+                if (user.direcciones_entrega && user.direcciones_entrega.length > 0 && !this.selectedAddress()) {
+                    // Ideally check for 'isDefault' flag, mostly first one is default
+                    this.setAddress(user.direcciones_entrega[0]);
                 }
             } else {
                 // User Logged Out: Clear Cart
-                this.cartItemsSignal.set([]); // Clear local cart
+                this.cartItemsSignal.set([]);
+                this.selectedAddress.set(null);
             }
         }, { allowSignalWrites: true });
     }
 
     private saveCartToBackend(userId: string, items: CartItem[]) {
-        // Debounce logic could be good here, but for now direct call
-        // We use subscribe but don't strictly wait.
-        // Also: items might have Circular structures if not careful? No, they are POJOs.
         this.http.put(`${this.apiUrl}/${userId}/cart`, items).subscribe({
             next: (res) => console.log('Cart synced to backend'),
             error: (err) => console.error('Failed to sync cart', err)
@@ -180,10 +163,16 @@ export class CartService {
 
         const isMayoristaUser = this.authService.isMayorista();
 
-        // Determine prices from product source
-        // product might be from Product Page (rich object) or lightweight
-        const retailPrice = product.basePrice || product.price || 0;
-        const wholesalePrice = product.wholesalePrice || retailPrice; // Fallback to retail if no wholesale
+        let retailPrice = product.basePrice || product.price || 0;
+        let promoId: string | undefined;
+
+        // Apply Promotion if active
+        if (product.promocion_activa) {
+            retailPrice = product.promocion_activa.precio_descuento;
+            promoId = product.promocion_activa.promocion_id;
+        }
+
+        const wholesalePrice = product.wholesalePrice || retailPrice;
 
         const existingItemIndex = currentItems.findIndex(item => item.id === productId);
 
@@ -192,35 +181,28 @@ export class CartService {
             const item = updatedItems[existingItemIndex];
             const newQty = item.quantity + quantity;
 
-            // Check stock limit for existing item addition
             if (newQty <= item.stock) {
-                // RE-CALCULATE PRICE for new total quantity
                 const applicablePrice = this.calculatePrice(newQty, item.retailPrice || retailPrice, item.wholesalePrice || wholesalePrice, isMayoristaUser);
-
                 updatedItems[existingItemIndex] = {
                     ...item,
                     quantity: newQty,
-                    price: applicablePrice
+                    price: applicablePrice,
+                    promocion_id: promoId || item.promocion_id
                 };
                 this.cartItemsSignal.set(updatedItems);
             } else {
-                // Cap at max stock
                 if (item.quantity < item.stock) {
                     const cappedQty = item.stock;
                     const applicablePrice = this.calculatePrice(cappedQty, item.retailPrice || retailPrice, item.wholesalePrice || wholesalePrice, isMayoristaUser);
-
-                    updatedItems[existingItemIndex] = {
-                        ...item,
-                        quantity: cappedQty,
-                        price: applicablePrice
-                    };
+                    updatedItems[existingItemIndex] = { ...item, quantity: cappedQty, price: applicablePrice };
                     this.cartItemsSignal.set(updatedItems);
                 }
             }
         } else {
-            // New Item
-            // Initial Price Calculation
             const applicablePrice = this.calculatePrice(quantity, retailPrice, wholesalePrice, isMayoristaUser);
+            // Ensure promo price applies if lower than any wholesale calculation (unless wholesale is better)
+            // But calculatePrice logic might return wholesale if applicable.
+            // If retailPrice IS the promo price, calculatePrice returns it for non-wholesale.
 
             const newItem: CartItem = {
                 id: productId,
@@ -233,35 +215,32 @@ export class CartService {
                 stock: product.stock || 0,
                 sku: product.sku || product.codigo_interno || '',
                 options: options,
-                vat_included: product.vat_included !== undefined ? product.vat_included : true, // Default to true if missing
+                vat_included: product.vat_included !== undefined ? product.vat_included : true,
                 weight_kg: product.weight_kg || product.weight || 0,
-                dimensions: product.dimensions
+                dimensions: product.dimensions,
+                promocion_id: promoId
             };
             this.cartItemsSignal.set([...currentItems, newItem]);
         }
         this.openCart();
     }
 
-    // Check if any item exceeds available stock
     validateStock(): boolean {
         const items = this.cartItemsSignal();
         let isValid = true;
-        const updatedItems = items.map(item => {
+        items.forEach(item => {
             if (item.quantity > item.stock) {
                 isValid = false;
             }
-            return item;
         });
         return isValid;
     }
 
-    // Helper to get out of stock items
     get outOfStockItems(): CartItem[] {
         return this.cartItemsSignal().filter(item => item.stock <= 0 || item.quantity > item.stock);
     }
 
     private calculatePrice(qty: number, retail: number, wholesale: number, isMayoristaUser: boolean): number {
-        // Rule: Usually wholesale if User is Mayorista OR Qty >= 12
         if (isMayoristaUser || qty >= 12) {
             return wholesale;
         }
@@ -287,28 +266,16 @@ export class CartService {
         if (index > -1) {
             const updatedItems = [...currentItems];
             const item = updatedItems[index];
-
             const isMayoristaUser = this.authService.isMayorista();
 
             if (quantity <= item.stock) {
                 const applicablePrice = this.calculatePrice(quantity, item.retailPrice || item.price, item.wholesalePrice || item.price, isMayoristaUser);
-
-                updatedItems[index] = {
-                    ...item,
-                    quantity: quantity,
-                    price: applicablePrice
-                };
+                updatedItems[index] = { ...item, quantity: quantity, price: applicablePrice };
                 this.cartItemsSignal.set(updatedItems);
             } else {
-                // Cap at stock
                 const cappedQty = item.stock;
                 const applicablePrice = this.calculatePrice(cappedQty, item.retailPrice || item.price, item.wholesalePrice || item.price, isMayoristaUser);
-
-                updatedItems[index] = {
-                    ...item,
-                    quantity: cappedQty,
-                    price: applicablePrice
-                };
+                updatedItems[index] = { ...item, quantity: cappedQty, price: applicablePrice };
                 this.cartItemsSignal.set(updatedItems);
             }
         }
@@ -328,14 +295,13 @@ export class CartService {
         return this.http.post<{ url: string }>(`${this.filesUrl}/upload`, formData);
     }
 
-    // --- Shipping Logic ---
     setAddress(address: DireccionEntrega | null) {
         this.selectedAddress.set(address);
     }
 
     setDeliveryMethod(method: 'shipping' | 'pickup') {
         this.deliveryMethod.set(method);
-        this.calculateShipping(); // Recalculate cost
+        this.calculateShipping();
     }
 
     setPaymentMethod(method: 'transfer' | 'cash') {
@@ -351,88 +317,45 @@ export class CartService {
         const address = this.selectedAddress();
         const items = this.cartItemsSignal();
 
-        if (!address) {
-            console.warn('Shipping: No address selected');
+        if (!address || items.length === 0) {
             this.shippingCost.set(0);
             return;
         }
 
-        if (!address.location) {
-            console.warn('Shipping: Selected address has no location data', address);
-            this.shippingCost.set(0);
-            return;
-        }
+        console.log('Calculating shipping for:', address.alias);
 
-        if (items.length === 0) {
-            this.shippingCost.set(0);
-            return;
-        }
+        let totalRealWeight = 0;
+        let totalVolumetricWeight = 0;
 
-        try {
-            console.log('Calculating shipping for:', address.alias, address.location);
+        items.forEach(item => {
+            const q = item.quantity;
+            const w = Number(item.weight_kg || 0);
+            totalRealWeight += w * q;
 
-            // 1. Distance
-            const distKm = this.getDistanceFromLatLonInKm(
-                this.STORE_LOCATION.lat, this.STORE_LOCATION.lng,
-                Number(address.location.lat), Number(address.location.lng) // Ensure numbers
-            );
-            console.log('Distance (km):', distKm);
+            if (item.dimensions) {
+                const l = Number(item.dimensions.largo || 0);
+                const an = Number(item.dimensions.ancho || 0);
+                const al = Number(item.dimensions.alto || 0);
+                const vol = (l * an * al) / 5000;
+                totalVolumetricWeight += vol * q;
+            }
+        });
 
-            // 2. Weight
-            let totalRealWeight = 0;
-            let totalVolumetricWeight = 0;
+        const chargeableWeight = Math.max(totalRealWeight, totalVolumetricWeight);
+        const locationName = address.provincia || address.ciudad || '';
 
-            items.forEach(item => {
-                const q = item.quantity;
-                const w = Number(item.weight_kg || 0);
-                totalRealWeight += w * q;
-
-                if (item.dimensions) {
-                    const l = Number(item.dimensions.largo || 0);
-                    const an = Number(item.dimensions.ancho || 0);
-                    const al = Number(item.dimensions.alto || 0);
-                    const vol = (l * an * al) / 5000;
-                    totalVolumetricWeight += vol * q;
-                }
-            });
-
-            const chargeableWeight = Math.max(totalRealWeight, totalVolumetricWeight);
-            console.log('Weights - Real:', totalRealWeight, 'Volumetric:', totalVolumetricWeight, 'Chargeable:', chargeableWeight);
-
-            // 3. Formula
-            let cost = this.RATE_BASE;
-            cost += distKm * this.RATE_PER_KM;
-            cost += chargeableWeight * this.RATE_PER_KG;
-
-            console.log('Calculated Cost:', cost);
-
-            const finalCost = Math.round(cost * 100) / 100;
-            console.log('Final Round Cost:', finalCost);
-
-            this.shippingCost.set(finalCost);
-        } catch (error) {
-            console.error('Error calculating shipping:', error);
-            this.shippingCost.set(0);
-        }
+        // Call Backend for Calculation
+        this.shippingService.calculateShipping(locationName, chargeableWeight).subscribe({
+            next: (res) => {
+                this.shippingCost.set(res.cost);
+            },
+            error: (err) => {
+                console.error('Error calculating shipping:', err);
+                this.shippingCost.set(0);
+            }
+        });
     }
 
-    private getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-        const R = 6371;
-        const dLat = this.deg2rad(lat2 - lat1);
-        const dLon = this.deg2rad(lon2 - lon1);
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
-
-    private deg2rad(deg: number) {
-        return deg * (Math.PI / 180);
-    }
-
-    // --- Storage ---
     private saveToStorage(items: CartItem[]) {
         localStorage.setItem('cart', JSON.stringify(items));
     }
@@ -447,7 +370,6 @@ export class CartService {
         }
     }
 
-    // --- UI Helpers ---
     toggleCart() { this.uiService.toggleCart(); }
     openCart() { if (!this.isOpen()) this.uiService.toggleCart(); }
     closeCart() { this.uiService.closeCart(); }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ErpService } from '../../../services/erp/erp.service';
 
-type SyncType = 'complete' | 'products' | 'prices' | 'stock';
+type SyncType = 'complete' | 'products' | 'categories';
 type SyncStatus = 'idle' | 'syncing' | 'completed' | 'failed';
 
 interface ProgressStep {
@@ -44,22 +44,17 @@ export class ManualSyncComponent implements OnDestroy {
         {
             id: 'complete' as SyncType,
             label: 'Sincronización Completa',
-            description: '(productos, precios y stock)'
+            description: '(productos, precios, stock y categorías)'
         },
         {
             id: 'products' as SyncType,
             label: 'Solo Productos',
-            description: '(catálogo sin precios)'
+            description: '(catálogo, precios y stock)'
         },
         {
-            id: 'prices' as SyncType,
-            label: 'Solo Precios',
-            description: '(actualizar precios PVP y PVM)'
-        },
-        {
-            id: 'stock' as SyncType,
-            label: 'Solo Stock',
-            description: '(actualizar existencias)'
+            id: 'categories' as SyncType,
+            label: 'Solo Categorías',
+            description: '(árbol de líneas y grupos)'
         }
     ];
 
@@ -89,6 +84,39 @@ export class ManualSyncComponent implements OnDestroy {
             await new Promise(resolve => setTimeout(resolve, 800)); // Min delay for visual
             this.steps[0].status = 'completed';
 
+            // SPECIAL CASE: Categories Sync
+            if (this.selectedSyncType === 'categories') {
+                this.steps[1].label = 'Sincronizando categorías (STO_MTX_CAT_LIN)...';
+                this.steps[1].status = 'processing';
+                this.cd.detectChanges();
+
+                this.erpService.syncCategories().subscribe({
+                    next: (data: any) => {
+                        this.steps[1].status = 'completed';
+                        this.steps[2].label = 'Categorías actualizadas';
+                        this.steps[2].status = 'completed';
+                        this.steps[3].status = 'completed';
+
+                        this.syncResults = {
+                            productsUpdated: 0,
+                            productsNew: data.length || 0, // Abuse new products field for categories count
+                            productsInactive: 0,
+                            errors: 0,
+                            duration: '0s',
+                            timestamp: ''
+                        };
+                        this.finishSync();
+                    },
+                    error: (err: any) => {
+                        console.error("Sync Error", err);
+                        this.steps[1].status = 'pending';
+                        this.cancelSync();
+                    }
+                });
+                return;
+            }
+
+            // STANDARD FLOW (Products)
             // STEP 2: Fetch Data
             this.steps[1].status = 'processing';
             this.cd.detectChanges();
@@ -115,22 +143,15 @@ export class ManualSyncComponent implements OnDestroy {
                     for (let i = 0; i < totalItems; i++) {
                         if (this.syncStatus !== 'syncing') break; // Allow cancel
 
+                        // Fake processing logic just for visual feedback based on real data
                         const item = data[i];
-
-                        // --- LOGIC: Categorize item based on its data ---
                         const stock = Number(item.STK) || 0;
                         const price = Number(item.PVP) || 0;
 
-                        // Hardcoded heuristic for demo purposes to categorize results based on data
-                        if (stock <= 0) {
-                            this.syncResults.productsInactive++;
-                        } else if (stock > 500 && i % 10 === 0) {
-                            this.syncResults.productsNew++;
-                        } else if (price <= 0.01) {
-                            this.syncResults.errors++;
-                        } else {
-                            this.syncResults.productsUpdated++;
-                        }
+                        if (stock <= 0) this.syncResults.productsInactive++;
+                        else if (stock > 500 && i % 10 === 0) this.syncResults.productsNew++; // Fake "new"
+                        else if (price <= 0.01) this.syncResults.errors++;
+                        else this.syncResults.productsUpdated++;
 
                         // Update Progress
                         const percentage = Math.min(Math.round(((i + 1) / totalItems) * 100), 100);
@@ -144,17 +165,31 @@ export class ManualSyncComponent implements OnDestroy {
                         }
                     }
 
-                    this.steps[2].status = 'completed';
-
-                    // STEP 4: Finalize
-                    this.steps[3].status = 'processing';
+                    // Call backend to actually perform sync-now (trigger real sync)
+                    this.steps[2].label = 'Guardando en base de datos...';
                     this.cd.detectChanges();
-                    await new Promise(resolve => setTimeout(resolve, 800));
-                    this.steps[3].status = 'completed';
 
-                    setTimeout(() => {
-                        this.finishSync();
-                    }, 500);
+                    this.erpService.triggerSync().subscribe({
+                        next: (res: any) => {
+                            this.steps[2].status = 'completed';
+                            // Update results with REAL backend stats if available
+                            if (res.created !== undefined) {
+                                this.syncResults.productsNew = res.created;
+                                this.syncResults.productsUpdated = res.updated;
+                            }
+
+                            // STEP 4: Finalize
+                            this.steps[3].status = 'processing';
+                            this.cd.detectChanges();
+                            this.steps[3].status = 'completed';
+                            this.finishSync();
+                        },
+                        error: (err: any) => {
+                            console.error("Backend Sync Error", err);
+                            // Even if backend fails, if we processed UI, maybe show partial? No, error is better.
+                            this.cancelSync();
+                        }
+                    });
                 },
                 error: (err: any) => {
                     console.error("Sync Error", err);
@@ -174,8 +209,10 @@ export class ManualSyncComponent implements OnDestroy {
         clearInterval(this.interval);
 
         const durationSeconds = Math.floor((Date.now() - this.startTime) / 1000);
-        this.syncResults!.duration = this.formatTime(durationSeconds);
-        this.syncResults!.timestamp = new Date().toLocaleString('es-ES');
+        if (this.syncResults) {
+            this.syncResults.duration = this.formatTime(durationSeconds);
+            this.syncResults.timestamp = new Date().toLocaleString('es-ES');
+        }
 
         this.syncStatus = 'completed';
         this.progress = 100;

@@ -152,31 +152,7 @@ export class AdminProductsListComponent implements OnInit {
         }
     }
 
-    toggleVisibility(product: MergedProduct) {
-        if (product.enrichmentStatus !== 'complete') return;
-
-        // Optimistic Update
-        const originalState = product.isVisible;
-        this.products.update(list => list.map(p =>
-            p.sku === product.sku ? { ...p, isVisible: !p.isVisible } : p
-        ));
-
-        // Call API patch
-        this.erpService.patchProduct(product.sku, { es_publico: !product.isVisible })
-            .subscribe({
-                next: () => {
-                    this.showToastNotification('✅ Visibilidad actualizada correctamente', 'success');
-                },
-                error: (err: any) => {
-                    console.error('Error updating visibility', err);
-                    // Revert on error
-                    this.products.update(list => list.map(p =>
-                        p.sku === product.sku ? { ...p, isVisible: originalState } : p
-                    ));
-                    this.showToastNotification('❌ Error al actualizar visibilidad', 'error');
-                }
-            });
-    }
+    // toggleVisibility removed - Visibility is now automatic based on sync logic
 
     showToastNotification(msg: string, type: 'success' | 'error' = 'success') {
         this.toastMessage = msg;

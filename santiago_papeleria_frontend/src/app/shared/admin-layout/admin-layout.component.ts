@@ -39,6 +39,16 @@ export class AdminLayoutComponent {
             path: '/admin/products'
         },
         {
+            icon: 'ri-percent-line',
+            label: 'Promociones',
+            path: '/admin/promociones'
+        },
+        {
+            icon: 'ri-truck-line',
+            label: 'Config. Envíos',
+            path: '/admin/shipping'
+        },
+        {
             icon: 'ri-refresh-line',
             label: 'Sincronización ERP',
             path: '/admin/erp-sync',
@@ -49,9 +59,9 @@ export class AdminLayoutComponent {
             ]
         },
         {
-            icon: 'ri-settings-line',
-            label: 'Configuración',
-            path: '/admin/settings'
+            icon: 'ri-file-chart-line',
+            label: 'Reportes',
+            path: '/admin/reports'
         },
         {
             icon: 'ri-logout-box-line',
