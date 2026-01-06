@@ -114,6 +114,18 @@
                 </div>
                 <span class="text-3xl font-bold text-green-500">{{ stats.delivered }}</span>
             </div>
+
+            <!-- Card: Cancelado -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 mb-3">
+                        <i class="ri-close-circle-line text-xl"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-sm">Cancelados</h3>
+                    <p class="text-xs text-gray-500 mt-1">Pedidos anulados</p>
+                </div>
+                <span class="text-3xl font-bold text-gray-500">{{ stats.cancelled }}</span>
+            </div>
         </div>
 
         <!-- FILTERS SECTION -->
@@ -124,7 +136,7 @@
                 </div>
                 <div>
                     <h2 class="font-bold text-[#012E40]">Filtros de Búsqueda</h2>
-                    <p class="text-xs text-gray-500">{{ orders.length }} pedidos encontrados</p>
+                    <p class="text-xs text-gray-500">{{ filteredOrders.length }} pedidos encontrados</p>
                 </div>
             </div>
 
@@ -133,7 +145,7 @@
                 <div class="lg:col-span-5">
                     <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-search-line"></i> Buscar
                         por Pedido o Guía</label>
-                    <input type="text" placeholder="PED-2024-001 o GUIA-12345"
+                    <input type="text" placeholder="PED-2024-001 o GUIA-12345" [(ngModel)]="searchTerm"
                         class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:border-[#F2CB07] outline-none transition-colors">
                 </div>
 
@@ -141,7 +153,7 @@
                 <div class="lg:col-span-3">
                     <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-list-check"></i>
                         Estado</label>
-                    <select
+                    <select [(ngModel)]="filterStatus"
                         class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:border-[#F2CB07] outline-none bg-white">
                         <option>Todos los estados</option>
                         <option>Pendiente</option>
@@ -156,13 +168,13 @@
                 <div class="lg:col-span-2">
                     <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-calendar-line"></i>
                         Desde</label>
-                    <input type="date"
+                    <input type="date" [(ngModel)]="startDate"
                         class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 focus:border-[#F2CB07] outline-none">
                 </div>
                 <div class="lg:col-span-2">
                     <label class="block text-xs font-bold text-gray-600 mb-1.5"><i class="ri-calendar-line"></i>
                         Hasta</label>
-                    <input type="date"
+                    <input type="date" [(ngModel)]="endDate"
                         class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-500 focus:border-[#F2CB07] outline-none">
                 </div>
             </div>
@@ -185,6 +197,10 @@
                     class="bg-green-50 text-green-700 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-green-100">
                     <i class="ri-checkbox-circle-line"></i> Entregado
                 </span>
+                <span
+                    class="bg-gray-50 text-gray-600 px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1 border border-gray-100">
+                    <i class="ri-close-circle-line"></i> Cancelado
+                </span>
             </div>
         </div>
 
@@ -194,7 +210,7 @@
                 <h3 class="font-bold flex items-center gap-2">
                     <i class="ri-file-list-3-line"></i> Lista de Pedidos
                     <span class="bg-[#F2CB07] text-[#012E40] text-xs px-2 py-0.5 rounded-full font-bold ml-1">{{
-                        orders.length }}</span>
+                        filteredOrders.length }}</span>
                 </h3>
             </div>
 
@@ -213,7 +229,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        <tr *ngFor="let order of orders" class="hover:bg-gray-50 transition-colors">
+                        <tr *ngFor="let order of filteredOrders" class="hover:bg-gray-50 transition-colors">
                             <!-- ID -->
                             <td class="px-6 py-4">
                                 <div class="font-bold text-[#012E40]">{{ order.id }}</div>
@@ -271,13 +287,18 @@
                                 </span>
                             </td>
 
-                            <!-- Acciones -->
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <button (click)="viewOrder(order)"
                                         class="w-8 h-8 rounded bg-[#104D73] text-white flex items-center justify-center hover:bg-[#0f4c75] transition-colors"
                                         title="Ver Detalles">
                                         <i class="ri-eye-line"></i>
+                                    </button>
+                                    <button *ngIf="order.status !== 'Entregado' && order.status !== 'Cancelado'"
+                                        (click)="markAsDelivered(order); $event.stopPropagation()"
+                                        class="w-8 h-8 rounded bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-colors"
+                                        title="Marcar Entregado">
+                                        <i class="ri-checkbox-circle-line"></i>
                                     </button>
                                     <button
                                         class="w-8 h-8 rounded bg-[#F2CB07] text-[#012E40] flex items-center justify-center hover:bg-[#e0bc06] transition-colors"
@@ -489,7 +510,7 @@
 
                 <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-4">
-                    <button
+                    <button (click)="downloadGuide(selectedOrder)"
                         class="bg-[#104D73] hover:bg-[#0e4363] text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
                         <i class="ri-download-line text-lg"></i> Descargar Guía
                     </button>
@@ -498,11 +519,7 @@
                         <i class="ri-printer-line"></i> Imprimir
                     </button>
 
-                    <!-- Dynamic Button: Generar Guía vs Marcar Entregado -->
-                    <button *ngIf="selectedOrder.status !== 'Enviado' && selectedOrder.status !== 'Entregado'"
-                        class="bg-[#10B981] hover:bg-[#059669] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
-                        <i class="ri-truck-line"></i> Generar Guía
-                    </button>
+                    <!-- Status Button -->
 
                     <button *ngIf="selectedOrder.status === 'Enviado'" (click)="selectStatus('Entregado')"
                         class="bg-[#10B981] hover:bg-[#059669] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
@@ -597,7 +614,10 @@
                             <button (click)="toggleStatusDropdown()"
                                 class="w-full border-2 border-[#104D73] rounded-lg px-4 py-3 text-sm font-bold text-[#012E40] bg-white flex items-center justify-between hover:bg-gray-50 transition-colors">
                                 <span class="flex items-center gap-2">
-                                    {{ selectedOrder.status }}
+                                    {{ pendingStatus || selectedOrder.status }}
+                                    <span *ngIf="pendingStatus && pendingStatus !== selectedOrder.status"
+                                        class="text-xs text-orange-500 font-normal italic">(Pendiente de
+                                        confirmar)</span>
                                 </span>
                                 <i class="ri-arrow-down-s-line text-lg transition-transform duration-200"
                                     [class.rotate-180]="isStatusDropdownOpen"></i>
@@ -641,8 +661,16 @@
                                     <i class="ri-close-circle-line text-gray-400 text-lg"></i>
                                     <span class="font-bold text-gray-700 text-sm">Cancelado</span>
                                 </button>
-
                             </div>
+                        </div>
+
+                        <!-- Confirm Button -->
+                        <div *ngIf="pendingStatus && pendingStatus !== selectedOrder.status"
+                            class="mt-3 animate-fadeIn">
+                            <button (click)="confirmStatusUpdate()"
+                                class="w-full bg-[#F2CB07] hover:bg-[#e0bc06] text-[#012E40] py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2">
+                                <i class="ri-check-double-line"></i> Confirmar Cambio de Estado
+                            </button>
                         </div>
                     </div>
 
@@ -664,6 +692,11 @@
                             <div>
                                 <p class="text-xs text-gray-500 font-bold mb-1">Método</p>
                                 <p class="text-gray-800 font-bold text-lg">{{ selectedOrder.paymentMethod }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Costo de Envío</p>
+                                <p class="text-gray-800 font-bold text-lg">{{ selectedOrder.shippingCost | currency }}
+                                </p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 font-bold mb-1">Total a Cobrar</p>
@@ -713,8 +746,21 @@
                             </tbody>
                             <tfoot class="bg-[#012E40] text-white">
                                 <tr>
-                                    <td colspan="4" class="px-6 py-4 text-right font-bold text-sm uppercase">Total:
+                                    <td colspan="4"
+                                        class="px-6 py-2 text-right font-medium text-xs uppercase opacity-80">Subtotal:
                                     </td>
+                                    <td class="px-6 py-2 font-medium text-sm">{{ selectedOrder.subtotal | currency }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4"
+                                        class="px-6 py-2 text-right font-medium text-xs uppercase opacity-80">Envío:
+                                    </td>
+                                    <td class="px-6 py-2 font-medium text-sm">{{ selectedOrder.shippingCost | currency
+                                        }}</td>
+                                </tr>
+                                <tr class="border-t border-[#104D73]">
+                                    <td colspan="4" class="px-6 py-4 text-right font-bold text-sm uppercase">Total:</td>
                                     <td class="px-6 py-4 font-bold text-xl text-[#F2CB07]">{{ selectedOrder.total |
                                         currency }}</td>
                                 </tr>

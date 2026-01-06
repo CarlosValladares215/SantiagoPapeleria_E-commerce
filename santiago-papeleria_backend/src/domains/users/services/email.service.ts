@@ -145,5 +145,52 @@ Si no solicitaste esto, ignora este mensaje.
             throw error;
         }
     }
+
+    async sendOrderConfirmation(email: string, order: any): Promise<void> {
+        const appName = 'Santiago Papelería';
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        // Formatear datos para la plantilla
+        const orderDate = new Date(order.fecha_compra).toLocaleDateString('es-ES', {
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        // Construir HTML de items
+        const itemsHtml = order.items.map((item: any) => `
+            <tr>
+                <td>${item.nombre}</td>
+                <td>${item.cantidad}</td>
+                <td>$${item.subtotal.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        const htmlContent = this.getTemplate('order-confirmation.html', {
+            appName,
+            userName: 'Cliente', // Se podría pasar el nombre real si estuviera disponible en el objeto order o pasado como argumento
+            orderNumber: order.numero_pedido_web.toString(),
+            orderDate,
+            itemsHtml,
+            subtotal: order.resumen_financiero.subtotal_sin_impuestos.toFixed(2),
+            shipping: order.resumen_financiero.costo_envio.toFixed(2),
+            total: order.resumen_financiero.total_pagado.toFixed(2),
+            paymentMethod: order.resumen_financiero.metodo_pago,
+            ordersLink: `${frontendUrl}/orders`
+        });
+
+        const fromAddress = this.configService.get<string>('SMTP_FROM', `"${appName}" <noreply@santiagopapeleria.com>`);
+
+        try {
+            await this.transporter.sendMail({
+                from: fromAddress,
+                to: email,
+                subject: `Ped. #${order.numero_pedido_web} Confirmado - ${appName}`,
+                html: htmlContent,
+            });
+            this.logger.log(`Order confirmation email sent to ${email} for Order #${order.numero_pedido_web}`);
+        } catch (error) {
+            this.logger.error(`Failed to send order confirmation to ${email}`, error);
+            // No lanzamos error para no interrumpir el flujo de compra, solo lo registramos
+        }
+    }
 }
 

@@ -143,13 +143,23 @@ export class Product implements OnDestroy {
     const v = this.selectedVariant();
     let price = v && v.precio_especifico ? v.precio_especifico : (p.basePrice || p.price);
 
-    if (this.authService.isMayorista()) {
+    // Wholesale Condition: User is Mayorista OR Quantity >= 12
+    const isMayorista = this.authService.isMayorista();
+    const qty = this.quantity();
+
+    // Check if wholesale applies
+    if (isMayorista || qty >= 12) {
       if (p.wholesalePrice) {
         price = p.wholesalePrice;
       }
     }
 
     return price;
+  });
+
+  // Helper to know if wholesale price is applied due to quantity (for retail users)
+  isWholesaleQuantityApplied = computed(() => {
+    return !this.authService.isMayorista() && this.quantity() >= 12;
   });
 
   // Helper to determine if we should show tiers

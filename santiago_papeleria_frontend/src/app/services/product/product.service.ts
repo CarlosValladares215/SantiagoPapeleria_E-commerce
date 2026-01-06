@@ -130,15 +130,11 @@ export class ProductService {
   fetchRelatedProducts(category: string, currentId: string): Observable<Product[]> {
     const params = new HttpParams()
       .set('category', category)
-      .set('limit', '4');
+      .set('excludeId', currentId) // Backend exclusion
+      .set('limit', '3');
 
     return this.http.get<ProductResponse[]>(this.apiURL, { params }).pipe(
-      map(responses =>
-        responses
-          .filter(r => r._id !== currentId)
-          .map(r => this.mapProduct(r))
-          .slice(0, 4)
-      )
+      map(responses => responses.map(r => this.mapProduct(r)))
     );
   }
 
@@ -168,8 +164,10 @@ export class ProductService {
       vat_included: raw.vat_included,
       isOffer: raw.isOffer || false,
 
-      // ✅ FIX: Stock is already a number from DTO
-      stock: raw.stock || 0,
+      // ✅ FIX: Handle Mixed Stock Types (Number vs Object from DB update)
+      stock: (typeof raw.stock === 'object' && raw.stock !== null)
+        ? Number((raw.stock as any).total_disponible || 0)
+        : Number(raw.stock || 0),
       branches: [], // Branches not included in DTO, would need separate endpoint
 
       // Price Tiers
@@ -189,10 +187,15 @@ export class ProductService {
       specs: raw.specs || [],
       reviews: raw.reviews || [],
 
-      // Variants
+      // Variants - Normalize Stock too!
       has_variants: raw.has_variants || false,
       variant_groups: raw.variant_groups || [],
-      variants: raw.variants || [],
+      variants: (raw.variants || []).map((v: any) => ({
+        ...v,
+        stock: (typeof v.stock === 'object' && v.stock !== null)
+          ? Number((v.stock as any).total_disponible || 0)
+          : Number(v.stock || 0)
+      })),
 
       // Enrichment
       weight: raw.weight,

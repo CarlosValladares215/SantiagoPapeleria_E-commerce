@@ -1,0 +1,175 @@
+<div class="guide-container mx-auto bg-white text-black p-8 max-w-[210mm] min-h-[297mm]" *ngIf="order">
+    <!-- Close Button (Hide on Print) -->
+    <button onclick="window.close()"
+        class="print:hidden fixed top-4 right-4 bg-red-500 hover:bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-colors z-50">
+        <i class="ri-close-line text-xl"></i>
+    </button>
+
+    <button onclick="window.print()"
+        class="print:hidden fixed top-4 right-16 bg-blue-600 hover:bg-blue-700 text-white px-4 h-10 rounded-full flex items-center justify-center shadow-lg gap-2 font-medium transition-colors z-50">
+        <i class="ri-printer-line"></i> Imprimir
+    </button>
+
+    <!-- Header -->
+    <div class="flex justify-between items-start border-b-2 border-black pb-6 mb-8">
+        <div class="flex items-center gap-6">
+            <div
+                class="w-20 h-20 bg-gray-900 text-white rounded-lg flex items-center justify-center font-bold text-3xl">
+                S
+            </div>
+            <div>
+                <h1 class="text-3xl font-extrabold uppercase tracking-widest text-[#012E40]">Santiago Papelería</h1>
+                <p class="text-sm font-medium text-gray-600 mt-1">Av. Principal 123 y Calle Secundaria</p>
+                <p class="text-sm font-medium text-gray-600">Loja, Ecuador | (07) 257-0000</p>
+                <p class="text-sm font-medium text-gray-600">info@santiagopapeleria.com</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="border-2 border-black px-4 py-2 rounded-md inline-block mb-3 bg-gray-50">
+                <h2 class="text-xl font-bold uppercase tracking-wider">Guía de Remisión</h2>
+            </div>
+            <p class="text-lg font-bold font-mono">{{ order.datos_envio.guia_tracking || 'PENDIENTE' }}</p>
+            <p class="text-sm text-gray-500 mt-1">Fecha Emisión: {{ currentDate | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p class="text-sm text-gray-500">Orden Ref: WEB-{{ order.numero_pedido_web }}</p>
+        </div>
+    </div>
+
+    <!-- Sender & Receiver Grid -->
+    <div class="grid grid-cols-2 gap-0 border-2 border-black mb-8">
+        <!-- Remitente -->
+        <div class="p-6 border-r-2 border-black">
+            <h3 class="font-bold text-xs uppercase text-gray-500 tracking-wider mb-3">Remitente (Sender)</h3>
+            <p class="font-bold text-xl mb-1">Santiago Papelería S.A.</p>
+            <p class="text-sm mb-1"><span class="font-bold">RUC:</span> 1101234567001</p>
+            <p class="text-sm mb-1"><span class="font-bold">Dirección:</span> Av. Principal 123 y Calle Secundaria, Loja
+            </p>
+            <p class="text-sm"><span class="font-bold">Teléfono:</span> (07) 257-0000</p>
+        </div>
+
+        <!-- Destinatario -->
+        <div class="p-6 bg-gray-50">
+            <h3 class="font-bold text-xs uppercase text-gray-500 tracking-wider mb-3">Destinatario (Receiver)</h3>
+            <!-- Safe access to populated user data -->
+            <p class="font-bold text-xl mb-1">
+                {{ order.usuario_id.nombres }} {{ order.usuario_id.apellidos }}
+            </p>
+            <p class="text-sm mb-1"><span class="font-bold">RUC/CI:</span> {{ order.usuario_id.cedula ||
+                order.usuario_id.ruc || '9999999999' }}</p>
+            <p class="text-sm mb-1"><span class="font-bold">Teléfono:</span> {{ order.usuario_id.telefono || 'N/A' }}
+            </p>
+            <p class="text-sm"><span class="font-bold">Email:</span> {{ order.usuario_id.email }}</p>
+        </div>
+    </div>
+
+    <!-- Shipping Address Large Block -->
+    <div class="mb-8 border-2 border-black rounded-lg p-6 bg-white shadow-sm">
+        <h3 class="font-bold text-lg mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+            <i class="ri-map-pin-line"></i> Dirección de Entrega
+        </h3>
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <p class="text-3xl font-bold leading-tight mb-2 text-[#012E40]">
+                    {{ order.datos_envio.direccion_destino.ciudad | uppercase }}
+                </p>
+                <p class="text-xl font-medium text-gray-800 mb-2">
+                    {{ order.datos_envio.direccion_destino.calle }}
+                </p>
+                <p class="text-base text-gray-600 italic">
+                    <span class="font-bold not-italic text-black">Ref:</span>
+                    "{{ order.datos_envio.direccion_destino.referencia || 'Sin referencia' }}"
+                </p>
+            </div>
+            <div class="text-right">
+                <div class="bg-gray-100 p-3 rounded text-center min-w-[120px]">
+                    <p class="text-xs font-bold text-gray-500 uppercase">Provincia</p>
+                    <p class="font-bold text-lg">{{ order.datos_envio.direccion_destino.provincia || 'Loja' }}</p>
+                </div>
+                <div class="mt-2 bg-gray-100 p-3 rounded text-center min-w-[120px]">
+                    <p class="text-xs font-bold text-gray-500 uppercase">C. Postal</p>
+                    <p class="font-bold text-lg">{{ order.datos_envio.direccion_destino.codigo_postal || '1101xx' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Package Content Summary -->
+    <div class="mb-12">
+        <h3 class="font-bold text-sm uppercase text-gray-500 mb-2">Contenido del Paquete</h3>
+        <table class="w-full border-collapse border border-black text-sm">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-black px-4 py-3 text-left w-16">Cant.</th>
+                    <th class="border border-black px-4 py-3 text-left">Descripción del Producto</th>
+                    <th class="border border-black px-4 py-3 text-center w-32">Código</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of order.items">
+                    <td class="border border-black px-4 py-3 font-bold text-center">{{ item.cantidad }}</td>
+                    <td class="border border-black px-4 py-3">
+                        <p class="font-bold">{{ item.nombre }}</p>
+                    </td>
+                    <td class="border border-black px-4 py-3 text-center text-gray-600 text-xs">{{ item.codigo_dobranet
+                        || 'GEN' }}</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr class="bg-gray-50">
+                    <td class="border border-black px-4 py-2 font-bold text-center">
+                        {{ order.items.length }}
+                    </td>
+                    <td class="border border-black px-4 py-2 font-bold text-right uppercase text-xs" colspan="2">
+                        Total Items Diferentes
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Signatures Area -->
+    <div class="mt-auto">
+        <div class="grid grid-cols-2 gap-16">
+            <!-- Signature 1 -->
+            <div class="text-center">
+                <div
+                    class="h-24 border-2 border-dashed border-gray-300 mb-2 rounded flex items-center justify-center text-gray-400 text-xs">
+                    Espacio para sello
+                </div>
+                <div class="border-t-2 border-black pt-2">
+                    <p class="font-bold text-sm uppercase">Firma Transportista</p>
+                    <p class="text-xs text-gray-500">Recibido en buen estado</p>
+                </div>
+            </div>
+
+            <!-- Signature 2 -->
+            <div class="text-center">
+                <div
+                    class="h-24 border-2 border-dashed border-gray-300 mb-2 rounded flex items-center justify-center text-gray-400 text-xs">
+                    Espacio para firma cliente
+                </div>
+                <div class="border-t-2 border-black pt-2">
+                    <p class="font-bold text-sm uppercase">Recibí Conforme (Cliente)</p>
+                    <p class="text-xs text-gray-500 mt-1">Nombre: _______________________</p>
+                    <p class="text-xs mt-1">C.I.: ___________________________</p>
+                    <p class="text-xs mt-1">Fecha: _____/_____/__________</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking Barcode Footer -->
+        <div class="mt-12 pt-6 border-t-4 border-black flex flex-col items-center justify-center">
+            <p class="text-xs font-bold uppercase tracking-widest mb-1">Tracking Number</p>
+            <!-- Simulated Barcode (CSS Stripes) -->
+            <div
+                class="h-16 w-3/4 max-w-md bg-[linear-gradient(90deg,black_2px,transparent_2px,black_5px,transparent_5px,black_10px,transparent_10px,black_3px,transparent_3px)] mb-2">
+            </div>
+            <p class="text-2xl font-mono font-bold tracking-[0.2em]">{{ order.datos_envio.guia_tracking }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div *ngIf="!order" class="flex flex-col items-center justify-center min-h-screen text-gray-500">
+    <i class="ri-loader-4-line text-4xl animate-spin mb-4"></i>
+    <p>Generando Guía de Remisión...</p>
+</div>

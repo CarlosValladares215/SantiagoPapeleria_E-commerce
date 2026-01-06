@@ -62,12 +62,22 @@ export class Cart {
         this.cartService.setDeliveryMethod(method);
     }
 
+    onBranchChange(event: any) {
+        const branchId = Number(event.target.value);
+        const branch = this.cartService.branches.find(b => b.id === branchId);
+        if (branch) {
+            this.cartService.selectedBranch.set(branch);
+        }
+    }
+
     setPayment(method: 'transfer' | 'cash') {
         this.cartService.setPaymentMethod(method);
         this.selectedFile = null; // Reset file on change
     }
 
     selectedFile: File | null = null;
+    showConfirmModal = false; // Modal de pregunta
+    showSuccessModal = false; // Modal de éxito
 
     onFileSelected(event: any) {
         const file = event.target.files[0];
@@ -106,8 +116,24 @@ export class Cart {
             return;
         }
 
-        // 2. Processing
+        // 2. Pre-Confirmation
+        this.showConfirmModal = true;
+    }
+
+    // Logic to execute AFTER user confirms in modal
+    processOrderConfirmed() {
+        this.showConfirmModal = false;
         this.isProcessing = true;
+
+        const delivery = this.cartService.deliveryMethod();
+        const payment = this.cartService.paymentMethod();
+        const address = this.cartService.selectedAddress();
+        const user = this.authService.user();
+
+        if (!user) { // Should check again just in case
+            this.isProcessing = false;
+            return;
+        }
 
         const processOrder = (transferUrl: string | null) => {
             const items = this.cartService.cartItems().map(i => ({
@@ -116,7 +142,7 @@ export class Cart {
                 cantidad: i.quantity,
                 precio_unitario_aplicado: i.price,
                 subtotal: i.price * i.quantity,
-                impuesto_iva: 0 // Frontend doesn't calculate tax explicitly yet, send 0 or calc? Assuming inclusive or 0 for now.
+                impuesto_iva: 0
             }));
 
             // Calculate totals
@@ -131,7 +157,7 @@ export class Cart {
                 fecha_compra: new Date().toISOString(),
                 items: items,
                 resumen_financiero: {
-                    subtotal_sin_impuestos: subtotal, // Assuming no tax separation for simplified frontend
+                    subtotal_sin_impuestos: subtotal,
                     total_impuestos: 0,
                     costo_envio: shipping,
                     total_pagado: total,
@@ -156,15 +182,11 @@ export class Cart {
             this.cartService.createOrder(orderPayload).subscribe({
                 next: (res: any) => {
                     this.isProcessing = false;
-                    const orderId = res.numero_pedido_web || '???';
-                    alert(`¡Pedido #${orderId} Confirmado con éxito!\nGracias por tu compra.`);
-                    this.cartService.clearCart();
-                    this.router.navigate(['/orders']); // Redirect to orders list
+                    this.showSuccessModal = true;
                 },
                 error: (err) => {
                     console.error('Error creando pedido', err);
                     this.isProcessing = false;
-                    // Show detailed error if available
                     const msg = err.error?.message || (Array.isArray(err.error?.message) ? err.error.message.join(', ') : 'Ocurrió un error al procesar tu pedido.');
                     alert('Error: ' + msg);
                 }
@@ -186,5 +208,15 @@ export class Cart {
             processOrder(null);
         }
     }
-}
 
+    cancelOrder() {
+        this.showConfirmModal = false;
+        this.isProcessing = false;
+    }
+
+    closeModalAndRedirect() {
+        this.showSuccessModal = false;
+        this.cartService.clearCart();
+        this.router.navigate(['/orders']);
+    }
+}

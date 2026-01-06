@@ -33,6 +33,18 @@ export const routes: Routes = [
     loadChildren: () => import('./pages/warehouse/warehouse.routes').then(m => m.WAREHOUSE_ROUTES)
   },
 
+  // Invoice (No Layout for printing)
+  {
+    path: 'orders/invoice/:id',
+    loadComponent: () => import('./pages/orders/invoice/invoice').then(m => m.Invoice)
+  },
+
+  // Guide (No Layout for printing)
+  {
+    path: 'orders/guide/:id',
+    loadComponent: () => import('./pages/orders/guide/guide').then(m => m.GuideComponent)
+  },
+
   // Public Routes (Wrapped in MainLayout)
   {
     path: '',

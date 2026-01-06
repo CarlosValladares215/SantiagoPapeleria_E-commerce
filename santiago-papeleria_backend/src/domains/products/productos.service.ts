@@ -68,7 +68,7 @@ export class ProductosService {
 
   // --- 1. Get Merged Products (Admin List & Catalog Base) ---
   async getMergedProducts(filterDto: ProductFilterDto): Promise<any> {
-    const { searchTerm, status, category, brand, minPrice, maxPrice, inStock, sortBy, page = 1, limit = 50 } = filterDto;
+    const { searchTerm, status, category, brand, minPrice, maxPrice, inStock, sortBy, page = 1, limit = 50, excludeId } = filterDto;
 
     const erpQuery: any = { activo: true };
 
@@ -77,6 +77,11 @@ export class ProductosService {
         { codigo: { $regex: searchTerm, $options: 'i' } },
         { nombre: { $regex: searchTerm, $options: 'i' } }
       ];
+    }
+
+    if (excludeId) {
+      // Excluir por código o ID (si es SKU)
+      erpQuery.codigo = { $ne: excludeId };
     }
 
     if (brand) erpQuery.marca = brand;
@@ -153,10 +158,16 @@ export class ProductosService {
       activo: true,
     };
 
+    if (filterDto.excludeId) {
+      erpQuery.codigo = { $ne: filterDto.excludeId };
+    }
+
+    // Aplicar filtros de categoria/marca al ERP
     if (filterDto.category) erpQuery.categoria_g2 = filterDto.category;
     if (filterDto.brand) erpQuery.marca = filterDto.brand;
 
-    const erpProducts = await this.productErpModel.find(erpQuery).limit(1000).lean().exec();
+    const limit = filterDto.limit ? Number(filterDto.limit) : 1000;
+    const erpProducts = await this.productErpModel.find(erpQuery).limit(limit).lean().exec();
 
     const finalSkus = erpProducts.map(p => p.codigo);
     const enrichedFullDocs = await this.productoModel.find({ codigo_interno: { $in: finalSkus } }).lean().exec();

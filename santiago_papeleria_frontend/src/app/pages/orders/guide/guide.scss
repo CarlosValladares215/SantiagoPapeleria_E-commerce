@@ -1,0 +1,24 @@
+@media print {
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .guide-container {
+        max-width: 100% !important;
+        box-shadow: none !important;
+        padding: 10mm !important;
+    }
+
+    /* Hide URL/Headers injected by browser if possible, though user settings control this */
+}
+
+.guide-container {
+    font-family: 'Courier New', Courier, monospace;
+    /* Industrial look */
+}

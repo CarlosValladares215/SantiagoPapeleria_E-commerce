@@ -12,6 +12,7 @@ import { ContadoresModule } from './core/counters/contadores.module';
 import { PromocionesModule } from './domains/promotions/promociones.module';
 import { ErpSyncModule } from './domains/erp/sync/erp-sync.module';
 import { FilesModule } from './shared/files/files.module';
+import { NotificationsModule } from './domains/notifications/notifications.module';
 @Module({
   imports: [
     // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
@@ -19,6 +20,7 @@ import { FilesModule } from './shared/files/files.module';
     ProductosModule,
     PedidosModule,
     UsuariosModule,
+    NotificationsModule,
     ContadoresModule,
     PromocionesModule,
     ErpSyncModule,

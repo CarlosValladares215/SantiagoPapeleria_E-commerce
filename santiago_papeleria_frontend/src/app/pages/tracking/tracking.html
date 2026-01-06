@@ -1,225 +1,230 @@
 <div class="container mx-auto px-4 py-8 max-w-5xl">
-    <!-- Title -->
-    <h1 class="text-2xl font-bold text-[#012e40] mb-6">Seguimiento de pedido</h1>
+    <!-- Search Section -->
+    <div class="mb-8 flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm border border-gray-100"
+        *ngIf="!order()">
+        <h2 class="text-xl font-bold text-[#012e40] mb-4">Rastrea tu pedido</h2>
+        <div class="flex gap-2 w-full max-w-md">
+            <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="performSearch()"
+                placeholder="Ingresa tu número de pedido (ej. 1012)"
+                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#012e40] outline-none">
+            <button (click)="performSearch()" [disabled]="loading()"
+                class="bg-[#F2CB07] hover:bg-[#d9b606] text-[#012e40] px-6 py-2 rounded-lg font-bold transition-colors disabled:opacity-50">
+                {{ loading() ? 'Buscando...' : 'Buscar' }}
+            </button>
+        </div>
+        <p *ngIf="error()" class="text-red-500 mt-2 text-sm">{{ error() }}</p>
+    </div>
 
-    <!-- Top Card: Order Info & Courier -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-8">
-        <!-- Order Info Header -->
-        <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Order # -->
-            <div>
-                <p class="text-xs text-gray-500 font-bold uppercase mb-1">Número de pedido</p>
-                <p class="text-xl font-bold text-[#012e40]">SP-2025-001</p>
+    <!-- Loading State -->
+    <div *ngIf="loading() && !order()" class="flex justify-center p-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#012e40]"></div>
+    </div>
+
+    <!-- Order Dashboard -->
+    <div *ngIf="order()" class="animate-fadeIn">
+
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+            <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-bold text-[#012e40]">Seguimiento de pedido</h1>
             </div>
-            <!-- Date -->
-            <div>
-                <p class="text-xs text-gray-500 font-bold uppercase mb-1">Fecha del Pedido</p>
-                <p class="text-[#374151]">15 de enero de 2025</p>
-            </div>
-            <!-- Total -->
-            <div>
-                <p class="text-xs text-gray-500 font-bold uppercase mb-1">Total</p>
-                <p class="text-xl font-bold text-[#012e40]">$ 30.00</p>
+            <!-- Small search to switch order -->
+            <div class="flex gap-2" *ngIf="order()">
+                <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="performSearch()"
+                    class="border border-gray-200 rounded px-2 py-1 text-sm w-32 focus:w-48 transition-all"
+                    placeholder="Buscar otro...">
+                <button (click)="performSearch()"
+                    class="bg-gray-100 px-3 py-1 rounded text-xs font-bold text-gray-600 hover:bg-gray-200"><i
+                        class="ri-search-line"></i></button>
             </div>
         </div>
 
-        <!-- Courier Banner -->
-        <div class="px-6 md:px-8 pb-8">
-            <div class="bg-[#FDEE87] p-5 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Top Card: Order Info & Courier -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-8">
+            <!-- Order Info Header -->
+            <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Order # -->
                 <div>
-                    <p class="text-xs font-bold text-[#012e40] opacity-70 mb-1">Número de Guía del Courier</p>
-                    <p class="text-[#012e40] font-medium text-lg">SRV123456789</p>
+                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">Número de pedido</p>
+                    <p class="text-xl font-bold text-[#012e40]">WEB-{{ order()?.numero_pedido_web }}</p>
                 </div>
-                <div class="md:text-right">
-                    <p class="text-xs font-bold text-[#012e40] opacity-70 mb-1">Entrega estimada:</p>
-                    <p class="text-[#012e40] font-bold text-lg">17 de enero de 2025</p>
+                <!-- Date -->
+                <div>
+                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">Fecha del Pedido</p>
+                    <p class="text-[#374151]">{{ order()?.fecha_compra | date:'d/MM/yyyy' }}</p>
+                </div>
+                <!-- Total -->
+                <div>
+                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">Total</p>
+                    <p class="text-xl font-bold text-[#012e40]">{{ order()?.resumen_financiero?.total_pagado | currency
+                        }}</p>
+                </div>
+            </div>
+
+            <!-- Courier Banner -->
+            <div class="px-6 md:px-8 pb-8">
+                <div
+                    class="bg-[#FDEE87] p-5 rounded-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-bold text-[#012e40] opacity-70 mb-1">Número de Guía del Courier</p>
+                        <p class="text-[#012e40] font-medium text-lg">{{ order()?.datos_envio?.guia_tracking ||
+                            'Pendiente de asignación' }}</p>
+                    </div>
+                    <div class="md:text-right" *ngIf="order()?.datos_envio?.guia_tracking">
+                        <p class="text-xs font-bold text-[#012e40] opacity-70 mb-1">Courier:</p>
+                        <p class="text-[#012e40] font-bold text-lg">{{ order()?.datos_envio?.courier || 'N/A' }}</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Timeline Section -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
-        <h2 class="text-lg font-bold text-[#012e40] mb-8">Estado del Pedido</h2>
+        <!-- Timeline Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+            <h2 class="text-lg font-bold text-[#012e40] mb-8">Estado del Pedido</h2>
 
-        <div class="relative">
-            <!-- Vertical Line (absolute customized) -->
-            <!-- Position logic: icon is 40px wide (w-10). Line should be centered at 20px (left-5). -->
-            <div class="absolute left-5 top-2 bottom-2 w-0.5 bg-gray-100 hidden md:block z-0"></div>
+            <div class="relative">
+                <!-- Vertical Line -->
+                <div class="absolute left-5 top-2 bottom-2 w-0.5 bg-gray-100 hidden md:block z-0"></div>
 
-            <div class="space-y-12 relative z-10">
-
-                <!-- Step 1: Completed (Received) -->
-                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
-                    <!-- Icon -->
-                    <div class="shrink-0 flex items-center md:justify-center">
-                        <div
-                            class="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-white border-4 border-white shadow-sm ring-1 ring-gray-100">
-                            <i class="ri-check-line text-lg font-bold"></i>
-                        </div>
-                        <span class="md:hidden ml-3 font-bold text-[#10B981]">Pedido Recibido</span>
-                    </div>
-                    <!-- Content -->
-                    <div class="flex-1 md:flex md:justify-between md:items-start pt-1">
-                        <div class="ml-10 md:ml-0 -mt-8 md:mt-0">
-                            <!-- negative margin for mobile visual alignment if needed, simplifying layout for now -->
-                            <!-- Mobile content adjustment -->
-                            <div class="hidden md:block">
-                                <h3 class="font-bold text-[#10B981] text-base">Pedido Recibido</h3>
+                <div class="space-y-12 relative z-10">
+                    @for (step of steps; track step.status) {
+                    <div class="flex flex-col md:flex-row md:gap-8 gap-4">
+                        <!-- Icon -->
+                        <div class="shrink-0 flex items-center md:justify-center">
+                            @if (getStepState(step.status) === 'completed') {
+                            <div
+                                class="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-white border-4 border-white shadow-sm ring-1 ring-gray-100">
+                                <i class="ri-check-line text-lg font-bold"></i>
                             </div>
-                            <p class="text-gray-500 text-sm mt-1">Tu pedido ha sido confirmado</p>
+                            <span class="md:hidden ml-3 font-bold text-[#10B981]">{{ step.label }}</span>
+                            } @else if (getStepState(step.status) === 'current') {
+                            <div
+                                class="w-10 h-10 rounded-full bg-[#f2cb07] border-4 border-white shadow-sm ring-1 ring-gray-100 animate-pulse">
+                            </div>
+                            <span class="md:hidden ml-3 font-bold text-[#012e40]">{{ step.label }}</span>
+                            } @else {
+                            <div
+                                class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border-4 border-white shadow-sm ring-1 ring-gray-100">
+                                <i [class]="step.icon" class="text-lg"></i>
+                            </div>
+                            <span class="md:hidden ml-3 font-bold text-gray-400">{{ step.label }}</span>
+                            }
                         </div>
-                        <div class="ml-10 md:ml-0 mt-1 md:mt-0">
-                            <span class="text-xs text-gray-400">15/01/2025 10:30</span>
+
+                        <!-- Content -->
+                        <div class="flex-1 pt-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold hidden md:block"
+                                    [class.text-[#10B981]]="getStepState(step.status) === 'completed'"
+                                    [class.text-[#012e40]]="getStepState(step.status) === 'current'"
+                                    [class.text-gray-400]="getStepState(step.status) === 'pending'">
+                                    {{ step.label }}
+                                </h3>
+                                <span class="text-xs text-gray-400" *ngIf="getStepDate(step.status)">
+                                    {{ getStepDate(step.status) | date:'dd/MM/yyyy HH:mm' }}
+                                </span>
+                            </div>
+
+                            <p class="text-sm mb-4" [class.text-gray-500]="getStepState(step.status) !== 'pending'"
+                                [class.text-gray-400]="getStepState(step.status) === 'pending'">
+                                {{ step.desc }}
+                            </p>
+
+                            <!-- Info Box (Only for Current Step) -->
+                            <div *ngIf="getStepState(step.status) === 'current'"
+                                class="bg-[#FDEE87] p-4 rounded-md text-[#012e40] text-sm flex gap-3 items-start animate-fadeIn">
+                                <i class="ri-information-line text-lg mt-px"></i>
+                                <p class="font-medium">
+                                    Estado actual: <strong>{{step.label}}</strong>.
+                                    <span *ngIf="step.status === 'Preparando'">Estamos alistando tus productos para el
+                                        envío.</span>
+                                    <span *ngIf="step.status === 'Enviado'">Tu paquete está en manos del courier.</span>
+                                </p>
+                            </div>
                         </div>
                     </div>
+                    }
                 </div>
-
-                <!-- Step 2: Completed (Payment) -->
-                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
-                    <!-- Icon -->
-                    <div class="shrink-0 flex items-center md:justify-center">
-                        <div
-                            class="w-10 h-10 rounded-full bg-[#10B981] flex items-center justify-center text-white border-4 border-white shadow-sm ring-1 ring-gray-100 pb-0.5">
-                            <i class="ri-secure-payment-line text-lg"></i>
-                        </div>
-                        <span class="md:hidden ml-3 font-bold text-[#10B981]">Pago verificado</span>
-                    </div>
-                    <!-- Content -->
-                    <div class="flex-1 md:flex md:justify-between md:items-start pt-1">
-                        <div>
-                            <h3 class="font-bold text-[#10B981] hidden md:block">Pago verificado</h3>
-                            <p class="text-gray-500 text-sm mt-1">El pago ha sido confirmado</p>
-                        </div>
-                        <div>
-                            <span class="text-xs text-gray-400">15/01/2025 11:15</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 3: Current (Preparation) -->
-                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
-                    <!-- Icon: Yellow solid circle -->
-                    <div class="shrink-0 flex items-center md:justify-center">
-                        <div
-                            class="w-10 h-10 rounded-full bg-[#f2cb07] border-4 border-white shadow-sm ring-1 ring-gray-100">
-                        </div>
-                        <span class="md:hidden ml-3 font-bold text-[#012e40]">En preparación</span>
-                    </div>
-                    <!-- Content -->
-                    <div class="flex-1 pt-1">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-bold text-[#012e40] hidden md:block">En preparación</h3>
-                            <span class="text-xs text-gray-400">15/01/2025 14:20</span>
-                        </div>
-                        <p class="text-gray-500 text-sm mb-4">Enviado a Bodega DobraNet para preparación</p>
-
-                        <!-- Info Box -->
-                        <div class="bg-[#FDEE87] p-4 rounded-md text-[#012e40] text-sm flex gap-3 items-start">
-                            <i class="ri-information-line text-lg mt-px"></i>
-                            <p class="font-medium">Tu pedido está siendo preparado en nuestra bodega. Recibirás una
-                                notificación cuando sea enviado.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 4: Pending (Enviado) -->
-                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
-                    <!-- Icon -->
-                    <div class="shrink-0 flex items-center md:justify-center">
-                        <div
-                            class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border-4 border-white shadow-sm ring-1 ring-gray-100">
-                            <i class="ri-truck-line text-lg"></i>
-                        </div>
-                        <span class="md:hidden ml-3 font-bold text-gray-400">Enviado</span>
-                    </div>
-                    <!-- Content -->
-                    <div class="flex-1 pt-1">
-                        <h3 class="font-bold text-gray-400 hidden md:block">Enviado</h3>
-                        <p class="text-gray-400 text-sm mt-1">Tu pedido está en camino</p>
-                    </div>
-                </div>
-
-                <!-- Step 5: Pending (Entregado) -->
-                <div class="flex flex-col md:flex-row md:gap-8 gap-4">
-                    <!-- Icon -->
-                    <div class="shrink-0 flex items-center md:justify-center">
-                        <div
-                            class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border-4 border-white shadow-sm ring-1 ring-gray-100 pb-0.5">
-                            <i class="ri-home-4-line text-lg"></i>
-                        </div>
-                        <span class="md:hidden ml-3 font-bold text-gray-400">Entregado</span>
-                    </div>
-                    <!-- Content -->
-                    <div class="flex-1 pt-1">
-                        <h3 class="font-bold text-gray-400 hidden md:block">Entregado</h3>
-                        <p class="text-gray-400 text-sm mt-1">Pedido entregado con éxito</p>
-                    </div>
-                </div>
-
             </div>
         </div>
-    </div>
 
-    <!-- Order Details -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
-        <h2 class="text-lg font-bold text-[#012e40] mb-8">Detalle del pedido</h2>
-
-        <div class="space-y-8">
-            <!-- Item 1 -->
-            <div class="flex flex-col sm:flex-row gap-5 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
-                <!-- Thumbnail -->
-                <div
-                    class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center text-gray-300 shrink-0">
-                    <i class="ri-file-text-line text-3xl"></i>
+        <!-- Order Meta Details Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Delivery Info -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h3 class="text-sm font-bold text-[#012e40] mb-4 uppercase flex items-center gap-2">
+                    <i class="ri-map-pin-line text-lg text-[#f2cb07]"></i> Dirección de Envío
+                </h3>
+                <div class="text-sm text-gray-600 space-y-1" *ngIf="order()?.datos_envio?.direccion_destino as addr">
+                    <p class="font-bold text-gray-800">{{ addr.calle }}</p>
+                    <p>{{ addr.ciudad }}<span *ngIf="addr.provincia">, {{ addr.provincia }}</span></p>
+                    <p *ngIf="addr.codigo_postal">C.P. {{ addr.codigo_postal }}</p>
+                    <p *ngIf="addr.referencia" class="italic text-xs mt-2 text-gray-400">"{{ addr.referencia }}"</p>
                 </div>
+            </div>
 
-                <div class="flex-1">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 class="font-bold text-[#012e40] mb-1">Cuaderno Universitario Norma 100 Hojas</h3>
-                            <p class="text-sm text-gray-500 mb-0.5">Variante: Azul - 100 hojas</p>
-                            <p class="text-sm text-gray-500">Cantidad: 2</p>
-                        </div>
-                        <div class="text-right shrink-0 ml-4">
-                            <p class="font-bold text-[#012e40] text-lg">$ 5.00</p>
-                            <p class="text-xs text-gray-400">$ 2.50 c/u</p>
-                        </div>
+            <!-- Payment Info -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                <h3 class="text-sm font-bold text-[#012e40] mb-4 uppercase flex items-center gap-2">
+                    <i class="ri-bank-card-line text-lg text-[#f2cb07]"></i> Método de Pago
+                </h3>
+                <div class="text-sm text-gray-600 space-y-2">
+                    <div class="flex justify-between">
+                        <span>Método:</span>
+                        <span class="font-bold">{{ order()?.resumen_financiero?.metodo_pago || 'No especificado'
+                            }}</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>{{ order()?.resumen_financiero?.subtotal_sin_impuestos | currency }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Envío:</span>
+                        <span>{{ order()?.resumen_financiero?.costo_envio | currency }}</span>
+                    </div>
+                    <div class="flex justify-between font-bold text-[#012e40] border-t border-gray-100 pt-2 mt-2">
+                        <span>Total Pagado:</span>
+                        <span>{{ order()?.resumen_financiero?.total_pagado | currency }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Personalization Note -->
+        <!-- Order Details (Products) -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 md:p-8">
+            <h2 class="text-lg font-bold text-[#012e40] mb-8">Detalle del pedido</h2>
+
+            <div class="space-y-8">
+                @for (item of order()?.items; track item.codigo_dobranet) {
+                <div class="flex flex-col sm:flex-row gap-5 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                    <!-- Thumbnail -->
                     <div
-                        class="bg-[#FDEE87] px-4 py-2.5 rounded text-sm text-[#012e40] flex items-start gap-2.5 mt-3 sm:w-fit">
-                        <i class="ri-message-3-line mt-0.5"></i>
-                        <span><strong>Personalización:</strong> Para María - Feliz cumpleaños</span>
+                        class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center text-gray-300 shrink-0">
+                        <i class="ri-file-text-line text-3xl"></i>
                     </div>
-                </div>
-            </div>
 
-            <!-- Item 2 -->
-            <div class="flex flex-col sm:flex-row gap-5 border-b border-gray-100 pb-8 last:border-0 last:pb-0">
-                <!-- Thumbnail -->
-                <div
-                    class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-lg flex items-center justify-center text-gray-300 shrink-0">
-                    <i class="ri-file-text-line text-3xl"></i>
-                </div>
-
-                <div class="flex-1">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="font-bold text-[#012e40] mb-1">Bolígrafo BIC Cristal Azul (Caja 50 unidades)</h3>
-                            <p class="text-sm text-gray-500 mb-0.5">Variante: Azul</p>
-                            <p class="text-sm text-gray-500">Cantidad: 1</p>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-[#012e40] mb-1">{{ item.nombre }}</h3>
+                                <p class="text-sm text-gray-500 mb-0.5">Código: {{ item.codigo_dobranet }}</p>
+                                <p class="text-sm text-gray-500">Cantidad: {{ item.cantidad }}</p>
+                            </div>
+                            <div class="text-right shrink-0 ml-4">
+                                <p class="font-bold text-[#012e40] text-lg">{{ item.subtotal | currency }}</p>
+                                <p class="text-xs text-gray-400">{{ item.precio_unitario_aplicado | currency }} c/u</p>
+                            </div>
                         </div>
-                        <div class="text-right shrink-0 ml-4">
-                            <p class="font-bold text-[#012e40] text-lg">$ 25.00</p>
-                            <p class="text-xs text-gray-400">$ 25.00 c/u</p>
+
+                        <!-- Personalization Note (Placeholder for future) -->
+                        <div *ngIf="false"
+                            class="bg-[#FDEE87] px-4 py-2.5 rounded text-sm text-[#012e40] flex items-start gap-2.5 mt-3 sm:w-fit">
+                            <i class="ri-message-3-line mt-0.5"></i>
+                            <span><strong>Personalización:</strong> --</span>
                         </div>
                     </div>
                 </div>
+                }
             </div>
-
         </div>
     </div>
-
 </div>

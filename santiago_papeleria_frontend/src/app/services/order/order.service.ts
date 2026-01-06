@@ -62,7 +62,19 @@ export class OrderService {
         return this.http.get<any[]>(`${this.apiUrl}/user/${userId}`);
     }
 
+    getOrderById(id: string, userId?: string): Observable<Order> {
+        let url = `${this.apiUrl}/${id}`;
+        if (userId) {
+            url += `?userId=${userId}`;
+        }
+        return this.http.get<Order>(url);
+    }
+
     updateOrderStatus(id: string, status: string): Observable<any> {
         return this.http.patch(`${this.apiUrl}/${id}/status`, { status });
+    }
+
+    cancelOrder(id: string, userId: string): Observable<any> {
+        return this.http.patch(`${this.apiUrl}/${id}/cancel`, { userId });
     }
 }

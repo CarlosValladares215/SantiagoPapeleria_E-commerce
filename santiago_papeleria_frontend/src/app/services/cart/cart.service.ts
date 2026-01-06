@@ -10,10 +10,13 @@ export interface CartItem {
     sku: string;
     name: string;
     price: number;
+    wholesalePrice?: number;
+    retailPrice?: number;
     quantity: number;
     image: string;
+    stock: number;
     options?: any;
-    // Shipping data
+    vat_included?: boolean; // Re-added VAT flag
     weight_kg?: number;
     dimensions?: {
         largo: number;
@@ -28,37 +31,74 @@ export interface CartItem {
 export class CartService {
     private uiService = inject(UiService);
     private http = inject(HttpClient);
-    private authService = inject(AuthService); // Inject AuthService
+    private authService = inject(AuthService);
     private apiUrl = 'http://localhost:3000/api/usuarios';
     private ordersUrl = 'http://localhost:3000/api/pedidos';
     private filesUrl = 'http://localhost:3000/api/files';
 
-    // Sync with UiService observables
+    // Sync with UiService
     private _isOpen = toSignal(this.uiService.isCartOpen$, { initialValue: false });
 
-    // Internal state signal
+    // Internal state
     private cartItemsSignal = signal<CartItem[]>(this.loadFromStorage());
 
-    // ... (Shipping State remains same)
+    // Shipping State
     selectedAddress = signal<DireccionEntrega | null>(null);
     shippingCost = signal<number>(0);
     deliveryMethod = signal<'shipping' | 'pickup'>('shipping');
     paymentMethod = signal<'transfer' | 'cash' | null>(null);
 
-    // ... (Constants remain same)
+    // Branch State
+    public branches = [
+        { id: 1, name: 'Matriz', address: 'Azuay 152-48 entre 18 de Noviembre y Avenida Universitaria', schedule: 'Lunes a Viernes: 08:30 - 13:00 / 15:00 - 18:30' },
+        { id: 2, name: 'Sucursal 1', address: 'Almacén UTPL (Campus UTPL, San Cayetano Alto)', schedule: 'Lunes a Viernes: 08:00 - 13:00 / 15:00 - 18:00' },
+        { id: 3, name: 'Sucursal 2', address: 'Calle Guaranda y Avenida Cuxibamba', schedule: 'Lunes a Viernes: 09:00 - 13:00 / 15:00 - 19:00' },
+    ];
+    selectedBranch = signal(this.branches[0]);
+
+    // Constants
     private readonly STORE_LOCATION = { lat: -3.99313, lng: -79.20422 };
     private readonly RATE_BASE = 2.50;
     private readonly RATE_PER_KM = 0.35;
     private readonly RATE_PER_KG = 0.25;
+    private readonly IVA_RATE = 0.15;
 
-    // ... (Public signals remain same)
+    // Computed Values
     isOpen = computed(() => this._isOpen());
     cartItems = computed(() => this.cartItemsSignal());
 
-    // Computed totals
     totalItems = computed(() => this.cartItemsSignal().reduce((acc, item) => acc + item.quantity, 0));
-    totalValue = computed(() => this.cartItemsSignal().reduce((acc, item) => acc + (item.price * item.quantity), 0));
+
+    // 1. Items Total (Gross)
+    itemsTotal = computed(() => this.cartItemsSignal().reduce((acc, item) => acc + (item.price * item.quantity), 0));
+
+    // 2. Breakdown (Subtotal Excl. VAT & VAT Amount)
+    subTotal = computed(() => {
+        return this.cartItemsSignal().reduce((acc, item) => {
+            const lineTotal = item.price * item.quantity;
+            if (item.vat_included) {
+                return acc + (lineTotal / (1 + this.IVA_RATE));
+            }
+            return acc + lineTotal;
+        }, 0);
+    });
+
+    totalIva = computed(() => {
+        return this.cartItemsSignal().reduce((acc, item) => {
+            const lineTotal = item.price * item.quantity;
+            if (item.vat_included) {
+                const base = lineTotal / (1 + this.IVA_RATE);
+                return acc + (lineTotal - base);
+            } else {
+                return acc + (lineTotal * this.IVA_RATE);
+            }
+        }, 0);
+    });
+
+    // 3. Final Totals
+    totalValue = computed(() => this.subTotal() + this.totalIva()); // Should match itemsTotal if all vat_included
     finalTotal = computed(() => this.totalValue() + this.shippingCost());
+
     cartCount = this.totalItems;
 
     constructor() {
@@ -138,30 +178,94 @@ export class CartService {
         const currentItems = this.cartItemsSignal();
         const productId = product.id || product._id || product.internal_id;
 
+        const isMayoristaUser = this.authService.isMayorista();
+
+        // Determine prices from product source
+        // product might be from Product Page (rich object) or lightweight
+        const retailPrice = product.basePrice || product.price || 0;
+        const wholesalePrice = product.wholesalePrice || retailPrice; // Fallback to retail if no wholesale
+
         const existingItemIndex = currentItems.findIndex(item => item.id === productId);
 
         if (existingItemIndex > -1) {
             const updatedItems = [...currentItems];
-            updatedItems[existingItemIndex] = {
-                ...updatedItems[existingItemIndex],
-                quantity: updatedItems[existingItemIndex].quantity + quantity
-            };
-            this.cartItemsSignal.set(updatedItems);
+            const item = updatedItems[existingItemIndex];
+            const newQty = item.quantity + quantity;
+
+            // Check stock limit for existing item addition
+            if (newQty <= item.stock) {
+                // RE-CALCULATE PRICE for new total quantity
+                const applicablePrice = this.calculatePrice(newQty, item.retailPrice || retailPrice, item.wholesalePrice || wholesalePrice, isMayoristaUser);
+
+                updatedItems[existingItemIndex] = {
+                    ...item,
+                    quantity: newQty,
+                    price: applicablePrice
+                };
+                this.cartItemsSignal.set(updatedItems);
+            } else {
+                // Cap at max stock
+                if (item.quantity < item.stock) {
+                    const cappedQty = item.stock;
+                    const applicablePrice = this.calculatePrice(cappedQty, item.retailPrice || retailPrice, item.wholesalePrice || wholesalePrice, isMayoristaUser);
+
+                    updatedItems[existingItemIndex] = {
+                        ...item,
+                        quantity: cappedQty,
+                        price: applicablePrice
+                    };
+                    this.cartItemsSignal.set(updatedItems);
+                }
+            }
         } else {
+            // New Item
+            // Initial Price Calculation
+            const applicablePrice = this.calculatePrice(quantity, retailPrice, wholesalePrice, isMayoristaUser);
+
             const newItem: CartItem = {
                 id: productId,
                 name: product.name || product.webName || 'Producto sin nombre',
-                price: parseFloat(product.price) || 0,
+                price: applicablePrice,
+                retailPrice: retailPrice,
+                wholesalePrice: wholesalePrice,
                 image: this.resolveImage(product),
                 quantity: quantity,
+                stock: product.stock || 0,
                 sku: product.sku || product.codigo_interno || '',
                 options: options,
+                vat_included: product.vat_included !== undefined ? product.vat_included : true, // Default to true if missing
                 weight_kg: product.weight_kg || product.weight || 0,
                 dimensions: product.dimensions
             };
             this.cartItemsSignal.set([...currentItems, newItem]);
         }
         this.openCart();
+    }
+
+    // Check if any item exceeds available stock
+    validateStock(): boolean {
+        const items = this.cartItemsSignal();
+        let isValid = true;
+        const updatedItems = items.map(item => {
+            if (item.quantity > item.stock) {
+                isValid = false;
+            }
+            return item;
+        });
+        return isValid;
+    }
+
+    // Helper to get out of stock items
+    get outOfStockItems(): CartItem[] {
+        return this.cartItemsSignal().filter(item => item.stock <= 0 || item.quantity > item.stock);
+    }
+
+    private calculatePrice(qty: number, retail: number, wholesale: number, isMayoristaUser: boolean): number {
+        // Rule: Usually wholesale if User is Mayorista OR Qty >= 12
+        if (isMayoristaUser || qty >= 12) {
+            return wholesale;
+        }
+        return retail;
     }
 
     private resolveImage(product: any): string {
@@ -179,10 +283,34 @@ export class CartService {
         if (quantity < 1) return;
         const currentItems = this.cartItemsSignal();
         const index = currentItems.findIndex(item => item.id === itemId);
+
         if (index > -1) {
             const updatedItems = [...currentItems];
-            updatedItems[index] = { ...updatedItems[index], quantity: quantity };
-            this.cartItemsSignal.set(updatedItems);
+            const item = updatedItems[index];
+
+            const isMayoristaUser = this.authService.isMayorista();
+
+            if (quantity <= item.stock) {
+                const applicablePrice = this.calculatePrice(quantity, item.retailPrice || item.price, item.wholesalePrice || item.price, isMayoristaUser);
+
+                updatedItems[index] = {
+                    ...item,
+                    quantity: quantity,
+                    price: applicablePrice
+                };
+                this.cartItemsSignal.set(updatedItems);
+            } else {
+                // Cap at stock
+                const cappedQty = item.stock;
+                const applicablePrice = this.calculatePrice(cappedQty, item.retailPrice || item.price, item.wholesalePrice || item.price, isMayoristaUser);
+
+                updatedItems[index] = {
+                    ...item,
+                    quantity: cappedQty,
+                    price: applicablePrice
+                };
+                this.cartItemsSignal.set(updatedItems);
+            }
         }
     }
 
