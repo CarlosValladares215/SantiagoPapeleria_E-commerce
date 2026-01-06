@@ -5,9 +5,11 @@
         <img [src]="getMainImage()" [alt]="product.name" class="w-full h-48 object-cover object-top" />
 
         <!-- Discount Badge - Top Left -->
-        <div *ngIf="product.discount && product.stock > 0"
+        <div *ngIf="(product.promocion_activa || product.discount) && product.stock > 0"
             class="absolute top-3 left-3 bg-red-600 text-white px-3 py-1.5 rounded-md text-sm font-bold shadow-lg">
-            -{{ product.discount }}%
+            -{{ product.promocion_activa ? product.promocion_activa.valor_descuento : product.discount }}
+            {{ product.promocion_activa?.tipo_descuento === 'porcentaje' ? '%' : (product.promocion_activa ? '$' : '%')
+            }}
         </div>
 
         <!-- New Badge - Top Right -->
@@ -35,11 +37,20 @@
         <!-- Price -->
         <div class="mb-4">
             <div class="flex items-baseline gap-2">
-                <span *ngIf="product.originalPrice" class="text-lg text-gray-400 line-through">
+                <!-- If Promo Active: Show Original Price Struck Through -->
+                <span *ngIf="product.promocion_activa" class="text-lg text-gray-400 line-through">
+                    ${{ product.promocion_activa.precio_original.toFixed(2) }}
+                </span>
+                <!-- Fallback to legacy discount -->
+                <span *ngIf="!product.promocion_activa && product.originalPrice"
+                    class="text-lg text-gray-400 line-through">
                     ${{ product.originalPrice.toFixed(2) }}
                 </span>
+
+                <!-- Final Price -->
                 <span class="text-3xl font-bold text-[#104D73]">
-                    ${{ product | displayPrice | number:'1.2-2' }}
+                    ${{ (product.promocion_activa ? product.promocion_activa.precio_descuento : product) | displayPrice
+                    | number:'1.2-2' }}
                 </span>
             </div>
         </div>

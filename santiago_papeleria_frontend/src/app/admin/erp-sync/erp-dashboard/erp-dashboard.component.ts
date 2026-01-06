@@ -48,6 +48,28 @@ export class ErpDashboardComponent implements OnInit {
     }
 
     handleManualSync() {
+        if (this.isSyncing) return;
+
+        this.isSyncing = true;
+        this.cd.markForCheck();
+
+        this.erpService.triggerSync().subscribe({
+            next: (res) => {
+                this.isSyncing = false;
+                // Refresh dashboard data to show new stats
+                this.loadData();
+                // Show a simple alert or notification could be nice, but loadData refresh might be enough visual feedback
+            },
+            error: (err) => {
+                console.error("Quick Sync Error", err);
+                this.isSyncing = false;
+                this.error = 'Error al sincronizar. Revise los logs.';
+                this.cd.markForCheck();
+            }
+        });
+    }
+
+    goToAdvancedSync() {
         this.router.navigate(['/admin/erp-sync/manual']);
     }
 

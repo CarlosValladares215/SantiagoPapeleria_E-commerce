@@ -148,29 +148,21 @@
                             </span>
                         </td>
 
-                        <!-- Visibility Toggle -->
+                        <!-- Visibility (Read-Only) -->
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2"
-                                [title]="product.enrichmentStatus !== 'complete' ? 'Debe completar el enriquecimiento primero' : ''">
+                                title="La visibilidad se gestiona automáticamente según el stock y estado en DobraNet">
 
-                                <button (click)="toggleVisibility(product)"
-                                    [disabled]="product.enrichmentStatus !== 'complete'"
-                                    [class.opacity-50]="product.enrichmentStatus !== 'complete'"
-                                    [class.cursor-not-allowed]="product.enrichmentStatus !== 'complete'"
-                                    [class.bg-green-500]="product.isVisible && product.enrichmentStatus === 'complete'"
-                                    [class.bg-gray-300]="!product.isVisible || product.enrichmentStatus !== 'complete'"
-                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
-
-                                    <span
-                                        [class.translate-x-5]="product.isVisible && product.enrichmentStatus === 'complete'"
-                                        [class.translate-x-0]="!product.isVisible || product.enrichmentStatus !== 'complete'"
-                                        class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out">
-                                    </span>
-                                </button>
-
-                                <i [class.ri-eye-line]="product.isVisible" [class.ri-eye-off-line]="!product.isVisible"
-                                    [class.text-green-600]="product.isVisible"
-                                    [class.text-gray-400]="!product.isVisible" class="text-lg"></i>
+                                <span
+                                    class="px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 border"
+                                    [class.bg-green-100]="product.isVisible" [class.text-green-700]="product.isVisible"
+                                    [class.border-green-200]="product.isVisible"
+                                    [class.bg-gray-100]="!product.isVisible" [class.text-gray-600]="!product.isVisible"
+                                    [class.border-gray-200]="!product.isVisible">
+                                    <i [class.ri-eye-line]="product.isVisible"
+                                        [class.ri-eye-off-line]="!product.isVisible"></i>
+                                    {{ product.isVisible ? 'Visible' : 'Oculto' }}
+                                </span>
                             </div>
                         </td>
 

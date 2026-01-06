@@ -66,4 +66,10 @@ export class ProductFilterDto {
   @IsOptional()
   @IsString()
   excludeId?: string; // Nuevo campo para excluir un producto específico (por SKU o ID)
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Type(() => String)
+  ids?: string[]; // Filtrar por lista de IDs/SKUs
 }

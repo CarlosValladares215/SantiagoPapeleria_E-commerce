@@ -39,7 +39,8 @@
     "mongoose": "^8.20.3",
     "nodemailer": "^7.0.11",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

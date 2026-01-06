@@ -1,37 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Producto, ProductoDocument } from './schemas/producto.schema';
-import { ProductERP, ProductERPDocument } from './schemas/product-erp.schema'; // Import ERP Schema
+import { ProductERP, ProductERPDocument } from './schemas/product-erp.schema';
 import { ProductFilterDto } from './dto/product-filter.dto';
+import { ErpSyncService } from '../erp/sync/erp-sync.service';
 
 // Definition of the Resolved Product (merged in memory)
-// This structure must match what the FrontEnd expects
 export interface ResolvedProduct {
   sku: string;
   erpName: string;
-  webName: string; // From enriched
+  webName: string;
   brand: string;
   category: string;
-
   price: number;
   wholesalePrice: number;
-
   stock: number;
-
   isVisible: boolean;
-  enrichmentStatus: string; // 'pending' | 'draft' | 'complete'
-
+  enrichmentStatus: string;
   description: string;
   images: string[];
-
-  // Advanced fields
   weight_kg: number;
   dimensions: any;
   allows_custom_message: boolean;
   attributes: any[];
-
-  // Full raw access (optional but useful for mappers)
   _erpData?: any;
   _enrichedData?: any;
 }
@@ -39,70 +31,48 @@ export interface ResolvedProduct {
 @Injectable()
 export class ProductosService {
   constructor(
-    @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,    // ENRICHED (products_enriched)
-    @InjectModel(ProductERP.name) private productErpModel: Model<ProductERPDocument> // ERP (products_erp)
+    @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,
+    @InjectModel(ProductERP.name) private productErpModel: Model<ProductERPDocument>,
+    @Inject(forwardRef(() => ErpSyncService)) private readonly erpSyncService: ErpSyncService
   ) { }
 
   // --- CORE: HELPER DE FUSIÓN (PURE LOGIC) ---
   private mergeProducts(erp: any, enriched: any): ResolvedProduct {
-    // 1. Base: ERP Data (Source of Truth)
-    // If enriched doesn't exist, we use defaults.
-
-    // Status Logic:
-    // If enriched doc exists, use its status/visibility.
-    // If NOT exists, it's 'pending' and NOT visible.
     const enrichmentStatus = enriched?.enrichment_status || 'pending';
-    const isVisible = enriched?.es_publico || false;
-
-    // Name Logic:
-    // Web Name overrides ERP Name if present
-    const finalName = enriched?.nombre_web || erp.nombre;
+    // Default to TRUE as per user requirement: "Automático (aparece al sincronizar)"
+    const isVisible = enriched?.es_publico !== undefined ? enriched.es_publico : true;
 
     return {
       sku: erp.codigo,
       erpName: erp.nombre,
-      webName: enriched?.nombre_web || '', // Explicit enriched name
+      webName: enriched?.nombre_web || '',
       brand: erp.marca || 'Genérico',
       category: erp.categoria_g2 || 'General',
-
       price: erp.precio_pvp || 0,
       wholesalePrice: erp.precio_pvm || 0,
-
-      // Stock is ALWAYS from ERP
       stock: erp.stock || 0,
-
       isVisible: isVisible,
       enrichmentStatus: enrichmentStatus,
-
-      // Enriched Content
-      description: enriched?.descripcion_extendida || erp.nombre, // Fallback to name
-      // Images: Priority to enriched.multimedia, fallback to nothing (or placeholder)
+      description: enriched?.descripcion_extendida || erp.descripcion || erp.nombre, // Prefer enriched, then ERP enriched, then name
       images: enriched?.multimedia?.principal
         ? [enriched.multimedia.principal, ...(enriched.multimedia.galeria || [])]
-        : [],
-
-      // Config
+        : (erp.imagen ? [`http://localhost:4000/data/photos/${erp.imagen}`] : []),
       weight_kg: enriched?.peso_kg || 0,
       dimensions: enriched?.dimensiones || {},
       allows_custom_message: enriched?.permite_mensaje_personalizado || false,
       attributes: enriched?.attributes || [],
-
       _erpData: erp,
       _enrichedData: enriched
     };
   }
 
-
   // --- 1. Get Merged Products (Admin List & Catalog Base) ---
   async getMergedProducts(filterDto: ProductFilterDto): Promise<any> {
     const { searchTerm, status, category, brand, minPrice, maxPrice, inStock, sortBy, page = 1, limit = 50, excludeId } = filterDto;
 
-    // A. Construir Query para ERP (Mongo)
-    // El ERP es la fuente principal. Si no está en ERP, no existe.
-    const erpQuery: any = { activo: true }; // Only active ERP products
+    const erpQuery: any = { activo: true };
 
     if (searchTerm) {
-      // Basic text search on ERP fields first
       erpQuery.$or = [
         { codigo: { $regex: searchTerm, $options: 'i' } },
         { nombre: { $regex: searchTerm, $options: 'i' } }
@@ -115,29 +85,31 @@ export class ProductosService {
     }
 
     if (brand) erpQuery.marca = brand;
-    if (category) erpQuery.categoria_g2 = category; // Mapping G2 as main category for now
+    if (category) erpQuery.categoria_g2 = category;
 
-    // Price Filters (ERP Source)
     if (minPrice || maxPrice) {
       erpQuery.precio_pvp = {};
       if (minPrice) erpQuery.precio_pvp.$gte = Number(minPrice);
       if (maxPrice) erpQuery.precio_pvp.$lte = Number(maxPrice);
     }
 
-    // Stock Filter (ERP Source)
     if (inStock === 'true') {
       erpQuery.stock = { $gt: 0 };
     }
 
-    // B. Ejecutar Query ERP con Paginación
-    const skip = (Number(page) - 1) * Number(limit);
+    // Filter by specific IDs/SKUs
+    if (filterDto.ids && filterDto.ids.length > 0) {
+      if (!erpQuery.$or) erpQuery.$or = [];
+      // Support finding by ERP Code (SKU)
+      erpQuery.codigo = { $in: filterDto.ids };
+    }
 
-    // Sort logic mapping
+    const skip = (Number(page) - 1) * Number(limit);
     let sortOptions: any = {};
     if (sortBy === 'price') sortOptions.precio_pvp = 1;
     else if (sortBy === '-price') sortOptions.precio_pvp = -1;
     else if (sortBy === 'stock') sortOptions.stock = -1;
-    else sortOptions.nombre = 1; // Default
+    else sortOptions.nombre = 1;
 
     const [erpProducts, total] = await Promise.all([
       this.productErpModel.find(erpQuery)
@@ -149,29 +121,17 @@ export class ProductosService {
       this.productErpModel.countDocuments(erpQuery)
     ]);
 
-    // C. Obtener Datos Enriquecidos (Solo para los SKUs encontrados)
     const skus = erpProducts.map(p => p.codigo);
     const enrichedDocs = await this.productoModel.find({
       codigo_interno: { $in: skus }
     }).lean().exec();
 
     const enrichmentMap = new Map(enrichedDocs.map(doc => [doc.codigo_interno, doc]));
-    console.log('--- DEBUG ENRICHMENT MAP ---');
-    console.log('Enriched Docs Found:', enrichedDocs.length);
-    console.log('Sample Keys:', Array.from(enrichmentMap.keys()));
-    console.log('----------------------------');
 
-    // D. Fusionar en Memoria
     let mergedProducts = erpProducts.map(erpItem => {
       const enrichedItem = enrichmentMap.get(erpItem.codigo);
-      // console.log(`Merging ${erpItem.codigo} with`, enrichedItem ? 'Enriched Data' : 'NULL');
       return this.mergeProducts(erpItem, enrichedItem);
     });
-
-    // E. Filtros Post-Fusión (Solo necesarios para campos Enriched)
-    // Si filtramos por "Status" o "Visibilidad", esto complica la paginación porque son campos de Mongo, no de ERP.
-    // ESTRATEGIA: Por ahora, aplicamos filtro post-fetch. *Esto puede causar páginas con menos ítems de lo esperado*,
-    // pero garantiza corrección sin duplicar datos en DB.
 
     if (status && status !== 'all') {
       mergedProducts = mergedProducts.filter(p => p.enrichmentStatus === status);
@@ -182,13 +142,24 @@ export class ProductosService {
       mergedProducts = mergedProducts.filter(p => p.isVisible === isVisibleBool);
     }
 
-    // Si también buscamos por "Nombre Web" (que está en Enriched), deberíamos filtrar aquí también si el search term no hizo match en ERP.
-    // (Omitido por simplicidad, asumimos búsqueda principal por ERP Name/SKU)
+    // Map to frontend friendly structure
+    const mappedData = mergedProducts.map(p => ({
+      _id: p._enrichedData?._id || p._erpData?._id,
+      codigo_interno: p.sku,
+      nombre: p.webName || p.erpName,
+      stock: p.stock,
+      precio: p.price,
+      marca: p.brand,
+      multimedia: {
+        principal: p.images[0] || ''
+      },
+      es_publico: p.isVisible
+    }));
 
     return {
-      data: mergedProducts,
+      data: mappedData,
       meta: {
-        total, // Total de ERP matches (antes de filtros de estado/visibilidad post-fetch)
+        total,
         page: Number(page),
         limit: Number(limit),
         totalPages: Math.ceil(total / Number(limit))
@@ -198,25 +169,14 @@ export class ProductosService {
 
   // --- 2. Public Catalog Access ---
   async findAll(filterDto: ProductFilterDto): Promise<any[]> {
-    // Reutilizamos la lógica de merged, pero forzamos ciertos flags
-    // Nota: Para catálogo público, usualmente queremos ver SOLO productos visibles.
-    // El método getMergedProducts pagina sobre ERP. Si filtramos vibilidad después, la paginación se rompe.
-    // SOLUCIÓN CORRECTA: 
-    // 1. Buscar SKUs "visibles" en Mongo (Enriched) primero.
-    // 2. Usar esos SKUs para filtrar ERP.
-    // Esto invierte la dependencia para el caso "Publico".
-
-    // Paso 1: Obtener SKUs habilitados desde Enriched
     const visibleEnrichedDocs = await this.productoModel.find({ es_publico: true }).select('codigo_interno').lean().exec();
     const visibleSkus = visibleEnrichedDocs.map(d => d.codigo_interno);
 
-    if (visibleSkus.length === 0) return []; // Nada público
+    if (visibleSkus.length === 0) return [];
 
-    // Paso 2: Consultar ERP filtrando por esos SKUs + Stock > 0 (opcional)
     const erpQuery: any = {
       codigo: { $in: visibleSkus },
       activo: true,
-      // stock: { $gt: 0 } // Descomentar si solo queremos productos con stock
     };
 
     if (filterDto.excludeId) {
@@ -230,24 +190,41 @@ export class ProductosService {
     const limit = filterDto.limit ? Number(filterDto.limit) : 1000;
     const erpProducts = await this.productErpModel.find(erpQuery).limit(limit).lean().exec();
 
-    // Paso 3: Traer los documentos completos enriched (ahora sí con todos los campos)
-    // Optimización: Ya tenemos los SKUs visibles, pero necesitamos el doc completo para fusionar (fotos, etc)
     const finalSkus = erpProducts.map(p => p.codigo);
     const enrichedFullDocs = await this.productoModel.find({ codigo_interno: { $in: finalSkus } }).lean().exec();
     const enrichmentMap = new Map(enrichedFullDocs.map(doc => [doc.codigo_interno, doc]));
 
-    // Paso 4: Fusionar
     const mergedList = erpProducts.map(erpItem => {
       const enrichedItem = enrichmentMap.get(erpItem.codigo);
       return this.mergeProducts(erpItem, enrichedItem);
     });
 
-    // Paso 5: Mapear a DTO Frontend (Legacy support)
+    // --- FEATURED PRODUCTS SORTING ---
+    const featuredSkus = [
+      "003734", "001281", "012166", "006171", "010552",
+      "002918", "012139", "025620", "010416", "026996"
+    ];
+
+    mergedList.sort((a, b) => {
+      const indexA = featuredSkus.indexOf(a.sku);
+      const indexB = featuredSkus.indexOf(b.sku);
+
+      // Both featured: sort by order in list
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      // Only A featured: comes first
+      if (indexA !== -1) return -1;
+      // Only B featured: comes first
+      if (indexB !== -1) return 1;
+      // Neither featured: keep original order (or sort by name/etc)
+      return 0;
+    });
+    // ---------------------------------
+
     return mergedList.map(p => ({
-      _id: p._enrichedData?._id || null, // ID técnico
+      _id: p._enrichedData?._id || null,
       codigo_interno: p.sku,
-      nombre: p.webName || p.erpName, // Preferencia a nombre web
-      slug: p._enrichedData?.slug || p.sku, // Slug o SKU
+      nombre: p.webName || p.erpName,
+      slug: p._enrichedData?.slug || p.sku,
       activo: true,
       clasificacion: {
         marca: p.brand,
@@ -257,7 +234,7 @@ export class ProductosService {
       precios: {
         pvp: p.price,
         pvm: p.wholesalePrice,
-        incluye_iva: true // Asumo True por defecto según esquema ERP
+        incluye_iva: true
       },
       stock: {
         total_disponible: p.stock
@@ -266,8 +243,6 @@ export class ProductosService {
         principal: p.images[0] || '',
         galeria: p.images.slice(1)
       },
-      // Enriched specific fields
-      // TODO: Update Frontend DTO to accept these if needed
       es_publico: true,
       enriquecido: true
     }));
@@ -276,14 +251,9 @@ export class ProductosService {
   // --- 3. Find One (Detail Page & Admin Edit) ---
   async findOne(term: string): Promise<any> {
     const { Types } = require('mongoose');
-
-    // Estrategia: "term" puede ser SKU o _id (Mongo).
-    // Necesitamos el SKU para query ERP.
-
     let sku = term;
     let enrichedDoc: any = null;
 
-    // A. Intentar buscar en Enriched primero para resolver SKU si pasaron ID
     const isObjectId = Types.ObjectId.isValid(term);
     enrichedDoc = await this.productoModel.findOne({
       $or: [
@@ -297,28 +267,14 @@ export class ProductosService {
       sku = enrichedDoc.codigo_interno;
     }
 
-    // B. Buscar en ERP (Obligatorio)
     const erpDoc = await this.productErpModel.findOne({ codigo: sku }).lean().exec();
 
     if (!erpDoc) {
-      // Edge case: Existe config en Mongo pero el producto desapareció del ERP?
-      // Retornamos null porque "No existe en ERP" = "No existe producto vendible".
       return null;
     }
 
-    // C. Fusionar
-    // Si no teniamos enrichedDoc aún (ej: buscamos por SKU directo y no estaba en mongo), buscamos ahora?
-    // Ya lo buscamos en el paso A (busqueda por codigo_interno). 
-
-    // Mapear al formato esperado (Resolve and Map)
-    // Para simplificar, retornamos el objeto merged "plano" que contiene _enrichedData y _erpData
-    // El controller se encargará de serializar o el frontend de consumir.
-    // PERO: El controller existente espera cierta estructura `ProductResponseDto`. 
-    // Vamos a retornar una estructura hibrida compatible.
-
     const resolve = this.mergeProducts(erpDoc, enrichedDoc);
 
-    // Compatibilidad DTO existente
     return {
       ...resolve,
       _id: resolve._enrichedData?._id || null,
@@ -333,34 +289,37 @@ export class ProductosService {
       },
       es_publico: resolve.isVisible,
       stock: { total_disponible: resolve.stock },
-      precios: { pvp: resolve.price, pvm: resolve.wholesalePrice, incluye_iva: true }
+      precios: { pvp: resolve.price, pvm: resolve.wholesalePrice, incluye_iva: true },
+      specs: resolve._enrichedData?.specs || [],
+      weight_kg: resolve._enrichedData?.peso_kg || 0,
+      dimensions: resolve._enrichedData?.dimensiones || null
     };
   }
 
-  // --- 4. Enrich Product (Write Config) ---
+  // --- 4. Enrich Product (Write Config & Sync Back) ---
   async enrichProduct(id: string, updateData: any): Promise<any> {
     const { Types } = require('mongoose');
     let filter = {};
+    let sku = '';
 
-    // ID puede ser ObjectId o SKU
     if (Types.ObjectId.isValid(id)) {
       filter = { _id: id };
+      const doc = await this.productoModel.findOne(filter).select('codigo_interno').lean().exec();
+      if (doc) sku = doc.codigo_interno;
     } else {
       filter = { codigo_interno: id };
+      sku = id;
     }
 
-    // Forzar status y flag
     updateData.enriquecido = true;
     updateData.enrichment_status = 'complete';
 
-    // Audit
     const auditEntry = {
       date: new Date(),
       admin: 'admin@santiagopapeleria.com',
       action: 'Actualización de producto'
     };
 
-    // Asegurar codigo_interno si es un upsert por SKU
     if (!updateData.codigo_interno && typeof id === 'string' && !Types.ObjectId.isValid(id)) {
       updateData.codigo_interno = id;
     }
@@ -368,6 +327,20 @@ export class ProductosService {
     console.log('--- DEBUG ENRICH PRODUCT (WRITE) ---');
     console.log('ID/Filter:', filter);
     console.log('Update Data:', JSON.stringify(updateData));
+
+    // --- SYNC BACK LOGIC ---
+    // Si estamos editando campos restringidos (Nombre, Descripción), enviamos al ERP
+    if (sku && (updateData.nombre_web || updateData.descripcion_extendida)) {
+      try {
+        await this.erpSyncService.updateProductInErp(sku, {
+          nombre: updateData.nombre_web,
+          descripcion: updateData.descripcion_extendida
+        });
+      } catch (error) {
+        console.error(`⚠️ Failed to sync back to ERP for ${sku}`, error.message);
+      }
+    }
+    // -----------------------
 
     const updatedDoc = await this.productoModel.findOneAndUpdate(
       filter,
@@ -381,16 +354,49 @@ export class ProductosService {
     console.log('Updated Doc Result:', updatedDoc);
     console.log('------------------------------------');
 
-    // Retornamos la versión fusionada para que el Admin vea el resultado final inmediato
     return this.findOne(updatedDoc.codigo_interno);
   }
 
   async getCategoryCounts(): Promise<{ name: string; count: number }[]> {
-    // Contamos sobre ERP porque es el inventario real
     return this.productErpModel.aggregate([
       { $match: { activo: true } },
       { $group: { _id: "$categoria_g2", count: { $sum: 1 } } },
       { $project: { _id: 0, name: "$_id", count: 1 } }
     ]).exec();
+  }
+
+  async getCategoriesStructure(): Promise<any[]> {
+    return this.productErpModel.aggregate([
+      { $match: { activo: true } },
+      {
+        $group: {
+          _id: { g1: "$categoria_g1", g2: "$categoria_g2" },
+          subgrupos: { $addToSet: "$categoria_g3" }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.g1",
+          grupos: {
+            $push: {
+              nombre: "$_id.g2",
+              subgrupos: "$subgrupos"
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          linea: "$_id",
+          grupos: 1
+        }
+      }
+    ]).exec();
+  }
+
+  async getBrands(): Promise<string[]> {
+    return this.productErpModel.distinct('marca', { activo: true }).exec();
   }
 }
