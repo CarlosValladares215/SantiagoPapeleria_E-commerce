@@ -1,0 +1,558 @@
+{
+    "metadata": {
+        "version": "1.0",
+        "last_sync": "2026-01-04T00:00:00Z",
+        "source": "DOBRANET_LINEAS"
+    },
+    "root": {
+        "ID": 1,
+        "COD": "01",
+        "NOM": "MERCADERIA (VENTA)",
+        "DAT": [
+            {
+                "ID": 10,
+                "COD": "010",
+                "NOM": "ACCESORIOS DE CABELLO",
+                "DAT": [
+                    {
+                        "ID": 1001,
+                        "COD": "01001",
+                        "NOM": "CEPILLOS/PEINILLAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1002,
+                        "COD": "01002",
+                        "NOM": "DIADEMAS Y CINTILLOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1003,
+                        "COD": "01003",
+                        "NOM": "GORRAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1004,
+                        "COD": "01004",
+                        "NOM": "VINCHAS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 11,
+                "COD": "011",
+                "NOM": "ACCESORIOS DE MODA",
+                "DAT": [
+                    {
+                        "ID": 1101,
+                        "COD": "01101",
+                        "NOM": "LLAVEROS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1102,
+                        "COD": "01102",
+                        "NOM": "RELOJ",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 12,
+                "COD": "012",
+                "NOM": "ASEO",
+                "DAT": [
+                    {
+                        "ID": 1201,
+                        "COD": "01201",
+                        "NOM": "GEL ANTIBACTERIAL",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1202,
+                        "COD": "01202",
+                        "NOM": "IMPLEMENTOS DE ASEO",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1203,
+                        "COD": "01203",
+                        "NOM": "JABON/ LAVAVAJILLAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1204,
+                        "COD": "01204",
+                        "NOM": "PAÑITOS HUMEDOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1205,
+                        "COD": "01205",
+                        "NOM": "SHAMPOO/ ACONDICIONADORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1206,
+                        "COD": "01206",
+                        "NOM": "TOALLAS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 13,
+                "COD": "013",
+                "NOM": "BISUTERIA",
+                "DAT": [
+                    {
+                        "ID": 1301,
+                        "COD": "01301",
+                        "NOM": "ARETES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1302,
+                        "COD": "01302",
+                        "NOM": "COLLARES",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 14,
+                "COD": "014",
+                "NOM": "BOLSOS",
+                "DAT": [
+                    {
+                        "ID": 1401,
+                        "COD": "01401",
+                        "NOM": "BILLETERAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1402,
+                        "COD": "01402",
+                        "NOM": "BOLSOS DE TELA/ PLASTICO",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1403,
+                        "COD": "01403",
+                        "NOM": "CARTUCHERAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1404,
+                        "COD": "01404",
+                        "NOM": "LONCHERAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1405,
+                        "COD": "01405",
+                        "NOM": "MOCHILAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1406,
+                        "COD": "01406",
+                        "NOM": "MONEDEROS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 15,
+                "COD": "015",
+                "NOM": "COMIDA",
+                "DAT": [
+                    {
+                        "ID": 1501,
+                        "COD": "01501",
+                        "NOM": "BEBIDAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1502,
+                        "COD": "01502",
+                        "NOM": "CARAMELOS/GOMITAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1503,
+                        "COD": "01503",
+                        "NOM": "CHOCOLATES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1504,
+                        "COD": "01504",
+                        "NOM": "GALLETAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1505,
+                        "COD": "01505",
+                        "NOM": "SNACKS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 16,
+                "COD": "016",
+                "NOM": "DECORACION",
+                "DAT": [
+                    {
+                        "ID": 1601,
+                        "COD": "01601",
+                        "NOM": "ADORNOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1602,
+                        "COD": "01602",
+                        "NOM": "CUADROS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1603,
+                        "COD": "01603",
+                        "NOM": "FLOREROS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1604,
+                        "COD": "01604",
+                        "NOM": "PORTARETRATOS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 17,
+                "COD": "017",
+                "NOM": "ELECTRONICA Y TECNOLOGIA",
+                "DAT": [
+                    {
+                        "ID": 1701,
+                        "COD": "01701",
+                        "NOM": "AUDIFONOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1702,
+                        "COD": "01702",
+                        "NOM": "CABLES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1703,
+                        "COD": "01703",
+                        "NOM": "CALCULADORAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1704,
+                        "COD": "01704",
+                        "NOM": "CARGADORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1705,
+                        "COD": "01705",
+                        "NOM": "MEMORIAS USB",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1706,
+                        "COD": "01706",
+                        "NOM": "PILAS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 18,
+                "COD": "018",
+                "NOM": "ESCOLAR",
+                "DAT": [
+                    {
+                        "ID": 1801,
+                        "COD": "01801",
+                        "NOM": "BORRADORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1802,
+                        "COD": "01802",
+                        "NOM": "COLORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1803,
+                        "COD": "01803",
+                        "NOM": "COMPASES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1804,
+                        "COD": "01804",
+                        "NOM": "CORRECTORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1805,
+                        "COD": "01805",
+                        "NOM": "CUADERNOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1806,
+                        "COD": "01806",
+                        "NOM": "ESTUCHES GEOMETRIA",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1807,
+                        "COD": "01807",
+                        "NOM": "FOLDERS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1808,
+                        "COD": "01808",
+                        "NOM": "GOMAS/PEGAMENTOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1809,
+                        "COD": "01809",
+                        "NOM": "LAPICEROS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1810,
+                        "COD": "01810",
+                        "NOM": "LAPICES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1811,
+                        "COD": "01811",
+                        "NOM": "MARCADORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1812,
+                        "COD": "01812",
+                        "NOM": "RESALTADORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1813,
+                        "COD": "01813",
+                        "NOM": "SACAPUNTAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1814,
+                        "COD": "01814",
+                        "NOM": "TIJERAS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 19,
+                "COD": "019",
+                "NOM": "FIESTAS Y CUMPLEAÑOS",
+                "DAT": [
+                    {
+                        "ID": 1901,
+                        "COD": "01901",
+                        "NOM": "DISFRACES / HALLOWEEN",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1902,
+                        "COD": "01902",
+                        "NOM": "FUNDAS REGALO",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1903,
+                        "COD": "01903",
+                        "NOM": "GLOBOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1904,
+                        "COD": "01904",
+                        "NOM": "PIÑATAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 1905,
+                        "COD": "01905",
+                        "NOM": "VELAS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 20,
+                "COD": "020",
+                "NOM": "JUGUETES",
+                "DAT": [
+                    {
+                        "ID": 2001,
+                        "COD": "02001",
+                        "NOM": "JUEGOS DE MESA",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2002,
+                        "COD": "02002",
+                        "NOM": "MUÑECOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2003,
+                        "COD": "02003",
+                        "NOM": "PELUCHES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2004,
+                        "COD": "02004",
+                        "NOM": "VEHICULOS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 21,
+                "COD": "021",
+                "NOM": "OFICINA",
+                "DAT": [
+                    {
+                        "ID": 2101,
+                        "COD": "02101",
+                        "NOM": "AGENDAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2102,
+                        "COD": "02102",
+                        "NOM": "ARCHIVADORES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2103,
+                        "COD": "02103",
+                        "NOM": "CLIPS/GRAPAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2104,
+                        "COD": "02104",
+                        "NOM": "GRAPADORAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2105,
+                        "COD": "02105",
+                        "NOM": "NOTAS ADHESIVAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2106,
+                        "COD": "02106",
+                        "NOM": "PERFORADORAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2107,
+                        "COD": "02107",
+                        "NOM": "SELLOS",
+                        "DAT": []
+                    }
+                ]
+            },
+            {
+                "ID": 22,
+                "COD": "022",
+                "NOM": "PAPELERIA ARTISTICA",
+                "DAT": [
+                    {
+                        "ID": 2201,
+                        "COD": "02201",
+                        "NOM": "ACUARELAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2202,
+                        "COD": "02202",
+                        "NOM": "CARTULINAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2203,
+                        "COD": "02203",
+                        "NOM": "CRAYONES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2204,
+                        "COD": "02204",
+                        "NOM": "FOAMI/EVA",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2205,
+                        "COD": "02205",
+                        "NOM": "PAPELES DECORATIVOS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2206,
+                        "COD": "02206",
+                        "NOM": "PINTURAS",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2207,
+                        "COD": "02207",
+                        "NOM": "PINCELES",
+                        "DAT": []
+                    },
+                    {
+                        "ID": 2208,
+                        "COD": "02208",
+                        "NOM": "PLASTILINA/MASAS",
+                        "DAT": []
+                    }
+                ]
+            }
+        ]
+    },
+    "line_mapping": {
+        "ACCESORIOS DE CABELLO": "010",
+        "ACCESORIOS DE MODA": "011",
+        "ASEO": "012",
+        "BISUTERIA": "013",
+        "BOLSOS": "014",
+        "COMIDA": "015",
+        "DECORACION": "016",
+        "ELECTRONICA Y TECNOLOGIA": "017",
+        "ESCOLAR": "018",
+        "FIESTAS Y CUMPLEAÑOS": "019",
+        "JUGUETES": "020",
+        "OFICINA": "021",
+        "PAPELERIA ARTISTICA": "022"
+    }
+}

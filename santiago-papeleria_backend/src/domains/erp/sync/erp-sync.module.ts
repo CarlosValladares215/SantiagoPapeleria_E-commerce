@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -8,11 +8,13 @@ import { ProductERP, ProductERPSchema } from '../../products/schemas/product-erp
 import { Producto, ProductoSchema } from '../../products/schemas/producto.schema';
 import { SyncLog, SyncLogSchema } from './schemas/sync-log.schema';
 import { ErpConfig, ErpConfigSchema } from './schemas/erp-config.schema';
+import { ProductosModule } from '../../products/productos.module';
 
 @Module({
   imports: [
     HttpModule,
     ScheduleModule.forRoot(),
+    forwardRef(() => ProductosModule),
     MongooseModule.forFeature([
       { name: ProductERP.name, schema: ProductERPSchema },
       { name: Producto.name, schema: ProductoSchema },

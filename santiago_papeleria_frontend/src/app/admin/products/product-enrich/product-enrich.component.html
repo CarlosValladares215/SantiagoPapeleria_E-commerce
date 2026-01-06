@@ -145,13 +145,13 @@
                 }
             </div>
 
-            <!-- Section 3: Images (Simplified for this iteration, keeping structure) -->
+            <!-- Section 3: Images (Read-Only) -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div (click)="toggleSection('images')"
                     class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors">
                     <h3 class="text-sm font-semibold text-gray-800 flex items-center">
                         <i class="ri-image-line mr-2 text-[#104D73]"></i>
-                        Multimedia / Imágenes
+                        Multimedia / Imágenes (Sincronizado del ERP)
                     </h3>
                     <i [class]="expandedSections.images ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
                         class="text-xl text-gray-400"></i>
@@ -159,140 +159,87 @@
                 @if (expandedSections.images) {
                 <div class="p-4 border-t border-gray-200">
                     <div class="flex flex-wrap gap-4">
-                        @for (img of formData.images; track img; let i = $index) {
+                        @for (img of formData.images; track img) {
                         <div
                             class="relative w-24 h-24 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group">
                             <img [src]="img" class="w-full h-full object-cover">
-                            <button (click)="handleDeleteImage(i)"
-                                class="absolute top-1 right-1 bg-red-500 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
                         </div>
                         }
-                        <button (click)="handleImageUpload()"
-                            class="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#104D73] hover:border-[#104D73] transition-colors">
-                            <i class="ri-add-line text-2xl"></i>
-                        </button>
-                        <!-- Hidden File Input -->
-                        <input type="file" id="productImageUpload" accept="image/png, image/jpeg, image/jpg, image/webp"
-                            hidden (change)="onFileSelected($event)">
+                        @if (formData.images.length === 0) {
+                        <p class="text-sm text-gray-500 italic">No hay imágenes disponibles desde el ERP.</p>
+                        }
                     </div>
                 </div>
                 }
             </div>
 
-            <!-- Section 4: Logistics -->
+            <!-- Section 4: Logistics & Attributes (Read-Only) -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-t-lg border-b border-gray-100">
                     <h3 class="text-sm font-semibold text-gray-800 flex items-center">
                         <i class="ri-settings-3-line mr-2 text-[#104D73]"></i>
-                        Configuración de Logística y Personalización
+                        Logística y Atributos (Sincronizado del ERP)
                     </h3>
                 </div>
                 <div class="p-4 space-y-4">
                     <div class="grid grid-cols-2 gap-4">
+                        <!-- Weight Read Only -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Peso
-                            </label>
-                            <div class="flex rounded-md shadow-sm">
-                                <input type="text" [ngModel]="displayedWeight()" (input)="onWeightInput($event)"
-                                    (blur)="onWeightBlur()" (keydown)="onWeightKeydown($event)"
-                                    (paste)="onWeightPaste($event)" [maxlength]="weightInputMaxLength"
-                                    class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
-                                    placeholder="0.000" />
-                                <select [ngModel]="weightUnit()"
-                                    (ngModelChange)="weightUnit.set($event); hasUnsavedChanges.set(true)"
-                                    class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-r-lg hover:bg-gray-100 focus:ring-2 focus:ring-[#104D73]">
-                                    <option value="kg">kg</option>
-                                    <option value="g">g</option>
-                                </select>
+                            <span class="block text-sm font-medium text-gray-700 mb-1">Peso</span>
+                            <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                                {{ formData.weight_kg }} kg
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Seleccione la unidad. Internamente se guarda como kg.
-                            </p>
                         </div>
+                        <!-- Dimensions Read Only -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Dimensiones (cm)
-                            </label>
-                            <div class="flex items-center space-x-2">
-                                <input type="text" [ngModel]="displayedDimensions().length"
-                                    (input)="onDimensionInput('length', $event)" (blur)="onDimensionBlur('length')"
-                                    (keydown)="onDimensionKeydown($event)" maxlength="6"
-                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
-                                    placeholder="L" />
-                                <span class="text-gray-400">×</span>
-                                <input type="text" [ngModel]="displayedDimensions().width"
-                                    (input)="onDimensionInput('width', $event)" (blur)="onDimensionBlur('width')"
-                                    (keydown)="onDimensionKeydown($event)" maxlength="6"
-                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
-                                    placeholder="A" />
-                                <span class="text-gray-400">×</span>
-                                <input type="text" [ngModel]="displayedDimensions().height"
-                                    (input)="onDimensionInput('height', $event)" (blur)="onDimensionBlur('height')"
-                                    (keydown)="onDimensionKeydown($event)" maxlength="6"
-                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#104D73] focus:border-transparent text-sm"
-                                    placeholder="H" />
+                            <span class="block text-sm font-medium text-gray-700 mb-1">Dimensiones (cm)</span>
+                            <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                                {{ formData.dimensions.length || 0 }} x {{ formData.dimensions.width || 0 }} x {{
+                                formData.dimensions.height || 0 }}
                             </div>
                         </div>
                     </div>
 
                     <div class="space-y-3 pt-2">
+                        <!-- Custom Message Read Only -->
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div>
-                                <label class="text-sm font-medium text-gray-700">Permite Mensaje Personalizado</label>
-                                <p class="text-xs text-gray-500">Los clientes pueden agregar un mensaje al producto</p>
+                                <span class="text-sm font-medium text-gray-700">Permite Mensaje Personalizado</span>
+                                <p class="text-xs text-gray-500">Configurado en origen</p>
                             </div>
-                            <button (click)="toggleCustomMessage()"
-                                class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer"
-                                [class]="isCustomMsgActive ? 'bg-[#104D73]' : 'bg-gray-300'">
-                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
-                                    [class]="isCustomMsgActive ? 'translate-x-6' : 'translate-x-1'"></span>
-                            </button>
+                            <span
+                                [class]="formData.allows_custom_message ? 'bg-[#104D73] text-white' : 'bg-gray-200 text-gray-600'"
+                                class="px-2 py-1 rounded text-xs font-semibold">
+                                {{ formData.allows_custom_message ? 'ACTIVO' : 'INACTIVO' }}
+                            </span>
                         </div>
 
-                        <!-- Attributes / Tags Section -->
-                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mt-3 animate-fade-in">
-                            <div class="flex items-center justify-between mb-3">
-                                <h3 class="text-sm font-semibold text-indigo-900 flex items-center">
-                                    <i class="ri-price-tag-3-line mr-2 text-indigo-600"></i>
-                                    Atributos (Etiquetas)
-                                </h3>
-                                <button (click)="addAttribute()"
-                                    class="text-xs font-medium text-white bg-indigo-600 px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors flex items-center">
-                                    <i class="ri-add-line mr-1"></i> Agregar Atributo
-                                </button>
-                            </div>
+                        <!-- Attributes Read Only -->
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mt-3">
+                            <h3 class="text-sm font-semibold text-indigo-900 flex items-center mb-3">
+                                <i class="ri-price-tag-3-line mr-2 text-indigo-600"></i>
+                                Atributos
+                            </h3>
 
                             <div class="space-y-2">
                                 @if (formData.attributes.length === 0) {
-                                <p class="text-xs text-indigo-700 italic">No hay atributos definidos. Agrega detalles
-                                    como Color, Tamaño, etc.</p>
+                                <p class="text-xs text-indigo-700 italic">No hay atributos definidos.</p>
                                 }
 
                                 @for (attr of formData.attributes; track $index) {
-                                <div class="flex items-center space-x-2 animate-fade-in-up">
-                                    <input type="text" [value]="attr.key"
-                                        (input)="updateAttribute($index, 'key', $event)" placeholder="Color"
-                                        class="flex-1 min-w-0 px-3 py-1.5 text-sm border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white placeholder-indigo-300" />
+                                <div class="flex items-center space-x-2">
+                                    <div
+                                        class="flex-1 px-3 py-1.5 text-sm bg-white border border-indigo-200 rounded text-indigo-800">
+                                        {{ attr.key }}
+                                    </div>
                                     <span class="text-indigo-400">:</span>
-                                    <input type="text" [value]="attr.value"
-                                        (input)="updateAttribute($index, 'value', $event)" placeholder="Rojo"
-                                        class="flex-1 min-w-0 px-3 py-1.5 text-sm border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white placeholder-indigo-300" />
-
-                                    <button (click)="removeAttribute($index)"
-                                        class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors"
-                                        title="Eliminar atributo">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>
+                                    <div
+                                        class="flex-1 px-3 py-1.5 text-sm bg-white border border-indigo-200 rounded text-indigo-800">
+                                        {{ attr.value }}
+                                    </div>
                                 </div>
                                 }
                             </div>
-                            <p class="text-xs text-indigo-800 mt-2">
-                                <i class="ri-information-line mr-1"></i>
-                                Estos atributos se mostrarán como información adicional en la página del producto.
-                            </p>
                         </div>
                     </div>
                 </div>

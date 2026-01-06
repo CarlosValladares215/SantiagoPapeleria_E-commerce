@@ -1,0 +1,107 @@
+{
+    "metadata": {
+        "version": "1.0",
+        "source": "DOBRANET_MARCAS"
+    },
+    "brands": {
+        "TOTTO": {
+            "ID": 1,
+            "NOM": "TOTTO",
+            "PAIS": "Colombia",
+            "DESC": "Marca líder en mochilas, maletas y accesorios de alta calidad."
+        },
+        "MOZIONI": {
+            "ID": 2,
+            "NOM": "MOZIONI",
+            "PAIS": "Ecuador",
+            "DESC": "Diseños modernos y juveniles para el regreso a clases."
+        },
+        "EPIC": {
+            "ID": 3,
+            "NOM": "EPIC",
+            "PAIS": "Ecuador",
+            "DESC": "Mochilas y accesorios escolares con diseños divertidos para niños."
+        },
+        "EVEREST": {
+            "ID": 4,
+            "NOM": "EVEREST",
+            "PAIS": "USA",
+            "DESC": "Mochilas robustas y duraderas para uso diario."
+        },
+        "VASARI": {
+            "ID": 5,
+            "NOM": "VASARI",
+            "PAIS": "Ecuador",
+            "DESC": "Artículos escolares con estilo contemporáneo."
+        },
+        "FERRERO ROCHER": {
+            "ID": 6,
+            "NOM": "FERRERO ROCHER",
+            "PAIS": "Italia",
+            "DESC": "Chocolates premium reconocidos mundialmente por su calidad."
+        },
+        "KINDER JOY": {
+            "ID": 7,
+            "NOM": "KINDER JOY",
+            "PAIS": "Italia",
+            "DESC": "Deliciosos huevos sorpresa para niños."
+        },
+        "TRENTO": {
+            "ID": 8,
+            "NOM": "TRENTO",
+            "PAIS": "Brasil",
+            "DESC": "Wafers de chocolate con rellenos cremosos irresistibles."
+        },
+        "HERBAL ESSENCES": {
+            "ID": 9,
+            "NOM": "HERBAL ESSENCES",
+            "PAIS": "USA",
+            "DESC": "Productos para el cuidado del cabello con esencias naturales."
+        },
+        "HEAD": {
+            "ID": 10,
+            "NOM": "HEAD",
+            "PAIS": "Austria",
+            "DESC": "Marca deportiva reconocida internacionalmente."
+        },
+        "CASIO": {
+            "ID": 11,
+            "NOM": "CASIO",
+            "PAIS": "Japón",
+            "DESC": "Líder mundial en calculadoras y electrónica."
+        },
+        "FABER CASTELL": {
+            "ID": 12,
+            "NOM": "FABER CASTELL",
+            "PAIS": "Alemania",
+            "DESC": "Excelencia en instrumentos de escritura y arte desde 1761."
+        },
+        "NORMA": {
+            "ID": 13,
+            "NOM": "NORMA",
+            "PAIS": "Colombia",
+            "DESC": "Cuadernos y papelería de alta calidad."
+        },
+        "PELIKAN": {
+            "ID": 14,
+            "NOM": "PELIKAN",
+            "PAIS": "Alemania",
+            "DESC": "Tradición en instrumentos de escritura premium."
+        },
+        "STABILO": {
+            "ID": 15,
+            "NOM": "STABILO",
+            "PAIS": "Alemania",
+            "DESC": "Innovación en marcadores y resaltadores."
+        }
+    },
+    "aliases": {
+        "F.CASTELL": "FABER CASTELL",
+        "FABER": "FABER CASTELL",
+        "F CASTELL": "FABER CASTELL",
+        "HERBAL ESS": "HERBAL ESSENCES",
+        "FERRERO": "FERRERO ROCHER",
+        "ROCHER": "FERRERO ROCHER",
+        "KINDER": "KINDER JOY"
+    }
+}

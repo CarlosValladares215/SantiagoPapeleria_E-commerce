@@ -44,7 +44,7 @@ export class ProductCard {
         if (this.product.images && this.product.images.length > 0) {
             return this.product.images[0];
         }
-        return 'assets/images/placeholder.png'; // Fallback image
+        return 'assets/images/product-placeholder.png'; // Fallback image
     }
 
     getStockStatusClass(): string {

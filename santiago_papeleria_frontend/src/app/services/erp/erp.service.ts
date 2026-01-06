@@ -112,4 +112,8 @@ export class ErpService {
         formData.append('file', file);
         return this.http.post(`${this.apiUrl}/productos/upload`, formData);
     }
+
+    syncCategories(): Observable<any> {
+        return this.http.post(`${this.apiUrl}/erp-sync/sync-categories`, {});
+    }
 }

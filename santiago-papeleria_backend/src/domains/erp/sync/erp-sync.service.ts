@@ -133,6 +133,10 @@ export class ErpSyncService {
                 update: {
                     $set: {
                         nombre: product.NOM,
+                        descripcion: product.NOT || '',
+                        imagen: product.FOT || '',
+                        linea_codigo: product.LIN || '',
+                        row_id: product.ROW || 0,
                         marca: product.MRK || '',
                         categoria_g1: product.G1 || '',
                         categoria_g2: product.G2 || '',
@@ -170,6 +174,8 @@ export class ErpSyncService {
                 codigo_interno: erpProduct.codigo,
             });
 
+            const imageUrl = erpProduct.imagen ? `http://localhost:4000/data/photos/${erpProduct.imagen}` : '';
+
             if (!existingProduct) {
                 // CREATE new enriched product
                 try {
@@ -179,6 +185,7 @@ export class ErpSyncService {
                         nombre: erpProduct.nombre,
                         slug: this.generateSlug(erpProduct.nombre) + '-' + erpProduct.codigo,
                         activo: true,
+                        es_publico: true, // Requisito: Visibilidad Automática
                         palabras_clave: [],
 
                         clasificacion: {
@@ -201,7 +208,7 @@ export class ErpSyncService {
                         },
 
                         multimedia: {
-                            principal: '',
+                            principal: imageUrl,
                             galeria: [],
                         },
 
@@ -212,26 +219,26 @@ export class ErpSyncService {
 
                         priceTiers: [],
                         peso_kg: this.calculateWeightInKg((erpProduct as any).weight_erp),
+                        descripcion_extendida: erpProduct.descripcion || '',
                     });
                     created++;
                 } catch (err) {
                     this.logger.error(`Error creating enriched product ${erpProduct.codigo}: ${err.message}`);
                 }
             } else {
-                // UPDATE only prices, stock, and sync date
+                // UPDATE
                 const updateDoc = {
+                    'nombre': erpProduct.nombre,
+                    'descripcion_extendida': erpProduct.descripcion || '',
+                    'multimedia.principal': imageUrl,
                     'precios.pvp': erpProduct.precio_pvp,
                     'precios.pvm': erpProduct.precio_pvm,
                     'precios.incluye_iva': erpProduct.iva,
                     'stock.total_disponible': erpProduct.stock,
-                    // We can update classification if we want, or lets keep it in sync
                     'clasificacion.marca': erpProduct.marca,
                     'clasificacion.grupo': erpProduct.categoria_g2,
                     'clasificacion.linea': erpProduct.categoria_g1,
                     'auditoria.ultima_sincronizacion_dobranet': new Date(),
-                    // Update weight if needed (careful not to overwrite manual enrichment if we don't want to, 
-                    // but for this task we assume Sync updates base data)
-                    // 'peso_kg': this.calculateWeightInKg((erpProduct as any).weight_erp), // Uncomment if we want strict sync
                 };
 
                 await this.productoModel.updateOne(
@@ -246,6 +253,7 @@ export class ErpSyncService {
 
         return { created, updated, total: erpProducts.length };
     }
+
 
     /**
      * Generate URL-friendly slug from product name
@@ -357,6 +365,35 @@ export class ErpSyncService {
     }
 
     /**
+     * Send product update (restriction: NOM and NOT only) to ERP
+     */
+    async updateProductInErp(codigo: string, data: { nombre?: string; descripcion?: string }): Promise<any> {
+        try {
+            const payload = {
+                COD: codigo,
+                ...(data.nombre && { NOM: data.nombre }),
+                ...(data.descripcion && { NOT: data.descripcion })
+            };
+
+            this.logger.log(`📤 Enviando actualización al ERP para ${codigo}...`);
+            const response = await firstValueFrom(
+                this.httpService.post(`${this.erpUrl}?CMD=STO_MTX_UPD_PRO`, payload)
+            );
+
+            if (response.data.STA === 'OK') {
+                this.logger.log(`✅ Producto ${codigo} actualizado en ERP`);
+            } else {
+                this.logger.warn(`⚠️ ERP rechazó actualización: ${response.data.MSG}`);
+            }
+
+            return response.data;
+        } catch (error) {
+            this.logger.error(`Error updating product ${codigo} in ERP:`, error.message);
+            throw error;
+        }
+    }
+
+    /**
      * Simulate Admin enrichment
      */
     async simulateEnrichment(codigo: string): Promise<any> {
@@ -438,6 +475,20 @@ export class ErpSyncService {
             config = await this.erpConfigModel.create({});
         }
         return config;
+    }
+
+    async syncCategories(): Promise<any> {
+        this.logger.log('🔄 Sincronizando árbol de categorías...');
+        try {
+            const response = await firstValueFrom(
+                this.httpService.get(`${this.erpUrl}?CMD=STO_MTX_CAT_LIN`)
+            );
+            this.logger.log(`✅ Categorías recibidas: ${response.data.length || 'Estructura árbol'}`);
+            return response.data;
+        } catch (error) {
+            this.logger.error('❌ Error sincronizando categorías:', error.message);
+            throw error;
+        }
     }
 
     async updateConfig(configData: any): Promise<any> {

@@ -53,4 +53,9 @@ export class ErpSyncController {
     async updateConfig(@Body() config: any) {
         return this.erpSyncService.updateConfig(config);
     }
+
+    @Post('sync-categories')
+    async syncCategories() {
+        return this.erpSyncService.syncCategories();
+    }
 }

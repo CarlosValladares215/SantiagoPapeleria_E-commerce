@@ -44,8 +44,21 @@ export class ProductERP extends Document {
     @Prop()
     ultima_sync: Date;
 
+    @Prop()
+    descripcion: string; // From NOT
+
+    @Prop()
+    imagen: string; // From FOT
+
+    @Prop()
+    linea_codigo: string; // From LIN
+
+    @Prop()
+    row_id: number; // From ROW
+
     @Prop({ default: true })
     activo: boolean;
 }
 
 export const ProductERPSchema = SchemaFactory.createForClass(ProductERP);
+

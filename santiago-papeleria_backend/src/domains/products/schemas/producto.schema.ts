@@ -154,7 +154,7 @@ export class Variante {
   @Prop({ type: Object, required: true })
   combinacion: Record<string, string>; // { "Color": "Rojo", "Talla": "S" }
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   sku: string;
 
   @Prop()
