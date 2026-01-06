@@ -29,6 +29,6 @@ async function bootstrap() {
   // Habilitar CORS para permitir peticiones desde el frontend (Angular)
   app.enableCors();
 
-  await app.listen(3000);
+  await app.listen(3000, '0.0.0.0');
 }
 bootstrap();
