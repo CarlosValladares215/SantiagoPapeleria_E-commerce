@@ -58,6 +58,15 @@ export class ProductERP extends Document {
 
     @Prop({ default: true })
     activo: boolean;
+
+    @Prop({ type: Number, default: 0 })
+    peso_erp: number; // From PES
+
+    @Prop({ type: Object, default: { L: 0, A: 0, H: 0 } })
+    dimensiones_erp: { L: number; A: number; H: number }; // From DIM
+
+    @Prop({ type: [{ label: String, value: String }], default: [] })
+    specs_erp: Array<{ label: string; value: string }>;
 }
 
 export const ProductERPSchema = SchemaFactory.createForClass(ProductERP);

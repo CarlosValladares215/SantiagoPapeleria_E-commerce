@@ -89,6 +89,12 @@ class IntegracionDobranet {
 
   @Prop({ type: Date, default: null })
   fecha_sincronizacion: Date;
+
+  @Prop({ default: null })
+  orden_erp: string; // Número de orden retornado por DobraNet (ORDVEN-NUM)
+
+  @Prop({ default: null })
+  ultimo_error: string; // Último error de sincronización
 }
 
 // Definición principal del Schema

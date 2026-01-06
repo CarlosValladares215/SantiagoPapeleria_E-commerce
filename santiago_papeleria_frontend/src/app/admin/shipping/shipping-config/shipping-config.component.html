@@ -1,0 +1,342 @@
+<div class="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Configuración de Envíos</h1>
+            <p class="text-gray-500 mt-1">Gestiona zonas de entrega, tarifas por peso y costos generales.</p>
+        </div>
+        <button (click)="saveConfig()" [disabled]="isSaving()"
+            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg shadow-blue-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95">
+            <lucide-icon name="save" class="w-5 h-5"></lucide-icon>
+            {{ isSaving() ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex bg-white p-1 rounded-xl shadow-sm border border-gray-100 w-fit">
+        <button (click)="currentTab.set('general')"
+            [class]="currentTab() === 'general' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            class="px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+            General
+        </button>
+        <button (click)="currentTab.set('zones')"
+            [class]="currentTab() === 'zones' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            class="px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+            Zonas y Tarifas
+        </button>
+        <button (click)="currentTab.set('import')"
+            [class]="currentTab() === 'import' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
+            class="px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+            Importar
+        </button>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div *ngIf="isLoading()" class="flex justify-center py-20">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- CONTENT -->
+    <div *ngIf="!isLoading()">
+
+        <!-- === TAB: GENERAL === -->
+        <div *ngIf="currentTab() === 'general'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Base Rate -->
+            <div
+                class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 hover:border-blue-200 transition-colors">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <lucide-icon name="dollar-sign" class="w-6 h-6"></lucide-icon>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900">Tarifa General (Fallback)</h3>
+                            <p class="text-sm text-gray-500">Se aplica si el cliente no está en ninguna zona definida
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold uppercase text-gray-400">Costo Base</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                            <input type="number" [(ngModel)]="config().baseRate" min="0" step="0.01"
+                                class="w-full pl-8 py-2 border border-gray-200 rounded-lg font-mono text-lg font-medium text-gray-800 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <!-- Global Params -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-semibold uppercase text-gray-400">Extra por KM</label>
+                            <input type="number" [(ngModel)]="config().ratePerKm" min="0" step="0.01"
+                                class="w-full mt-1 p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-100">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold uppercase text-gray-400">Extra por KG</label>
+                            <input type="number" [(ngModel)]="config().ratePerKg" min="0" step="0.01"
+                                class="w-full mt-1 p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Config -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                        <lucide-icon name="percent" class="w-6 h-6"></lucide-icon>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-900">Impuestos (IVA)</h3>
+                        <p class="text-sm text-gray-500">Porcentaje aplicado al subtotal del envío</p>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold uppercase text-gray-400">Valor Decimal (ej: 0.15 = 15%)</label>
+                    <input type="number" [(ngModel)]="config().ivaRate" min="0" step="0.01"
+                        class="w-full mt-1 p-3 border border-gray-200 rounded-lg text-lg font-medium outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- === TAB: ZONES & RATES === -->
+        <div *ngIf="currentTab() === 'zones'" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- LEFT: Zone List & Create -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Create Zone Card -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <h3 class="font-bold text-gray-900 mb-4">Nueva Zona Geográfica</h3>
+                    <div class="space-y-4">
+                        <input [(ngModel)]="newZoneName" placeholder="Nombre (ej: Costa Norte)"
+                            class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 outline-none transition-all">
+
+                        <!-- Province Multiselect Chips -->
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Seleccionar
+                                Provincias</label>
+                            <div
+                                class="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 border border-gray-100 rounded-lg custom-scrollbar">
+                                <button *ngFor="let p of provincesList" (click)="toggleProvince(p)"
+                                    [class.bg-blue-600]="selectedProvinces().has(p)"
+                                    [class.text-white]="selectedProvinces().has(p)"
+                                    [class.bg-gray-100]="!selectedProvinces().has(p)"
+                                    [class.text-gray-600]="!selectedProvinces().has(p)"
+                                    class="px-3 py-1 text-xs font-medium rounded-full transition-colors hover:bg-blue-500 hover:text-white border border-transparent">
+                                    {{ p }}
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1 text-right">{{ selectedProvinces().size }}
+                                seleccionadas</p>
+                        </div>
+
+                        <button (click)="addZone()" [disabled]="!newZoneName || selectedProvinces().size === 0"
+                            class="w-full py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                            Crear Zona
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Zone List -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50">
+                        <h4 class="font-bold text-gray-700">Zonas Existentes</h4>
+                    </div>
+                    <div class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+                        <div *ngFor="let zone of zones()" (click)="selectZone(zone)"
+                            [class.bg-blue-50]="selectedZone()?._id === zone._id"
+                            class="p-4 cursor-pointer hover:bg-gray-50 transition-colors group relative">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium text-gray-800">{{ zone.name }}</span>
+                                <button (click)="deleteZone(zone._id); $event.stopPropagation()"
+                                    class="p-1 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <lucide-icon name="trash-2" class="w-4 h-4"></lucide-icon>
+                                </button>
+                            </div>
+                            <!-- Show first 3 provinces + count -->
+                            <p class="text-xs text-gray-500 mt-1 truncate">
+                                {{ zone.provinces.slice(0, 3).join(', ') }}
+                                <span *ngIf="zone.provinces.length > 3" class="text-gray-400">+{{ zone.provinces.length
+                                    - 3 }} más</span>
+                            </p>
+                        </div>
+                        <div *ngIf="zones().length === 0" class="p-8 text-center text-gray-400">
+                            No hay zonas creadas
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Zone Details & Rates -->
+            <div class="lg:col-span-8">
+                <div *ngIf="selectedZone(); else emptyState"
+                    class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden min-h-[600px] flex flex-col">
+                    <!-- Zone Header -->
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">{{ selectedZone()?.name }}</h2>
+                            <p class="text-sm text-gray-500">Configuración de tarifas por peso</p>
+                        </div>
+                        <div class="text-right">
+                            <span
+                                class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">Activa</span>
+                        </div>
+                    </div>
+
+                    <!-- Rates Table -->
+                    <div class="p-6 flex-1">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-gray-400 border-b border-gray-100">
+                                    <th class="pb-3 font-semibold text-left w-1/4">Peso Min (kg)</th>
+                                    <th class="pb-3 font-semibold text-left w-1/4">Peso Max (kg)</th>
+                                    <th class="pb-3 font-semibold text-left w-1/4">Tarifa ($)</th>
+                                    <th class="pb-3 w-10"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                <!-- Existing Rates (Editable) -->
+                                <tr *ngFor="let rate of rates()" class="group hover:bg-gray-50">
+                                    <td class="py-2 pr-2">
+                                        <input type="number" [(ngModel)]="rate.min_weight"
+                                            (change)="updateInlineRate(rate)"
+                                            class="w-full bg-transparent border-b border-transparent focus:border-blue-500 outline-none text-gray-700 font-medium transition-colors text-center">
+                                    </td>
+                                    <td class="py-2 pr-2">
+                                        <input type="number" [(ngModel)]="rate.max_weight"
+                                            (change)="updateInlineRate(rate)"
+                                            class="w-full bg-transparent border-b border-transparent focus:border-blue-500 outline-none text-gray-700 font-medium transition-colors text-center">
+                                    </td>
+
+                                    <td class="py-2 pr-2">
+                                        <div class="relative">
+                                            <span class="absolute left-2 text-gray-400">$</span>
+                                            <input type="number" [(ngModel)]="rate.price"
+                                                (change)="updateInlineRate(rate)"
+                                                class="w-full pl-6 bg-transparent border-b border-transparent focus:border-blue-500 outline-none text-gray-900 font-bold transition-colors">
+                                        </div>
+                                    </td>
+                                    <td class="py-2 text-right">
+                                        <button (click)="deleteRate(rate._id)"
+                                            class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors"
+                                            title="Eliminar Tarifa">
+                                            <lucide-icon name="trash-2" class="w-4 h-4"></lucide-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Add Row (Always visible at bottom) -->
+                                <tr class="bg-blue-50/50">
+                                    <td class="p-2">
+                                        <input type="number" [(ngModel)]="newRateMin" placeholder="0"
+                                            class="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-center focus:ring-2 focus:ring-blue-200 outline-none">
+                                    </td>
+                                    <td class="p-2">
+                                        <input type="number" [(ngModel)]="newRateMax" placeholder="5"
+                                            class="w-full bg-white border border-gray-200 rounded px-2 py-1.5 text-center focus:ring-2 focus:ring-blue-200 outline-none">
+                                    </td>
+                                    <td class="p-2">
+                                        <div class="relative">
+                                            <span
+                                                class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                                            <input type="number" [(ngModel)]="newRatePrice" placeholder="0.00"
+                                                class="w-full bg-white border border-gray-200 rounded pl-5 pr-2 py-1.5 text-left font-bold focus:ring-2 focus:ring-blue-200 outline-none">
+                                        </div>
+                                    </td>
+                                    <td class="p-2 text-center">
+                                        <button (click)="addRate()"
+                                            class="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-transform active:scale-95">
+                                            <lucide-icon name="plus" class="w-4 h-4"></lucide-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Footer Note -->
+                    <div class="p-4 bg-gray-50 text-xs text-gray-400 text-center border-t border-gray-100">
+                        Los cambios en la tabla se guardan automáticamente.
+                    </div>
+                </div>
+
+                <ng-template #emptyState>
+                    <div
+                        class="h-full flex flex-col items-center justify-center p-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-center min-h-[500px]">
+                        <div class="p-4 bg-white rounded-full shadow-sm mb-4">
+                            <lucide-icon name="map-pin" class="w-10 h-10 text-gray-300"></lucide-icon>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Selecciona una Zona</h3>
+                        <p class="text-gray-500 max-w-xs mx-auto mt-2">Haz clic en una zona de la izquierda para editar
+                            sus tarifas de envío o crea una nueva.</p>
+                    </div>
+                </ng-template>
+            </div>
+        </div>
+
+        <!-- === TAB: IMPORT === -->
+        <div *ngIf="currentTab() === 'import'" class="max-w-2xl mx-auto py-10">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center space-y-8">
+                <div
+                    class="p-5 bg-green-50 text-green-600 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
+                    <lucide-icon name="file-spreadsheet" class="w-12 h-12"></lucide-icon>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">Importación Masiva</h3>
+                    <p class="text-gray-500 mt-2 max-w-md mx-auto">Sube tus tarifas desde un archivo Excel o CSV para
+                        actualizar múltiples zonas rápidamente.</p>
+                </div>
+
+                <div class="flex flex-col gap-4 max-w-sm mx-auto w-full">
+                    <button (click)="downloadTemplate()"
+                        class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-medium rounded-xl transition-colors group">
+                        <lucide-icon name="download"
+                            class="w-4 h-4 text-gray-400 group-hover:text-gray-600"></lucide-icon>
+                        Descargar Plantilla de Ejemplo
+                    </button>
+
+                    <div class="relative group">
+                        <input type="file" (change)="onFileSelected($event)" accept=".xlsx, .xls, .csv"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                        <button
+                            class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gray-900 group-hover:bg-black text-white font-medium rounded-xl transition-colors shadow-lg shadow-gray-200">
+                            <lucide-icon name="upload" class="w-4 h-4"></lucide-icon>
+                            Subir Archivo Excel / CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-left text-sm text-gray-600 bg-gray-50 p-6 rounded-xl mt-8 border border-gray-100">
+                    <p class="font-bold mb-3 text-gray-900 flex items-center gap-2">
+                        <lucide-icon name="info" class="w-4 h-4 text-blue-500"></lucide-icon>
+                        Requisitos del archivo:
+                    </p>
+                    <ul class="list-disc pl-5 space-y-2 marker:text-gray-300">
+                        <li>Columnas requeridas: <span
+                                class="font-mono text-xs bg-gray-200 px-1 py-0.5 rounded">Zone</span>, <span
+                                class="font-mono text-xs bg-gray-200 px-1 py-0.5 rounded">MinWeight</span>, <span
+                                class="font-mono text-xs bg-gray-200 px-1 py-0.5 rounded">MaxWeight</span>, <span
+                                class="font-mono text-xs bg-gray-200 px-1 py-0.5 rounded">Price</span>, <span
+                                class="font-mono text-xs bg-gray-200 px-1 py-0.5 rounded">Provinces</span></li>
+                        <li>Las provincias deben ir separadas por comas (ej: "Pichincha, Guayas").</li>
+                        <li>El sistema actualizará zonas existentes o creará nuevas automáticamente.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast -->
+    <div *ngIf="showToastNotification()"
+        class="fixed bottom-6 right-6 px-6 py-4 rounded-xl shadow-2xl z-50 flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300"
+        [class.bg-green-600]="toastType() === 'success'" [class.bg-red-600]="toastType() === 'error'">
+        <lucide-icon [name]="toastType() === 'success' ? 'check-circle' : 'alert-circle'"
+            class="text-white w-6 h-6"></lucide-icon>
+        <span class="text-white font-medium">{{ toastMessage() }}</span>
+    </div>
+
+</div>

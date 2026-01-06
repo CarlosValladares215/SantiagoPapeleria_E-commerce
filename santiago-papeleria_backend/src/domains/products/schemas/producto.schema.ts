@@ -1,7 +1,7 @@
 // src/productos/schemas/producto.schema.ts (CORREGIDO)
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 // Define la interfaz para el documento
 export type ProductoDocument = Producto & Document;
@@ -62,6 +62,12 @@ export class Stock {
 
   @Prop({ type: [Bodega] })
   bodegas: Bodega[];
+
+  @Prop({ enum: ['normal', 'bajo', 'agotado'], default: 'normal' })
+  estado_stock: string; // HU78: Estado calculado automáticamente en sincronización
+
+  @Prop({ default: 5 })
+  umbral_stock_alerta: number; // HU78: Umbral para marcar como "bajo"
 }
 
 // 5. Multimedia
@@ -170,6 +176,28 @@ export class Variante {
   imagenes: string[];
 }
 
+// 7. Promocion Activa (Denormalized)
+@Schema()
+export class PromocionActiva {
+  @Prop({ type: Types.ObjectId, ref: 'Promocion' })
+  promocion_id: Types.ObjectId;
+
+  @Prop()
+  precio_original: number;
+
+  @Prop()
+  precio_descuento: number;
+
+  @Prop()
+  tipo_descuento: string;
+
+  @Prop()
+  valor_descuento: number;
+
+  @Prop()
+  calculado_at: Date;
+}
+
 // Definición principal del Schema
 @Schema()
 export class Producto {
@@ -235,6 +263,9 @@ export class Producto {
   @Prop()
   descripcion_extendida: string;
 
+  @Prop({ type: [{ label: String, value: String }], default: [] })
+  specs: Array<{ label: string; value: string }>;
+
   @Prop({ default: false })
   enriquecido: boolean;
 
@@ -246,6 +277,9 @@ export class Producto {
 
   @Prop()
   nombre_web: string; // Título H1 optimizado
+
+  @Prop({ type: PromocionActiva })
+  promocion_activa: PromocionActiva;
 }
 
 export const ProductoSchema = SchemaFactory.createForClass(Producto);

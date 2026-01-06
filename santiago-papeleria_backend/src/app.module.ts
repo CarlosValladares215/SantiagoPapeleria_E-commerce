@@ -13,6 +13,8 @@ import { PromocionesModule } from './domains/promotions/promociones.module';
 import { ErpSyncModule } from './domains/erp/sync/erp-sync.module';
 import { FilesModule } from './shared/files/files.module';
 import { NotificationsModule } from './domains/notifications/notifications.module';
+import { ShippingModule } from './domains/shipping/shipping.module';
+import { ReportsModule } from './domains/reports/reports.module';
 @Module({
   imports: [
     // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
@@ -24,6 +26,8 @@ import { NotificationsModule } from './domains/notifications/notifications.modul
     ContadoresModule,
     PromocionesModule,
     ErpSyncModule,
+    ShippingModule,
+    ReportsModule,
     FilesModule,
     ConfigModule.forRoot({
       isGlobal: true,

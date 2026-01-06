@@ -27,6 +27,7 @@ export interface Product {
     GAL?: string[];
     PES?: number;
     DIM?: { L: number; A: number; H: number };
+    SPC?: Array<{ label: string; value: string }>;
 }
 
 @Injectable()
@@ -120,8 +121,9 @@ export class ErpService implements OnModuleInit {
 
                 // Extras (Internal use if needed)
                 baseProduct.GAL = enriched?.GAL || defaults.GAL || [];
-                baseProduct.PES = enriched?.PES || 0;
-                baseProduct.DIM = enriched?.DIM || {};
+                baseProduct.PES = enriched?.PES || defaults.PES || 0;
+                baseProduct.DIM = enriched?.DIM || defaults.DIM || {};
+                baseProduct.SPC = enriched?.SPC || defaults.SPC || [];
 
                 return baseProduct;
 

@@ -143,6 +143,31 @@ export class ProductService {
     return this.http.get<CategoryCount[]>(`${this.apiURL}/counts`);
   }
 
+  // Obtener estructura de categorías (Lineas -> Grupos)
+  fetchCategoriesStructure(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiURL}/structure`);
+  }
+
+  // Obtener lista de marcas
+  fetchBrands(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiURL}/brands`);
+  }
+
+  // --- ADMIN METHODS ---
+  searchAdminProducts(term: string, page: number = 1, limit: number = 20): Observable<any> {
+    let params = new HttpParams()
+      .set('searchTerm', term)
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+    return this.http.get<any>(`${this.apiURL}/admin/search`, { params });
+  }
+
+  getAdminProductsByIds(ids: string[]): Observable<any> {
+    let params = new HttpParams();
+    ids.forEach(id => params = params.append('ids', id));
+    return this.http.get<any>(`${this.apiURL}/admin/search`, { params });
+  }
+
   // ✅ MAPPER CORREGIDO: Backend DTO Response -> Frontend Product Model
   private mapProduct(raw: ProductResponse): Product {
     console.log('🔍 Mapping product:', raw.name, 'Stock:', raw.stock);

@@ -1,6 +1,6 @@
 {
     "metadata": {
-        "version": "1.2",
+        "version": "1.3",
         "last_sync": "2026-01-05T00:00:00Z",
         "source": "DOBRANET_INTERNAL_DB",
         "description": "Datos de enriquecimiento del ERP DobraNet para productos del catálogo"
@@ -31,7 +31,33 @@
                 "L": 38,
                 "A": 28,
                 "H": 15
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Color",
+                    "value": "Rosa con corazones"
+                },
+                {
+                    "label": "Material",
+                    "value": "Poliéster 600D resistente"
+                },
+                {
+                    "label": "Capacidad",
+                    "value": "25 Litros"
+                },
+                {
+                    "label": "Compartimentos",
+                    "value": "3 (principal + frontal + lateral)"
+                },
+                {
+                    "label": "Tirantes",
+                    "value": "Acolchados ajustables"
+                },
+                {
+                    "label": "Garantía",
+                    "value": "1 año TOTTO"
+                }
+            ]
         },
         "001281": {
             "NOT": "Mochila TOTTO para laptop modelo Knitty L en color gris. Diseño ejecutivo con compartimento acolchado para portátil de hasta 15.6 pulgadas. Múltiples bolsillos organizadores, espaldar ergonómico con sistema de ventilación y correas ajustables. Perfecta para estudiantes universitarios y profesionales.",
@@ -46,7 +72,33 @@
                 "L": 45,
                 "A": 32,
                 "H": 18
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Color",
+                    "value": "Gris ejecutivo"
+                },
+                {
+                    "label": "Material",
+                    "value": "Nylon balístico"
+                },
+                {
+                    "label": "Compatibilidad",
+                    "value": "Laptop hasta 15.6\""
+                },
+                {
+                    "label": "Compartimentos",
+                    "value": "5 con organizadores"
+                },
+                {
+                    "label": "Espaldar",
+                    "value": "Ergonómico con ventilación"
+                },
+                {
+                    "label": "Garantía",
+                    "value": "1 año TOTTO"
+                }
+            ]
         },
         "012166": {
             "NOT": "Mochila EPIC con diseño de Fútbol para niños. Estructura resistente con base reforzada. Compartimento principal espacioso, bolsillos laterales para botellas de agua y tirantes acolchados ergonómicos. Colores vibrantes con detalles deportivos que encantarán a los pequeños aficionados al deporte rey.",
@@ -60,7 +112,29 @@
                 "L": 35,
                 "A": 25,
                 "H": 12
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Color",
+                    "value": "Verde con estampado de fútbol"
+                },
+                {
+                    "label": "Material",
+                    "value": "Poliéster reforzado"
+                },
+                {
+                    "label": "Capacidad",
+                    "value": "18 Litros"
+                },
+                {
+                    "label": "Base",
+                    "value": "Reforzada anti-desgaste"
+                },
+                {
+                    "label": "Edad recomendada",
+                    "value": "6-10 años"
+                }
+            ]
         },
         "006171": {
             "NOT": "Cartuchera MOZIONI de 3 servicios con diseño de gato en negro. Fabricada en material sintético premium resistente al agua. Tres compartimentos independientes con cremalleras metálicas de alta durabilidad. Interior organizado para lápices, bolígrafos, sacapuntas y más útiles escolares.",
@@ -74,7 +148,29 @@
                 "L": 22,
                 "A": 10,
                 "H": 8
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Color",
+                    "value": "Negro con diseño de gato"
+                },
+                {
+                    "label": "Material",
+                    "value": "Sintético premium impermeable"
+                },
+                {
+                    "label": "Compartimentos",
+                    "value": "3 independientes"
+                },
+                {
+                    "label": "Cremalleras",
+                    "value": "Metálicas de alta durabilidad"
+                },
+                {
+                    "label": "Capacidad",
+                    "value": "Hasta 30 lápices/bolígrafos"
+                }
+            ]
         },
         "010552": {
             "NOT": "Ferrero Rocher Cubo de 75 gramos. Exquisitos bombones de chocolate con avellana entera, relleno de crema de avellanas y cubiertos con chocolate con leche y trozos de avellana crujiente. Presentación elegante en cubo ideal para regalo. Producto importado con calidad premium garantizada.",
@@ -88,7 +184,29 @@
                 "L": 6,
                 "A": 6,
                 "H": 6
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Chocolate con avellana"
+                },
+                {
+                    "label": "Contenido",
+                    "value": "75g (6 bombones)"
+                },
+                {
+                    "label": "Tipo",
+                    "value": "Bombones premium"
+                },
+                {
+                    "label": "Origen",
+                    "value": "Italia"
+                },
+                {
+                    "label": "Presentación",
+                    "value": "Cubo elegante para regalo"
+                }
+            ]
         },
         "002918": {
             "NOT": "Kinder Joy Huevo Sorpresa de 20 gramos. Cada huevo contiene crema de leche y cacao con bolitas crujientes más una sorpresa coleccionable. Perfecto para niños: combina la diversión del juguete sorpresa con el delicioso sabor de Kinder. Ideal para loncheras o como premio especial.",
@@ -100,7 +218,29 @@
                 "L": 8,
                 "A": 5,
                 "H": 5
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Crema de leche y cacao"
+                },
+                {
+                    "label": "Contenido",
+                    "value": "20g + sorpresa"
+                },
+                {
+                    "label": "Tipo",
+                    "value": "Huevo sorpresa"
+                },
+                {
+                    "label": "Origen",
+                    "value": "Italia"
+                },
+                {
+                    "label": "Incluye",
+                    "value": "Juguete coleccionable"
+                }
+            ]
         },
         "012139": {
             "NOT": "Mochila EVEREST modelo 1045RN con diseño clásico y práctico. Múltiples compartimentos para organización perfecta. Tirantes acolchados anchos y espaldar con panel transpirable. Ideal para uso diario escolar o paseos. Fabricación robusta con materiales de primera calidad.",
@@ -114,7 +254,29 @@
                 "L": 40,
                 "A": 30,
                 "H": 14
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Color",
+                    "value": "Negro clásico"
+                },
+                {
+                    "label": "Material",
+                    "value": "Nylon de alta resistencia"
+                },
+                {
+                    "label": "Capacidad",
+                    "value": "22 Litros"
+                },
+                {
+                    "label": "Tirantes",
+                    "value": "Acolchados anchos"
+                },
+                {
+                    "label": "Espaldar",
+                    "value": "Panel transpirable"
+                }
+            ]
         },
         "025620": {
             "NOT": "Shampoo Herbal Essences fragancia Mango de 400ml. Fórmula enriquecida con extractos naturales de mango que nutre e hidrata profundamente el cabello. Deja el cabello suave, brillante y con un aroma tropical irresistible. Libre de parabenos. Para uso diario en todo tipo de cabello.",
@@ -126,7 +288,29 @@
                 "L": 20,
                 "A": 7,
                 "H": 5
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Fragancia",
+                    "value": "Mango tropical"
+                },
+                {
+                    "label": "Contenido",
+                    "value": "400ml"
+                },
+                {
+                    "label": "Tipo de cabello",
+                    "value": "Todo tipo"
+                },
+                {
+                    "label": "Beneficios",
+                    "value": "Nutre, hidrata y da brillo"
+                },
+                {
+                    "label": "Libre de",
+                    "value": "Parabenos"
+                }
+            ]
         },
         "010416": {
             "NOT": "Mochila VASARI negro con azul modelo VME171810. Diseño moderno y juvenil con compartimentos amplios. Tirantes ergonómicos acolchados y espaldar con sistema de ventilación. Bolsillos laterales de malla para hidratación. Refuerzos en costuras para mayor durabilidad. Ideal para secundaria y preparatoria.",
@@ -140,7 +324,33 @@
                 "L": 42,
                 "A": 30,
                 "H": 16
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Color",
+                    "value": "Negro con detalles azul"
+                },
+                {
+                    "label": "Material",
+                    "value": "Poliéster resistente"
+                },
+                {
+                    "label": "Capacidad",
+                    "value": "28 Litros"
+                },
+                {
+                    "label": "Compartimentos",
+                    "value": "4 con bolsillos laterales"
+                },
+                {
+                    "label": "Tirantes",
+                    "value": "Ergonómicos acolchados"
+                },
+                {
+                    "label": "Espaldar",
+                    "value": "Sistema de ventilación"
+                }
+            ]
         },
         "026996": {
             "NOT": "Chocolate Trento sabor Avellana de 32 gramos. Delicioso wafer crujiente cubierto de chocolate con leche y relleno cremoso de avellana. Textura perfecta que combina lo crocante con lo suave. Snack ideal para cualquier momento del día. Producto brasileño de alta calidad.",
@@ -152,7 +362,29 @@
                 "L": 15,
                 "A": 3,
                 "H": 2
-            }
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Avellana"
+                },
+                {
+                    "label": "Contenido",
+                    "value": "32g"
+                },
+                {
+                    "label": "Tipo",
+                    "value": "Wafer con chocolate"
+                },
+                {
+                    "label": "Origen",
+                    "value": "Brasil"
+                },
+                {
+                    "label": "Textura",
+                    "value": "Crujiente con relleno cremoso"
+                }
+            ]
         }
     },
     "default_values": {
@@ -160,11 +392,25 @@
         "FOT": "product-placeholder.png",
         "MRK": "GENERICO",
         "GAL": [],
-        "PES": 0,
+        "PES": 0.10,
         "DIM": {
-            "L": 0,
-            "A": 0,
-            "H": 0
-        }
+            "L": 15,
+            "A": 10,
+            "H": 5
+        },
+        "SPC": [
+            {
+                "label": "Categoría",
+                "value": "Papelería y útiles escolares"
+            },
+            {
+                "label": "Disponibilidad",
+                "value": "En stock"
+            },
+            {
+                "label": "Garantía",
+                "value": "Según fabricante"
+            }
+        ]
     }
 }

@@ -1,24 +1,28 @@
 // src/pedidos/pedidos.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Pedido, PedidoDocument } from './schemas/pedido.schema';
-import { CreatePedidoDto } from './dto/create-pedido.dto'; // Tendrás que crear este DTO
+import { CreatePedidoDto } from './dto/create-pedido.dto';
 import { ContadoresService } from '../../core/counters/contadores.service';
 import { UsuariosService } from '../users/usuarios.service';
 import { EmailService } from '../users/services/email.service';
-
 import { NotificationsService } from '../notifications/notifications.service';
+import { ErpSyncService } from '../erp/sync/erp-sync.service';
 
 @Injectable()
 export class PedidosService {
+  private readonly logger = new Logger(PedidosService.name);
+
   constructor(
     @InjectModel(Pedido.name) private pedidoModel: Model<PedidoDocument>,
     private contadoresService: ContadoresService,
     private usuariosService: UsuariosService,
     private emailService: EmailService,
-    private notificationsService: NotificationsService, // Inject it
+    private notificationsService: NotificationsService,
+    @Inject(forwardRef(() => ErpSyncService))
+    private erpSyncService: ErpSyncService,
   ) { }
 
   // Crea un nuevo pedido (usado en el POST)
@@ -49,6 +53,9 @@ export class PedidosService {
     // 4. Enviar correo de confirmación (Asíncrono)
     this.sendConfirmationEmail(createPedidoDto.usuario_id, savedPedido);
 
+    // 5. Enviar pedido al ERP DobraNet (Asíncrono con reintentos)
+    this.sendOrderToErpWithRetry(savedPedido);
+
     return savedPedido;
   }
 
@@ -63,7 +70,74 @@ export class PedidosService {
         await this.emailService.sendOrderConfirmation(user.email, order);
       }
     } catch (error) {
-      console.error('Error enviando correo de confirmación de pedido:', error);
+      this.logger.error('Error enviando correo de confirmación de pedido:', error);
+    }
+  }
+
+  /**
+   * Envía el pedido al ERP DobraNet con reintentos (max 3)
+   * HU79: Integración automática de pedidos con sistema externo
+   */
+  private async sendOrderToErpWithRetry(pedido: PedidoDocument, maxRetries = 3): Promise<void> {
+    const erpPayload = {
+      WEB_ID: pedido.numero_pedido_web,
+      ITEMS: pedido.items.map(item => ({
+        COD: item.codigo_dobranet,
+        UND: item.cantidad,
+        PRE: item.precio_unitario_aplicado,
+      })),
+      TOTAL: pedido.resumen_financiero.total_pagado,
+      CLI: pedido.usuario_id.toString(),
+    };
+
+    let attempts = 0;
+    let success = false;
+    let lastError = '';
+    let erpOrderNumber = '';
+
+    while (attempts < maxRetries && !success) {
+      attempts++;
+      try {
+        this.logger.log(`📤 Intentando enviar pedido #${pedido.numero_pedido_web} al ERP (intento ${attempts}/${maxRetries})...`);
+
+        const erpResponse = await this.erpSyncService.sendOrderToERP(erpPayload);
+
+        if (erpResponse.STA === 'OK') {
+          success = true;
+          erpOrderNumber = erpResponse['ORDVEN-NUM'] || '';
+          this.logger.log(`✅ Pedido #${pedido.numero_pedido_web} sincronizado con ERP: ${erpOrderNumber}`);
+        } else {
+          lastError = erpResponse.MSG || 'Error desconocido del ERP';
+          this.logger.warn(`⚠️ ERP rechazó pedido: ${lastError}`);
+        }
+      } catch (error) {
+        lastError = error.message || 'Error de conexión';
+        this.logger.error(`❌ Error enviando pedido al ERP (intento ${attempts}): ${lastError}`);
+
+        // Esperar antes de reintentar (backoff exponencial)
+        if (attempts < maxRetries) {
+          const waitTime = Math.pow(2, attempts) * 1000; // 2s, 4s, 8s
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+
+    // Actualizar el estado de integración en el pedido
+    await this.pedidoModel.updateOne(
+      { _id: pedido._id },
+      {
+        $set: {
+          'integracion_dobranet.sincronizado': success,
+          'integracion_dobranet.intentos': attempts,
+          'integracion_dobranet.fecha_sincronizacion': success ? new Date() : null,
+          'integracion_dobranet.orden_erp': erpOrderNumber,
+          'integracion_dobranet.ultimo_error': success ? null : lastError,
+        }
+      }
+    );
+
+    if (!success) {
+      this.logger.error(`❌ Pedido #${pedido.numero_pedido_web} NO pudo sincronizarse con ERP después de ${maxRetries} intentos`);
     }
   }
 

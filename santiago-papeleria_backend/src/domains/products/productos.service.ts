@@ -97,6 +97,13 @@ export class ProductosService {
       erpQuery.stock = { $gt: 0 };
     }
 
+    // Filter by specific IDs/SKUs
+    if (filterDto.ids && filterDto.ids.length > 0) {
+      if (!erpQuery.$or) erpQuery.$or = [];
+      // Support finding by ERP Code (SKU)
+      erpQuery.codigo = { $in: filterDto.ids };
+    }
+
     const skip = (Number(page) - 1) * Number(limit);
     let sortOptions: any = {};
     if (sortBy === 'price') sortOptions.precio_pvp = 1;
@@ -135,8 +142,22 @@ export class ProductosService {
       mergedProducts = mergedProducts.filter(p => p.isVisible === isVisibleBool);
     }
 
+    // Map to frontend friendly structure
+    const mappedData = mergedProducts.map(p => ({
+      _id: p._enrichedData?._id || p._erpData?._id,
+      codigo_interno: p.sku,
+      nombre: p.webName || p.erpName,
+      stock: p.stock,
+      precio: p.price,
+      marca: p.brand,
+      multimedia: {
+        principal: p.images[0] || ''
+      },
+      es_publico: p.isVisible
+    }));
+
     return {
-      data: mergedProducts,
+      data: mappedData,
       meta: {
         total,
         page: Number(page),
@@ -268,7 +289,10 @@ export class ProductosService {
       },
       es_publico: resolve.isVisible,
       stock: { total_disponible: resolve.stock },
-      precios: { pvp: resolve.price, pvm: resolve.wholesalePrice, incluye_iva: true }
+      precios: { pvp: resolve.price, pvm: resolve.wholesalePrice, incluye_iva: true },
+      specs: resolve._enrichedData?.specs || [],
+      weight_kg: resolve._enrichedData?.peso_kg || 0,
+      dimensions: resolve._enrichedData?.dimensiones || null
     };
   }
 
@@ -339,5 +363,40 @@ export class ProductosService {
       { $group: { _id: "$categoria_g2", count: { $sum: 1 } } },
       { $project: { _id: 0, name: "$_id", count: 1 } }
     ]).exec();
+  }
+
+  async getCategoriesStructure(): Promise<any[]> {
+    return this.productErpModel.aggregate([
+      { $match: { activo: true } },
+      {
+        $group: {
+          _id: { g1: "$categoria_g1", g2: "$categoria_g2" },
+          subgrupos: { $addToSet: "$categoria_g3" }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.g1",
+          grupos: {
+            $push: {
+              nombre: "$_id.g2",
+              subgrupos: "$subgrupos"
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          linea: "$_id",
+          grupos: 1
+        }
+      }
+    ]).exec();
+  }
+
+  async getBrands(): Promise<string[]> {
+    return this.productErpModel.distinct('marca', { activo: true }).exec();
   }
 }

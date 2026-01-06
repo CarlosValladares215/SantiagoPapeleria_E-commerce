@@ -59,6 +59,16 @@ export class ProductosController {
     return this.productosService.getCategoryCounts();
   }
 
+  @Get('structure')
+  async getCategoriesStructure(): Promise<any[]> {
+    return this.productosService.getCategoriesStructure();
+  }
+
+  @Get('brands')
+  async getBrands(): Promise<string[]> {
+    return this.productosService.getBrands();
+  }
+
   // --- Endpoints de Enriquecimiento (ADMIN) ---
 
   @Get('admin/search')
