@@ -50,7 +50,7 @@ export interface Order {
 })
 export class OrderService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:3000/api/pedidos';
+    private apiUrl = `${environment.baseApiUrl}/pedidos`;
 
     orders = signal<Order[]>([]);
 

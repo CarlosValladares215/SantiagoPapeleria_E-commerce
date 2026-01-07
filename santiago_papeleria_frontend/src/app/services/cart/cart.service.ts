@@ -39,10 +39,10 @@ export class CartService {
     private shippingService = inject(ShippingService);
 
     // API URLs
-    private apiUrl = 'http://localhost:3000/api/usuarios';
-    private ordersUrl = 'http://localhost:3000/api/pedidos';
-    private filesUrl = 'http://localhost:3000/api/files';
-    private shippingUrl = 'http://localhost:3000/api/shipping';
+    private apiUrl = `${environment.baseApiUrl}/usuarios`;
+    private ordersUrl = `${environment.baseApiUrl}/pedidos`;
+    private filesUrl = `${environment.baseApiUrl}/files`;
+    private shippingUrl = `${environment.baseApiUrl}/shipping`;
 
     // Sync with UiService
     private _isOpen = toSignal(this.uiService.isCartOpen$, { initialValue: false });

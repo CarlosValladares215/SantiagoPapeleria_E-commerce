@@ -4,13 +4,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 import { Usuario } from '../../models/usuario.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/api/usuarios';
-  private verifyApiUrl = 'http://localhost:3000/api/usuarios';
+  private apiUrl = `${environment.baseApiUrl}/usuarios`;
+  private verifyApiUrl = `${environment.baseApiUrl}/usuarios`;
 
   user = signal<Usuario | null>(null);
 
