@@ -73,4 +73,18 @@ export class ProductCard {
         if (this.product.stock < 20) return 'ri-alert-fill';
         return 'ri-checkbox-circle-fill';
     }
+
+    getOriginalPrice(): number {
+        if (this.product.promocion_activa) {
+            return this.product.promocion_activa.precio_original;
+        }
+        // Legacy discount calculation
+        if (this.product.originalPrice) {
+            return this.product.originalPrice;
+        }
+        if (this.product.discount) {
+            return this.product.price / (1 - (this.product.discount || 0) / 100);
+        }
+        return 0;
+    }
 }

@@ -5,7 +5,7 @@ import { Product } from '../models/product.model';
 @Pipe({
     name: 'displayPrice',
     standalone: true,
-    pure: false // Impure because auth state might change dynamically (though signals might handle it, impure is safer for now)
+    pure: true
 })
 export class DisplayPricePipe implements PipeTransform {
     private authService = inject(AuthService);

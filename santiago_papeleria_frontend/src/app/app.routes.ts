@@ -17,6 +17,7 @@ import { Register } from './pages/register/register';
 import { NotFound } from './pages/not-found/not-found';
 import { ADMIN_ROUTES } from './admin/admin.routes';
 import { VerifyEmailComponent } from './pages/auth/verify-email/verify-email.component';
+import { adminGuard, warehouseGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
 
@@ -24,13 +25,15 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: Admin,
+    canActivate: [adminGuard],
     children: ADMIN_ROUTES
   },
 
   // Warehouse Routes
   {
     path: 'warehouse',
-    loadChildren: () => import('./pages/warehouse/warehouse.routes').then(m => m.WAREHOUSE_ROUTES)
+    loadChildren: () => import('./pages/warehouse/warehouse.routes').then(m => m.WAREHOUSE_ROUTES),
+    canActivate: [warehouseGuard]
   },
 
   // Invoice (No Layout for printing)

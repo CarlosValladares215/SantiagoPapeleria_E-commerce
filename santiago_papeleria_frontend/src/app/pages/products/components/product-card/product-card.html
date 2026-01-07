@@ -44,7 +44,7 @@
                 <!-- Fallback to legacy discount -->
                 <span *ngIf="!product.promocion_activa && (product.originalPrice || product.discount)"
                     class="text-lg text-red-500 font-medium line-through decoration-2">
-                    ${{ (product.originalPrice || product.price / (1 - (product.discount || 0)/100)).toFixed(2) }}
+                    ${{ getOriginalPrice().toFixed(2) }}
                 </span>
 
                 <!-- Final Price -->

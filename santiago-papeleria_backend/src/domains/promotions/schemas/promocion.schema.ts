@@ -23,6 +23,9 @@ export class Promocion {
   @Prop({ required: true, unique: true })
   nombre: string;
 
+  @Prop({ required: true, unique: true })
+  codigo: string;
+
   @Prop()
   descripcion: string;
 

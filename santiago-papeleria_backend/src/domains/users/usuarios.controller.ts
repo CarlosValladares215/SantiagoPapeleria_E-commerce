@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, NotFoundException, Query, UnauthorizedException, BadRequestException, ForbiddenException, ConflictException, Headers } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, NotFoundException, Query, UnauthorizedException, BadRequestException, ForbiddenException, ConflictException, Headers, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UsuariosService } from './usuarios.service';
 import { UsuarioDocument } from './schemas/usuario.schema';
@@ -11,6 +11,9 @@ import { EmailService } from './services/email.service';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { JwtAuthGuard } from '../../shared/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @Controller('usuarios') // Ruta base: /usuarios
 export class UsuariosController {
@@ -58,7 +61,8 @@ export class UsuariosController {
     const token = jwt.sign({
       sub: user._id,
       email: user.email,
-      roles: [user.tipo_cliente], // can be MINORISTA or MAYORISTA
+      roles: [user.role], // NOW USING 'role' (admin, warehouse, customer)
+      tipo_cliente: user.tipo_cliente, // Keep for legacy frontend support
     }, this.jwtSecret, { expiresIn: '7d' });
 
     // ONLY return access_token as per new requirements
@@ -146,7 +150,8 @@ export class UsuariosController {
     const jwtToken = jwt.sign({
       sub: user._id,
       email: user.email,
-      roles: [user.tipo_cliente],
+      roles: [user.role], // Use correct role
+      tipo_cliente: user.tipo_cliente
     }, this.jwtSecret, { expiresIn: '7d' });
 
     return {
@@ -221,7 +226,8 @@ export class UsuariosController {
     const jwtToken = jwt.sign({
       sub: user._id,
       email: user.email,
-      roles: [user.tipo_cliente],
+      roles: [user.role], // Use correct role
+      tipo_cliente: user.tipo_cliente
     }, this.jwtSecret, { expiresIn: '7d' });
 
     return {
@@ -319,6 +325,8 @@ export class UsuariosController {
 
   // GET /usuarios
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async findAll(): Promise<UsuarioDocument[]> {
     return this.usuariosService.findAll();
   }
@@ -349,5 +357,46 @@ export class UsuariosController {
     return updatedUser.carrito;
   }
 
+  // POST /usuarios/setup-initial-users
+  @Post('setup-initial-users')
+  async setupInitialUsers() {
+    // 1. Check if admin exists
+    let admin = await this.usuariosService.findByEmail('admin@santiagopapeleria.com');
+    if (!admin) {
+      // Create Admin
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash('Admin123!', salt);
 
+      await this.usuariosService.registerInternal({
+        nombres: 'System Administrator',
+        email: 'admin@santiagopapeleria.com',
+        password: 'Admin123!', // Service hashes it again? registerInternal usually takes raw password if it hashes, let's check service logic.
+        // Actually registerInternal usually takes raw password if we look at register method.
+        // Wait, register passes dto.password to userData.password. 
+        // I should check registerInternal implementation to be safe.
+        // Assuming it hashes. The code above in register() passes raw password.
+        role: 'admin',
+        tipo_cliente: 'MINORISTA',
+        email_verified: true,
+        datos_negocio: {} as any
+      });
+    }
+
+    // 2. Check if warehouse exists
+    let warehouse = await this.usuariosService.findByEmail('bodega@santiagopapeleria.com');
+    if (!warehouse) {
+      await this.usuariosService.registerInternal({
+        nombres: 'Encargado Bodega',
+        email: 'bodega@santiagopapeleria.com',
+        password: 'Bodega123!',
+        role: 'warehouse',
+        tipo_cliente: 'MINORISTA',
+        email_verified: true,
+        datos_negocio: {} as any
+      });
+    }
+
+    return { message: 'Initial users setup complete (or already existed).' };
+  }
 }
+

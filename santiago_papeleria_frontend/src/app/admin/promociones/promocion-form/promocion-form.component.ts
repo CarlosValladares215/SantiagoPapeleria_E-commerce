@@ -1,10 +1,18 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
+import { Component, OnInit, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, FormControl, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PromocionesService } from '../../../services/promociones.service';
 import { ProductService } from '../../../services/product/product.service';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+// import Swal from 'sweetalert2';
+
+// Custom Validator
+const dateRangeValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
+    const start = group.get('fecha_inicio')?.value;
+    const end = group.get('fecha_fin')?.value;
+    return start && end && new Date(end) <= new Date(start) ? { dateRangeInvalid: true } : null;
+};
 
 @Component({
     selector: 'app-promocion-form',
@@ -15,7 +23,8 @@ export class PromocionFormComponent implements OnInit {
     form: FormGroup;
     isEdit = false;
     promotionId: string | null = null;
-    loading = false;
+    loading = signal<boolean>(false);
+    today = new Date().toISOString().split('T')[0];
 
     // Categories & Brands Data (for dropdowns)
     categoryStructure: any[] = [];
@@ -54,7 +63,7 @@ export class PromocionFormComponent implements OnInit {
             fecha_inicio: ['', Validators.required],
             fecha_fin: ['', Validators.required],
             activa: [true]
-        });
+        }, { validators: dateRangeValidator });
 
         this.setupProductSearch();
     }
@@ -206,7 +215,7 @@ export class PromocionFormComponent implements OnInit {
     }
 
     loadPromotion(id: string) {
-        this.loading = true;
+        this.loading.set(true);
         this.promocionesService.getById(id).subscribe({
             next: (promo: any) => {
                 // Convert dates to YYYY-MM-DD format for form patchValue safely
@@ -253,41 +262,51 @@ export class PromocionFormComponent implements OnInit {
                 }
 
                 this.syncFiltro();
-                this.loading = false;
+                this.syncFiltro();
+                this.loading.set(false);
                 this.cdr.detectChanges();
             },
             error: (err) => {
                 console.error(err);
-                this.loading = false;
+                this.loading.set(false);
                 this.cdr.detectChanges();
+                alert('Error: No se pudo cargar la promoción');
             }
         });
     }
 
     loadSelectedProductsDetails(codigos: string[]) {
-        // Implementación mínima para mostrar nombres reales en los chips al editar
-        // This approach might be inefficient for many products. Consider a single API call if available.
-        codigos.forEach(codigo => {
-            this.productService.searchAdminProducts(codigo).subscribe(res => {
-                const found = res.data.find((p: any) => p.codigo_interno === codigo);
-                if (found) {
-                    const idx = this.selectedProducts.findIndex(p => p.codigo_interno === codigo);
-                    if (idx !== -1) {
-                        this.selectedProducts[idx] = found;
-                        this.cdr.detectChanges();
-                    }
-                }
-            });
+        // [PERFORMANCE FIX] Batch Request
+        if (!codigos || codigos.length === 0) return;
+
+        this.productService.getAdminProductsByIds(codigos).subscribe({
+            next: (res: any) => {
+                const products = res.data || [];
+                // Map to required structure
+                this.selectedProducts = products.map((p: any) => ({
+                    ...p,
+                    codigo_interno: p.sku || p.codigo_interno
+                }));
+                this.cdr.detectChanges();
+            },
+            error: (err) => console.error('Error batch loading products', err)
         });
     }
 
     save() {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
+            if (this.form.errors?.['dateRangeInvalid']) {
+                // Swal.fire('Error', 'La fecha de fin debe ser posterior a la de inicio', 'error');
+                alert('Error: La fecha de fin debe ser posterior a la de inicio');
+            } else {
+                // Swal.fire('Error', 'Por favor, completa los campos requeridos', 'error');
+                alert('Error: Por favor, completa los campos requeridos');
+            }
             return;
         }
 
-        this.loading = true;
+        this.loading.set(true);
         const formValue = this.form.value;
 
         // Ensure filtro arrays are current
@@ -300,16 +319,38 @@ export class PromocionFormComponent implements OnInit {
             }
         };
 
+        const observer = {
+            next: () => {
+                this.loading.set(false);
+                this.cdr.detectChanges(); // Force UI update
+
+                // Swal.fire({
+                //     title: '¡Guardado!',
+                //     text: 'La promoción se ha registrado correctamente',
+                //     icon: 'success',
+                //     timer: 2000,
+                //     showConfirmButton: false
+                // }).then(() => {
+                //     this.router.navigate(['/admin/promociones']);
+                // });
+                alert('¡Guardado! La promoción se ha registrado correctamente');
+                this.router.navigate(['/admin/promociones']);
+            },
+            error: (err: any) => {
+                this.loading.set(false);
+                this.cdr.detectChanges();
+
+                const errorMsg = err.error?.message || 'Hubo un error al procesar la solicitud';
+                // Swal.fire('Error', errorMsg, 'error');
+                alert('Error: ' + errorMsg);
+                console.error(err);
+            }
+        };
+
         if (this.isEdit && this.promotionId) {
-            this.promocionesService.update(this.promotionId, promoData).subscribe({
-                next: () => this.router.navigate(['/admin/promociones']),
-                error: (err: any) => { console.error(err); this.loading = false; }
-            });
+            this.promocionesService.update(this.promotionId, promoData).subscribe(observer);
         } else {
-            this.promocionesService.create(promoData).subscribe({
-                next: () => this.router.navigate(['/admin/promociones']),
-                error: (err: any) => { console.error(err); this.loading = false; }
-            });
+            this.promocionesService.create(promoData).subscribe(observer);
         }
     }
 }

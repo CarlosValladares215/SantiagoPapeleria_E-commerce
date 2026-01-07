@@ -32,3 +32,20 @@ export const adminGuard: CanActivateFn = (route, state) => {
     router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
 };
+
+export const warehouseGuard: CanActivateFn = (route, state) => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+
+    if (authService.isAuthenticated() && authService.isWarehouse()) {
+        return true;
+    }
+
+    if (authService.isAuthenticated()) {
+        router.navigate(['/']);
+        return false;
+    }
+
+    router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
+    return false;
+};
