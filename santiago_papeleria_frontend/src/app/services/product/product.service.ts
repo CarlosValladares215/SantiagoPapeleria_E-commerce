@@ -41,6 +41,7 @@ interface ProductResponse {
   weight?: number;
   dimensions?: any;
   allowCustomMessage?: boolean;
+  promocion_activa?: any;
 
   // Additional fields that might come from backend
   description?: string;
@@ -188,6 +189,7 @@ export class ProductService {
       wholesalePrice: raw.wholesalePrice,
       vat_included: raw.vat_included,
       isOffer: raw.isOffer || false,
+      promocion_activa: raw.promocion_activa,
 
       // ✅ FIX: Handle Mixed Stock Types (Number vs Object from DB update)
       stock: (typeof raw.stock === 'object' && raw.stock !== null)

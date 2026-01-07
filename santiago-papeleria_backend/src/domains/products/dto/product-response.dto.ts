@@ -108,8 +108,9 @@ export class ProductResponseDto {
   // Campos de estado requeridos por Angular
   @Expose()
   @Transform(({ obj }) => {
-    // Si tiene tiers de precio, es una oferta (al menos para mayoristas)
+    // Si tiene tiers de precio O una promoción activa, es una oferta
     if (obj.priceTiers && obj.priceTiers.length > 0) return true;
+    if (obj.promocion_activa) return true;
     return false;
   })
   isOffer: boolean;
@@ -125,6 +126,11 @@ export class ProductResponseDto {
   @Expose()
   @Transform(({ obj }) => obj.priceTiers || [])
   priceTiers: any[];
+
+  // --- PROMOTIONS ---
+  @Expose()
+  @Type(() => Object)
+  promocion_activa?: any;
 
   // --- ENRICHED FIELDS (FIX) ---
   @Expose()

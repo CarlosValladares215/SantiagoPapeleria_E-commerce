@@ -142,18 +142,22 @@ export class ProductosService {
       mergedProducts = mergedProducts.filter(p => p.isVisible === isVisibleBool);
     }
 
-    // Map to frontend friendly structure
+    // Map to frontend friendly structure (MATCHING Frontend MergedProduct Interface)
     const mappedData = mergedProducts.map(p => ({
       _id: p._enrichedData?._id || p._erpData?._id,
-      codigo_interno: p.sku,
-      nombre: p.webName || p.erpName,
+      sku: p.sku, // Frontend uses 'sku'
+      erpName: p.erpName, // Frontend uses 'erpName'
+      webName: p.webName, // Frontend uses 'webName'
+      nombre: p.webName || p.erpName, // Fallback/Display name
       stock: p.stock,
-      precio: p.price,
-      marca: p.brand,
+      price: p.price, // Frontend uses 'price' (not precio)
+      brand: p.brand, // Frontend uses 'brand'
       multimedia: {
         principal: p.images[0] || ''
       },
-      es_publico: p.isVisible
+      isVisible: p.isVisible, // Frontend uses 'isVisible'
+      enrichmentStatus: p.enrichmentStatus, // Frontend uses 'enrichmentStatus' for badges
+      promocion_activa: p._enrichedData?.promocion_activa
     }));
 
     return {
@@ -244,7 +248,8 @@ export class ProductosService {
         galeria: p.images.slice(1)
       },
       es_publico: true,
-      enriquecido: true
+      enriquecido: true,
+      promocion_activa: p._enrichedData?.promocion_activa
     }));
   }
 
@@ -292,7 +297,8 @@ export class ProductosService {
       precios: { pvp: resolve.price, pvm: resolve.wholesalePrice, incluye_iva: true },
       specs: resolve._enrichedData?.specs || [],
       weight_kg: resolve._enrichedData?.peso_kg || 0,
-      dimensions: resolve._enrichedData?.dimensiones || null
+      dimensions: resolve._enrichedData?.dimensiones || null,
+      promocion_activa: resolve._enrichedData?.promocion_activa
     };
   }
 

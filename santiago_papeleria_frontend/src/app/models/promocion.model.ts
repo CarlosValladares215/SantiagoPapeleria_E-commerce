@@ -4,12 +4,10 @@ export interface Promocion {
     descripcion?: string;
     tipo: 'porcentaje' | 'valor_fijo';
     valor: number;
-    ambito: 'global' | 'categoria' | 'marca' | 'productos';
+    ambito: 'global' | 'categoria' | 'marca' | 'productos' | 'mixto';
     filtro?: {
-        categoria_g1?: string;
-        categoria_g2?: string;
-        categoria_g3?: string;
-        marca?: string;
+        categorias?: string[];
+        marcas?: string[];
         codigos_productos?: string[];
     };
     fecha_inicio: Date | string;

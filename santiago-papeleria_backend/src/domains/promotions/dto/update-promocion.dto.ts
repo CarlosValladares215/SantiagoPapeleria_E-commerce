@@ -1,25 +1,19 @@
-
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsBoolean, IsDateString, ValidateNested, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsBoolean, IsDateString, ValidateNested, Min, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class FiltroPromocionDto {
     @IsOptional()
-    @IsString()
-    categoria_g1?: string;
+    @IsArray()
+    @IsString({ each: true })
+    categorias?: string[];
 
     @IsOptional()
-    @IsString()
-    categoria_g2?: string;
+    @IsArray()
+    @IsString({ each: true })
+    marcas?: string[];
 
     @IsOptional()
-    @IsString()
-    categoria_g3?: string;
-
-    @IsOptional()
-    @IsString()
-    marca?: string;
-
-    @IsOptional()
+    @IsArray()
     @IsString({ each: true })
     codigos_productos?: string[];
 }
@@ -44,7 +38,7 @@ export class UpdatePromocionDto {
     valor?: number;
 
     @IsOptional()
-    @IsEnum(['global', 'categoria', 'marca', 'productos'])
+    @IsEnum(['global', 'categoria', 'marca', 'productos', 'mixto'])
     ambito?: string;
 
     @IsOptional()

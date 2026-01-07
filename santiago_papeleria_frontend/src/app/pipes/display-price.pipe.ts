@@ -11,7 +11,10 @@ export class DisplayPricePipe implements PipeTransform {
     private authService = inject(AuthService);
 
     transform(product: Product | any): number {
-        if (!product) return 0;
+        if (product === null || product === undefined) return 0;
+
+        // If it's already a number (like a promotional price passed directly), return it
+        if (typeof product === 'number') return product;
 
         // Check if user is mayorista
         const isMayorista = this.authService.isMayorista();

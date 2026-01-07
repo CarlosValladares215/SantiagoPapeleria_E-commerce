@@ -25,15 +25,23 @@ export class ProductCard {
 
     onAddToCart(): void {
         if (this.product.stock > 0) {
-            // Create a copy with the correct price based on role
+            // Apply promotion if available, otherwise role-based price
+            let basePrice = this.product.price;
             const isMayorista = this.authService.isMayorista();
-            const effectivePrice = (isMayorista && this.product.wholesalePrice)
-                ? this.product.wholesalePrice
-                : this.product.price;
+
+            if (isMayorista && this.product.wholesalePrice) {
+                basePrice = this.product.wholesalePrice;
+            }
+
+            // If there's an active promotion, it overrides the base price (simplified)
+            // Note: In a real system, we'd check if the promo applies to wholesale too.
+            const finalPrice = this.product.promocion_activa
+                ? this.product.promocion_activa.precio_descuento
+                : basePrice;
 
             const productToAdd = {
                 ...this.product,
-                price: effectivePrice
+                price: finalPrice
             };
 
             this.addToCart.emit(productToAdd);

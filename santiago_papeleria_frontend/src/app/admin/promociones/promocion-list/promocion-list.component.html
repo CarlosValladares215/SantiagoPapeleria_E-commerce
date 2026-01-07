@@ -55,10 +55,16 @@
                     <td class="px-5 py-5 border-b border-gray-200 text-sm w-32">
                         <span class="capitalize">{{ promo.ambito }}</span>
                         <div *ngIf="promo.ambito === 'categoria'" class="text-xs text-gray-500">
-                            {{ promo.filtro?.categoria_g1 || 'G1' }} > {{ promo.filtro?.categoria_g2 || 'G2' }}
+                            {{ promo.filtro?.categorias?.join(', ') || 'N/A' }}
                         </div>
                         <div *ngIf="promo.ambito === 'marca'" class="text-xs text-gray-500">
-                            {{ promo.filtro?.marca }}
+                            {{ promo.filtro?.marcas?.join(', ') || 'N/A' }}
+                        </div>
+                        <div *ngIf="promo.ambito === 'productos'" class="text-xs text-gray-500">
+                            {{ promo.filtro?.codigos_productos?.length }} productos
+                        </div>
+                        <div *ngIf="promo.ambito === 'mixto'" class="text-xs text-gray-500">
+                            Configuración múltiple
                         </div>
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 text-sm whitespace-nowrap">

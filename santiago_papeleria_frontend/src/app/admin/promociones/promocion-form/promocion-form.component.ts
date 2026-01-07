@@ -207,28 +207,77 @@ export class PromocionFormComponent implements OnInit {
 
     loadPromotion(id: string) {
         this.loading = true;
-        this.promocionesService.getById(id).subscribe((promo: any) => {
-            const startDate = new Date(promo.fecha_inicio).toISOString().split('T')[0];
-            const endDate = new Date(promo.fecha_fin).toISOString().split('T')[0];
+        this.promocionesService.getById(id).subscribe({
+            next: (promo: any) => {
+                // Convert dates to YYYY-MM-DD format for form patchValue safely
+                let startDate = '';
+                let endDate = '';
+                try {
+                    if (promo.fecha_inicio) {
+                        const d = new Date(promo.fecha_inicio);
+                        if (!isNaN(d.getTime())) {
+                            startDate = d.toISOString().split('T')[0];
+                        }
+                    }
+                    if (promo.fecha_fin) {
+                        const d = new Date(promo.fecha_fin);
+                        if (!isNaN(d.getTime())) {
+                            endDate = d.toISOString().split('T')[0];
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing dates:', e);
+                }
 
-            this.form.patchValue({
-                ...promo,
-                fecha_inicio: startDate,
-                fecha_fin: endDate
-            });
-
-            // Populate multi-select arrays from loaded data
-            this.selectedCategories = promo.filtro?.categorias || [];
-            this.selectedBrands = promo.filtro?.marcas || [];
-
-            // Load product details for SKUs
-            if (promo.filtro?.codigos_productos && promo.filtro.codigos_productos.length > 0) {
-                this.productService.getAdminProductsByIds(promo.filtro.codigos_productos).subscribe((res: any) => {
-                    this.selectedProducts = res.data || [];
+                this.form.patchValue({
+                    ...promo,
+                    fecha_inicio: startDate,
+                    fecha_fin: endDate
                 });
-            }
 
-            this.loading = false;
+                // Cargar arrays de multi-selección
+                if (promo.filtro) {
+                    this.selectedCategories = promo.filtro.categorias || [];
+                    this.selectedBrands = promo.filtro.marcas || [];
+
+                    // Mapear códigos a objetos de producto si existen
+                    if (promo.filtro.codigos_productos?.length > 0) {
+                        this.selectedProducts = promo.filtro.codigos_productos.map((codigo: string) => ({
+                            codigo_interno: codigo,
+                            nombre: 'Cargando...' // Temporal hasta que busquemos nombres si es necesario
+                        }));
+
+                        // Opcional: Cargar detalles reales de productos seleccionados
+                        this.loadSelectedProductsDetails(promo.filtro.codigos_productos);
+                    }
+                }
+
+                this.syncFiltro();
+                this.loading = false;
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error(err);
+                this.loading = false;
+                this.cdr.detectChanges();
+            }
+        });
+    }
+
+    loadSelectedProductsDetails(codigos: string[]) {
+        // Implementación mínima para mostrar nombres reales en los chips al editar
+        // This approach might be inefficient for many products. Consider a single API call if available.
+        codigos.forEach(codigo => {
+            this.productService.searchAdminProducts(codigo).subscribe(res => {
+                const found = res.data.find((p: any) => p.codigo_interno === codigo);
+                if (found) {
+                    const idx = this.selectedProducts.findIndex(p => p.codigo_interno === codigo);
+                    if (idx !== -1) {
+                        this.selectedProducts[idx] = found;
+                        this.cdr.detectChanges();
+                    }
+                }
+            });
         });
     }
 

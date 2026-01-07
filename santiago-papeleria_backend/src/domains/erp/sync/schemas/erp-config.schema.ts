@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class ErpConfig extends Document {
-    @Prop({ required: true, default: 'https://api.dobranet.com' })
+    @Prop({ required: true, default: 'http://localhost:4000/matrix/ports/acme/af58yz' }) // Default to Simulator
     baseUrl: string;
 
     @Prop({ required: false, default: '' })

@@ -1,0 +1,15 @@
+{
+    "nombre": "CURL TEST PROMO",
+    "descripcion": "desc",
+    "tipo": "porcentaje",
+    "valor": 10,
+    "ambito": "global",
+    "fecha_inicio": "2026-01-01T00:00:00.000Z",
+    "fecha_fin": "2026-12-31T23:59:59.000Z",
+    "activa": true,
+    "filtro": {
+        "categorias": [],
+        "marcas": [],
+        "codigos_productos": []
+    }
+}
