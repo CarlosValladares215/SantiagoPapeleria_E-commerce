@@ -66,11 +66,36 @@ export class ProductsComponent implements OnInit {
         public productService: ProductService,
         private cartService: CartService
     ) {
-        // Handle query params for search
+        // Handle query params for search and filters
         this.route.queryParams.subscribe(params => {
-            if (params['search']) {
-                this.filters.update(f => ({ ...f, searchTerm: params['search'] }));
+            console.log('ProductsComponent: Query Params changed', params);
+
+            // 1. Extract params
+            const search = params['search'] || '';
+            // Map 'categoria' (URL) to 'category' (Filter) - Support both
+            const category = params['categoria'] || params['category'] || '';
+            const brand = params['brand'] || '';
+            const sort = params['sort'] || 'name';
+            const inStock = params['inStock'] === 'true';
+
+            // Price Range Parse
+            let priceRange: [number, number] = [0, 100];
+            if (params['minPrice'] && params['maxPrice']) {
+                priceRange = [Number(params['minPrice']), Number(params['maxPrice'])];
             }
+
+            // 2. Update Filters Signal (This triggers the effect)
+            this.filters.set({
+                searchTerm: search,
+                category: category,
+                brand: brand,
+                sortBy: sort,
+                inStock: inStock,
+                priceRange: priceRange
+            });
+
+            // 3. Reset pagination
+            this.currentPage.set(1);
         });
 
         // Trigger fetch when filters change
@@ -78,7 +103,8 @@ export class ProductsComponent implements OnInit {
             const currentFilters = this.filters();
             console.log('Filters changed, fetching products:', currentFilters);
             this.productService.fetchProducts(currentFilters);
-            this.currentPage.set(1); // Reset to page 1 on filter change
+            // Note: currentPage reset is also handled in the effect in the original code, 
+            // but doing it in params subscription ensures it resets on navigation too.
         });
     }
 

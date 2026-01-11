@@ -140,6 +140,11 @@ export class Product implements OnDestroy {
     const p = this.productData();
     if (!p) return 0;
 
+    // Check for active promotion first (Overrides everything)
+    if (p.promocion_activa) {
+      return p.promocion_activa.precio_descuento;
+    }
+
     const v = this.selectedVariant();
     let price = v && v.precio_especifico ? v.precio_especifico : (p.basePrice || p.price);
 
