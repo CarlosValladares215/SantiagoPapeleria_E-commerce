@@ -116,7 +116,7 @@ class DatosDevolucion {
 }
 
 // Definición principal del Schema
-@Schema()
+@Schema({ collection: 'pedidos' })
 export class Pedido {
   @Prop({ required: true, unique: true })
   numero_pedido_web: number; // Corresponde a "numero_pedido_web"
@@ -149,5 +149,7 @@ export class Pedido {
   @Prop({ type: DatosDevolucion, default: null })
   datos_devolucion: DatosDevolucion;
 }
+
+export type PedidoStatus = 'PAGADO' | 'PENDIENTE' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO';
 
 export const PedidoSchema = SchemaFactory.createForClass(Pedido);

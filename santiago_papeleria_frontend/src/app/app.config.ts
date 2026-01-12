@@ -1,13 +1,12 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './interceptors/auth.interceptor';
 
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import { LucideAngularModule, University, Plus, Pencil, Trash2, Banknote, Store, Info, Save, MessageCircle, X, Send, Minimize2 } from 'lucide-angular';
 import { routes } from './app.routes';
-import { LucideAngularModule, MessageCircle, X, Send, Minimize2 } from 'lucide-angular';
-import { importProvidersFrom } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideCharts(withDefaultRegisterables()),
-    importProvidersFrom(LucideAngularModule.pick({ MessageCircle, X, Send, Minimize2 }))
+    importProvidersFrom(LucideAngularModule.pick({ MessageCircle, X, Send, Minimize2 })),
+    importProvidersFrom(LucideAngularModule.pick({ University, Plus, Pencil, Trash2, Banknote, Store, Info, Save }))
   ]
 };

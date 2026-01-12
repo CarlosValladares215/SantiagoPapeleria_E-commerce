@@ -9,6 +9,7 @@ export interface ShippingConfig {
     ratePerKg: number;
     ivaRate: number;
     isActive: boolean;
+    freeShippingThreshold?: number; // Optional until backend fully propagated or default 0
 }
 
 export interface ShippingZone {

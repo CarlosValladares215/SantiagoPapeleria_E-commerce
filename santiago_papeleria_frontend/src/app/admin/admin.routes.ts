@@ -23,6 +23,10 @@ export const ADMIN_ROUTES: Routes = [
     { path: 'promociones', loadChildren: () => import('./promociones/promociones.module').then(m => m.PromocionesModule) },
 
 
+    // Payments Config
+    { path: 'payments', loadComponent: () => import('./payments/payment-config/payment-config.component').then(m => m.PaymentConfigComponent) },
+
+
     // Reports
     { path: 'reports', loadComponent: () => import('./pages/reports/sales-dashboard/sales-dashboard.component').then(m => m.SalesDashboardComponent) },
 

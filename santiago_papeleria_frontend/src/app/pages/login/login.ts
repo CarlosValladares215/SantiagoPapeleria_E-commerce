@@ -30,16 +30,22 @@ export class Login {
     this.isLoading = true;
 
     this.authService.login(this.formData).subscribe({
-      next: (user) => {
+      next: ({ user, token }) => {
         this.isLoading = false;
         console.log('Login exitoso:', user);
         // Session set automatically by service
 
-        if (this.authService.isAdmin()) {
-          this.router.navigate(['/admin/dashboard']);
-        } else if (this.authService.isWarehouse()) {
-          this.router.navigate(['/warehouse/dashboard']);
+        if (user.role === 'admin') {
+          // Open Admin Panel in new tab with token handoff because session lives in sessionStorage
+          window.open(`/admin/dashboard?token=${token}`, '_blank');
+          // Redirect current page to home (not logged in as client)
+          this.router.navigate(['/']);
+        } else if (user.role === 'warehouse') {
+          // Open Warehouse Panel in new tab
+          window.open(`/warehouse/dashboard?token=${token}`, '_blank');
+          this.router.navigate(['/']);
         } else {
+          // Client login - proceed as normal
           this.router.navigate(['/']);
         }
       },

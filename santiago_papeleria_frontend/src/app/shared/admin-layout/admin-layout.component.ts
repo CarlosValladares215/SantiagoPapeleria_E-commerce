@@ -49,6 +49,11 @@ export class AdminLayoutComponent {
             path: '/admin/shipping'
         },
         {
+            icon: 'ri-secure-payment-line',
+            label: 'Pagos',
+            path: '/admin/payments'
+        },
+        {
             icon: 'ri-refresh-line',
             label: 'Sincronización ERP',
             path: '/admin/erp-sync',

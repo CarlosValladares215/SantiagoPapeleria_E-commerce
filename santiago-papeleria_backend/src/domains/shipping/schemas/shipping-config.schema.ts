@@ -20,6 +20,9 @@ export class ShippingConfig {
 
     @Prop({ required: true, default: true })
     isActive: boolean;
+
+    @Prop({ required: true, default: 0 })
+    freeShippingThreshold: number; // 0 = disabled
 }
 
 export const ShippingConfigSchema = SchemaFactory.createForClass(ShippingConfig);

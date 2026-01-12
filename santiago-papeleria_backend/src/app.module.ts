@@ -16,6 +16,8 @@ import { NotificationsModule } from './domains/notifications/notifications.modul
 import { ShippingModule } from './domains/shipping/shipping.module';
 import { ReportsModule } from './domains/reports/reports.module';
 import { ChatbotModule } from './domains/chatbot/chatbot.module';
+import { PaymentsModule } from './domains/payments/payments.module';
+
 @Module({
   imports: [
     // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
@@ -29,6 +31,7 @@ import { ChatbotModule } from './domains/chatbot/chatbot.module';
     ErpSyncModule,
     ShippingModule,
     ReportsModule,
+    PaymentsModule,
     FilesModule,
     ChatbotModule,
     ConfigModule.forRoot({

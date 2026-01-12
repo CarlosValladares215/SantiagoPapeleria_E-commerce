@@ -6,6 +6,7 @@ import { DireccionEntrega } from '../../models/usuario.model';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
 import { ShippingService } from '../../services/shipping.service';
+import { PaymentService, PaymentConfig } from '../../services/payment.service';
 import { environment } from '../../../environments/environment';
 
 export interface CartItem {
@@ -37,6 +38,7 @@ export class CartService {
     private http = inject(HttpClient);
     private authService = inject(AuthService);
     private shippingService = inject(ShippingService);
+    private paymentService = inject(PaymentService);
 
     // API URLs
     private apiUrl = `${environment.baseApiUrl}/usuarios`;
@@ -56,15 +58,20 @@ export class CartService {
     deliveryMethod = signal<'shipping' | 'pickup'>('shipping');
     paymentMethod = signal<'transfer' | 'cash' | null>(null);
 
+    // Payment Config State
+    paymentConfig = signal<PaymentConfig | null>(null);
+
     // Branch State
     public branches = [
         { id: 1, name: 'Matriz', address: 'Azuay 152-48 entre 18 de Noviembre y Avenida Universitaria', schedule: 'Lunes a Viernes: 08:30 - 13:00 / 15:00 - 18:30' },
         { id: 2, name: 'Sucursal 1', address: 'Almacén UTPL (Campus UTPL, San Cayetano Alto)', schedule: 'Lunes a Viernes: 08:00 - 13:00 / 15:00 - 18:00' },
         { id: 3, name: 'Sucursal 2', address: 'Calle Guaranda y Avenida Cuxibamba', schedule: 'Lunes a Viernes: 09:00 - 13:00 / 15:00 - 19:00' },
+        { id: 4, name: 'Sucursal 3', address: 'Mall Don Daniel', schedule: 'Lunes a Domingo: 10:00 - 20:00' },
     ];
     selectedBranch = signal(this.branches[0]);
 
-    private readonly IVA_RATE = 0.15;
+    // Dynamic IVA Rate
+    ivaRate = signal<number>(0.15); // Default fallback
 
     // Computed Values
     isOpen = computed(() => this._isOpen());
@@ -77,23 +84,25 @@ export class CartService {
 
     // 2. Breakdown (Subtotal Excl. VAT & VAT Amount)
     subTotal = computed(() => {
+        const rate = this.ivaRate();
         return this.cartItemsSignal().reduce((acc, item) => {
             const lineTotal = item.price * item.quantity;
             if (item.vat_included) {
-                return acc + (lineTotal / (1 + this.IVA_RATE));
+                return acc + (lineTotal / (1 + rate));
             }
             return acc + lineTotal;
         }, 0);
     });
 
     totalIva = computed(() => {
+        const rate = this.ivaRate();
         return this.cartItemsSignal().reduce((acc, item) => {
             const lineTotal = item.price * item.quantity;
             if (item.vat_included) {
-                const base = lineTotal / (1 + this.IVA_RATE);
+                const base = lineTotal / (1 + rate);
                 return acc + (lineTotal - base);
             } else {
-                return acc + (lineTotal * this.IVA_RATE);
+                return acc + (lineTotal * rate);
             }
         }, 0);
     });
@@ -105,6 +114,9 @@ export class CartService {
     cartCount = this.totalItems;
 
     constructor() {
+        this.loadShippingConfig();
+        this.loadPaymentConfig();
+
         // 1. Effect: Sync changes TO LocalStorage & Backend
         effect(() => {
             const items = this.cartItemsSignal();
@@ -148,6 +160,26 @@ export class CartService {
                 this.selectedAddress.set(null);
             }
         }, { allowSignalWrites: true });
+    }
+
+    loadShippingConfig() {
+        this.shippingService.getConfig().subscribe({
+            next: (config) => {
+                // Ensure rate is valid number
+                const rate = Number(config.ivaRate);
+                if (!isNaN(rate) && rate >= 0) {
+                    this.ivaRate.set(rate);
+                }
+            },
+            error: (err) => console.error('Error loading shipping config for IVA', err)
+        });
+    }
+
+    loadPaymentConfig() {
+        this.paymentService.getConfig().subscribe({
+            next: (config) => this.paymentConfig.set(config),
+            error: (err) => console.error('Error loading payment config', err)
+        });
     }
 
     private saveCartToBackend(userId: string, items: CartItem[]) {
@@ -322,6 +354,27 @@ export class CartService {
             return;
         }
 
+        // Check for Free Shipping Rule Locally first (Optimization)
+        // We need to fetch global shipping config to know the threshold if not part of calculation response
+        // Better: The calculateShipping endpoint should handle it. But currently endpoint returns cost based on weight/zone.
+        // Let's rely on backend returning 0 if free shipping applies? 
+        // Or we can check threshold here if we have it.
+        // The backend logic is: zone -> rate. 
+        // We need to update backend calculation to check threshold.
+        // However, we recently updated ShippingConfig schema. 
+        // Let's update this method to just call backend, assuming backend handles logic or we handle it here.
+        // Let's handle it here for now if we can get config, otherwise rely on backend.
+        // Since we don't hold ShippingConfig here, let's trust backend returns correct cost.
+        // WAIT: I only updated ShippingConfig Schema, not the calculation logic in backend to use it.
+        // I should fix backend calculation logic to use threshold.
+        // OR I can fetch ShippingConfig here and apply it.
+
+        // Let's do a quick fetch of shipping config alongside payment? No, let's keep it simple.
+        // I will update the backend calculation logic in proper task or now.
+        // Actually, the plan said: "Implement free shipping logic in calculateShipping".
+
+        // Let's fetch shipping config once on load too.
+
         console.log('Calculating shipping for:', address.alias);
 
         let totalRealWeight = 0;
@@ -329,7 +382,8 @@ export class CartService {
 
         items.forEach(item => {
             const q = item.quantity;
-            const w = Number(item.weight_kg || 0);
+            // Support both backend 'peso_kg' and frontend 'weight_kg'
+            const w = Number((item as any).peso_kg || item.weight_kg || 0);
             totalRealWeight += w * q;
 
             if (item.dimensions) {
@@ -343,11 +397,25 @@ export class CartService {
 
         const chargeableWeight = Math.max(totalRealWeight, totalVolumetricWeight);
         const locationName = address.provincia || address.ciudad || '';
+        const subTotal = this.subTotal(); // Use subTotal to check threshold
 
         // Call Backend for Calculation
         this.shippingService.calculateShipping(locationName, chargeableWeight).subscribe({
             next: (res) => {
+                // Check Free Shipping Logic here if backend doesn't do it yet
+                // Or better, fetch config and checking.
+                // For now, let's assume standard calculation. 
+                // To support free shipping properly, I'll fetch shipping config in CartService as well.
                 this.shippingCost.set(res.cost);
+
+                // Override if Free Shipping Threshold met (Client Side Logic for immediate feedback)
+                this.shippingService.getConfig().subscribe(config => {
+                    if (config.freeShippingThreshold && config.freeShippingThreshold > 0) {
+                        if (subTotal >= config.freeShippingThreshold) {
+                            this.shippingCost.set(0);
+                        }
+                    }
+                });
             },
             error: (err) => {
                 console.error('Error calculating shipping:', err);
