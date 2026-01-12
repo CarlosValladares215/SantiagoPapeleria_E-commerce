@@ -1,0 +1,24 @@
+<div
+    class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center space-y-6 animate-in zoom-in-95 duration-300">
+    <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <lucide-icon name="file-spreadsheet" class="w-10 h-10"></lucide-icon>
+    </div>
+    <h3 class="text-xl font-bold text-slate-800">Importación Masiva</h3>
+    <p class="text-slate-500 max-w-md mx-auto">Sube un archivo Excel (.xlsx) o CSV para actualizar zonas y
+        tarifas rápidamente.</p>
+
+    <div class="flex justify-center gap-4">
+        <label
+            class="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-lg shadow-slate-200 flex items-center gap-2">
+            <lucide-icon name="cloud-upload" class="w-5 h-5"></lucide-icon>
+            Seleccionar Archivo
+            <input type="file" (change)="onFileSelected($event)" accept=".xlsx, .csv" class="hidden">
+        </label>
+    </div>
+
+    @if(message()) {
+    <div class="mt-4 p-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 font-medium">
+        {{ message() }}
+    </div>
+    }
+</div>

@@ -1,0 +1,12 @@
+<div [className]="getContainerClass()">
+    <h3 [className]="getTitleClass()">{{ title }}</h3>
+    <div class="grid gap-2" [class.grid-cols-2]="provinces.length > 7" [class.flex]="provinces.length <= 7"
+        [class.flex-col]="provinces.length <= 7">
+        @for(prov of provinces; track $index) {
+        <button (click)="toggle.emit(prov)" [className]="getButtonClass(prov)">
+            {{ prov }}
+            @if(isSelected(prov)) { <lucide-icon name="check" class="w-3 h-3"></lucide-icon> }
+        </button>
+        }
+    </div>
+</div>
