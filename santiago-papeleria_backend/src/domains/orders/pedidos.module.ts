@@ -20,5 +20,6 @@ import { ErpSyncModule } from '../erp/sync/erp-sync.module';
   ],
   controllers: [PedidosController],
   providers: [PedidosService],
+  exports: [PedidosService],
 })
 export class PedidosModule { }
