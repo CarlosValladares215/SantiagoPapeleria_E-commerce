@@ -15,6 +15,7 @@ import { FilesModule } from './shared/files/files.module';
 import { NotificationsModule } from './domains/notifications/notifications.module';
 import { ShippingModule } from './domains/shipping/shipping.module';
 import { ReportsModule } from './domains/reports/reports.module';
+import { ChatbotModule } from './domains/chatbot/chatbot.module';
 @Module({
   imports: [
     // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
@@ -29,6 +30,7 @@ import { ReportsModule } from './domains/reports/reports.module';
     ShippingModule,
     ReportsModule,
     FilesModule,
+    ChatbotModule,
     ConfigModule.forRoot({
       isGlobal: true,
     })

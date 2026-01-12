@@ -17,7 +17,7 @@ import { Register } from './pages/register/register';
 import { NotFound } from './pages/not-found/not-found';
 import { ADMIN_ROUTES } from './admin/admin.routes';
 import { VerifyEmailComponent } from './pages/auth/verify-email/verify-email.component';
-import { adminGuard, warehouseGuard } from './guards/auth.guard';
+import { adminGuard, warehouseGuard, authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
 
@@ -58,7 +58,7 @@ export const routes: Routes = [
       { path: 'products', loadComponent: () => import('./pages/products/products.component').then(m => m.ProductsComponent), pathMatch: 'full' },
       { path: 'contact', component: Contact },
       { path: 'cart', loadComponent: () => import('./pages/cart/cart').then(m => m.Cart) },
-      { path: 'tracking', component: Tracking },
+      { path: 'tracking', component: Tracking, canActivate: [authGuard] },
       { path: 'offers', component: Offers },
       { path: 'login', component: Login },
       { path: 'register', component: Register },

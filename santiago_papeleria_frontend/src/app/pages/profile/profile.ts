@@ -73,6 +73,48 @@ export class Profile implements OnInit {
             lat: [null, Validators.required],
             lng: [null, Validators.required]
         });
+
+        this.passwordForm = this.fb.group({
+            currentPassword: ['', Validators.required],
+            newPassword: ['', [Validators.required, Validators.minLength(8)]],
+            confirmPassword: ['', Validators.required]
+        }, { validators: this.passwordMatchValidator });
+    }
+
+    passwordForm: FormGroup;
+    isChangingPassword = false;
+
+    passwordMatchValidator(g: FormGroup) {
+        return g.get('newPassword')?.value === g.get('confirmPassword')?.value
+            ? null : { 'mismatch': true };
+    }
+
+    toggleChangePassword() {
+        this.isChangingPassword = !this.isChangingPassword;
+        if (!this.isChangingPassword) {
+            this.passwordForm.reset();
+        }
+    }
+
+    onSubmitPassword() {
+        if (this.passwordForm.valid) {
+            this.isLoading = true;
+            const { currentPassword, newPassword } = this.passwordForm.value;
+
+            this.authService.changePassword(currentPassword, newPassword).subscribe({
+                next: (res) => {
+                    this.isLoading = false;
+                    this.isChangingPassword = false;
+                    this.passwordForm.reset();
+                    this.successMessage = res.message || 'Contraseña actualizada correctamente';
+                    setTimeout(() => this.successMessage = '', 3000);
+                },
+                error: (err) => {
+                    this.isLoading = false;
+                    alert(err.error?.message || 'Error al actualizar contraseña');
+                }
+            });
+        }
     }
 
     get isMayorista(): boolean {

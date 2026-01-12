@@ -177,10 +177,14 @@ export class VerifyEmailComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.isLoading = false;
         if (res.verified) {
-          // AUTO-LOGIN: Set Session
+          // LOGIN AFTER VERIFY
           if (res.access_token && res.user) {
-            const userSession = { ...res.user, token: res.access_token };
-            this.authService.setSession(userSession);
+            // Manually save token
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('token', res.access_token);
+            }
+            // Update Auth Service State
+            this.authService.setSession(res.user);
           }
 
           this.showModal('success', '¡Cuenta Verificada!', 'Tu cuenta ha sido verificada exitosamente. Ahora serás redirigido.');

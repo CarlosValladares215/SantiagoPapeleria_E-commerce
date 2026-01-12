@@ -62,6 +62,16 @@ export class AuthService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, { token, newPassword });
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : '';
+    const headers = { Authorization: `Bearer ${token}` };
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/change-password`,
+      { currentPassword, newPassword },
+      { headers }
+    );
+  }
+
   resendVerificationEmail(email: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(
       `${this.verifyApiUrl}/resend-verification`,

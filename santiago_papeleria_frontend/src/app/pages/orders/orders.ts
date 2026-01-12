@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
 import { OrderService, Order as BackendOrder } from '../../services/order/order.service';
 
@@ -15,7 +16,7 @@ interface ProductItem {
 interface Order {
     id: string;
     orderNumber: number; // Raw number for linking
-    status: 'Pendiente' | 'Preparando' | 'Enviado' | 'Entregado' | 'Cancelado' | string;
+    status: 'Pendiente' | 'Preparando' | 'Enviado' | 'Entregado' | 'Cancelado' | 'Devolución Pendiente' | 'Devolución Aprobada' | 'Devolución Rechazada' | string;
     date: Date;
     itemsCount: number;
     trackingId?: string;
@@ -35,12 +36,13 @@ interface Order {
         costo_envio: number;
         total: number;
     };
+    warehouseObservations?: string;
 }
 
 @Component({
     selector: 'app-orders',
     standalone: true,
-    imports: [CommonModule, RouterLink, RouterLinkActive],
+    imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
     templateUrl: './orders.html',
     styleUrl: './orders.scss'
 })
@@ -60,6 +62,7 @@ export class Orders implements OnInit {
         { label: 'Preparando', count: 0, value: 'Preparando' },
         { label: 'Enviados', count: 0, value: 'Enviado' },
         { label: 'Entregados', count: 0, value: 'Entregado' },
+        { label: 'Devoluciones', count: 0, value: 'Devolucion' }, // Group all return statuses
         { label: 'Cancelados', count: 0, value: 'Cancelado' }
     ];
 
@@ -107,7 +110,8 @@ export class Orders implements OnInit {
                 totalPrice: item.subtotal,
                 unitPrice: item.precio_unitario_aplicado,
                 image: 'assets/products/placeholder.png'
-            }))
+            })),
+            warehouseObservations: backendOrder.datos_devolucion?.observaciones_bodega
         };
     }
 
@@ -121,7 +125,10 @@ export class Orders implements OnInit {
             'PREPARANDO': 'Preparando',
             'ENVIADO': 'Enviado',
             'ENTREGADO': 'Entregado',
-            'CANCELADO': 'Cancelado'
+            'CANCELADO': 'Cancelado',
+            'PENDIENTE_REVISION': 'Devolución Pendiente',
+            'DEVOLUCION_APROBADA': 'Devolución Aprobada',
+            'DEVOLUCION_RECHAZADA': 'Devolución Rechazada'
         };
         return statusMap[status] || 'Pendiente';
     }
@@ -133,6 +140,7 @@ export class Orders implements OnInit {
         const sentCount = this.orders.filter(o => o.status === 'Enviado').length;
         const deliveredCount = this.orders.filter(o => o.status === 'Entregado').length;
         const cancelledCount = this.orders.filter(o => o.status === 'Cancelado').length;
+        const returnsCount = this.orders.filter(o => o.status.includes('Devolución')).length;
 
         this.filters = [
             { label: 'Todos', count: allCount, value: 'Todos' },
@@ -140,6 +148,7 @@ export class Orders implements OnInit {
             { label: 'Preparando', count: preparingCount, value: 'Preparando' },
             { label: 'Enviados', count: sentCount, value: 'Enviado' },
             { label: 'Entregados', count: deliveredCount, value: 'Entregado' },
+            { label: 'Devoluciones', count: returnsCount, value: 'Devolucion' },
             { label: 'Cancelados', count: cancelledCount, value: 'Cancelado' }
         ];
     }
@@ -156,6 +165,9 @@ export class Orders implements OnInit {
         if (this.activeFilter === 'Todos') {
             return this.orders;
         }
+        if (this.activeFilter === 'Devolucion') {
+            return this.orders.filter(order => order.status.includes('Devolución'));
+        }
         return this.orders.filter(order => order.status === this.activeFilter);
     }
 
@@ -171,6 +183,12 @@ export class Orders implements OnInit {
             case 'Preparando': return 'bg-blue-100 text-blue-700';
             case 'Pendiente': return 'bg-orange-100 text-orange-700'; // Standardized orange
             case 'Cancelado': return 'bg-gray-100 text-gray-700';
+
+            // New Return Statuses (HU048)
+            case 'Devolución Aprobada': return 'bg-green-100 text-green-700';
+            case 'Devolución Rechazada': return 'bg-red-100 text-red-700';
+            case 'Devolución Pendiente': return 'bg-yellow-100 text-yellow-800';
+
             default: return 'bg-gray-100 text-gray-700';
         }
     }
@@ -182,6 +200,12 @@ export class Orders implements OnInit {
             case 'Preparando': return 'ri-box-3-line'; // Standardized icon
             case 'Pendiente': return 'ri-time-line';
             case 'Cancelado': return 'ri-close-circle-line';
+
+            // New Return Statuses (HU048)
+            case 'Devolución Aprobada': return 'ri-check-double-line';
+            case 'Devolución Rechazada': return 'ri-close-circle-line';
+            case 'Devolución Pendiente': return 'ri-time-line';
+
             default: return 'ri-question-line';
         }
     }
@@ -229,6 +253,88 @@ export class Orders implements OnInit {
                 console.error('Error cancelling order', err);
                 alert('No se pudo cancelar el pedido. Intente nuevamente.');
                 this.closeCancelModal();
+            }
+        });
+    }
+
+    // --- Return Logic (HU046) ---
+    showReturnModal = false;
+    orderToReturn: Order | null = null;
+    isReturning = false;
+    returnForm = {
+        motivo: '',
+        items: [] as { name: string, quantity: number, selected: boolean, max: number }[]
+    };
+
+    canReturn(order: Order): boolean {
+        if (order.status !== 'Entregado') return false;
+
+        // 5 days verification
+        const deliveryDate = order.date; // Use order date as fallback if delivery date is string 'Entregado'
+        // Ideally 'order.date' is purchase date. We need actual delivery date from backend
+        // For strictly HU: "Validar elegibilidad (5 días)"
+        // Since frontend 'order' interface maps deliveryDate as string, we use order.date for now as approximation 
+        // or we rely on backend error. Let's filter visually using order.date + reasonable delivery time or just order.date
+
+        const diffTime = Math.abs(new Date().getTime() - new Date(order.date).getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return diffDays <= 10; // Allow opening modal liberally, backend enforces 5 days from delivery
+    }
+
+    initiateReturn(order: Order) {
+        this.orderToReturn = order;
+        this.returnForm = {
+            motivo: '',
+            items: order.products.map(p => ({
+                name: p.name,
+                quantity: 1,
+                selected: false,
+                max: p.quantity
+            }))
+        };
+        this.showReturnModal = true;
+    }
+
+    closeReturnModal() {
+        this.showReturnModal = false;
+        this.orderToReturn = null;
+    }
+
+    submitReturn() {
+        if (!this.orderToReturn) return;
+
+        const selectedItems = this.returnForm.items
+            .filter(i => i.selected)
+            .map(i => ({ nombre: i.name, cantidad: i.quantity, codigo: 'N/A' })); // Code not in frontend model yet
+
+        if (selectedItems.length === 0) {
+            alert('Debes seleccionar al menos un producto para devolver');
+            return;
+        }
+        if (!this.returnForm.motivo.trim()) {
+            alert('Debes ingresar un motivo para la devolución');
+            return;
+        }
+
+        const userId = this.authService.user()?._id;
+        if (!userId) return;
+
+        this.isReturning = true;
+        this.orderService.requestReturn(this.orderToReturn.id.replace('ORD-WEB-', ''), userId, {
+            items: selectedItems,
+            motivo: this.returnForm.motivo
+        }).subscribe({
+            next: () => {
+                this.isReturning = false;
+                this.closeReturnModal();
+                this.loadUserOrders();
+                alert('Solicitud de devolución enviada correctamente. Estado: Pendiente de Revisión');
+            },
+            error: (err) => {
+                this.isReturning = false;
+                console.error('Error requesting return', err);
+                alert(err.error?.message || 'Error al solicitar devolución');
             }
         });
     }
