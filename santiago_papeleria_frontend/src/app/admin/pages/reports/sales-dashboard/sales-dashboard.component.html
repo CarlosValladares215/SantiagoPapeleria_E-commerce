@@ -1,0 +1,74 @@
+<div class="p-6 space-y-6 bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">📊 Reportes de Ventas</h1>
+            <p class="text-sm text-gray-500">
+                Última actualización: {{ lastUpdate | date:'mediumTime' }}
+            </p>
+        </div>
+
+        <div class="flex gap-2">
+            <select [(ngModel)]="selectedRange" (change)="onRangeChange(selectedRange)"
+                class="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option *ngFor="let range of dateRanges" [value]="range.value">
+                    {{ range.label }}
+                </option>
+            </select>
+
+            <div class="relative group">
+                <button (click)="showExportMenu = !showExportMenu"
+                    class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center gap-2 focus:outline-none">
+                    Exportar ▼
+                </button>
+                <!-- Dropdown -->
+                <div *ngIf="showExportMenu"
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-100">
+                    <button (click)="exportReport('pdf'); showExportMenu = false"
+                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        📄 PDF
+                    </button>
+                    <button (click)="exportReport('excel'); showExportMenu = false"
+                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        📊 Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" *ngIf="stats">
+        <app-kpi-card title="💰 Ingresos" [value]="stats.ingresos.value | currency" [change]="stats.ingresos.change"
+            icon="dollar-sign" [loading]="isLoading"></app-kpi-card>
+
+        <app-kpi-card title="📦 Pedidos" [value]="stats.pedidos.value" [change]="stats.pedidos.change" icon="package"
+            [loading]="isLoading"></app-kpi-card>
+
+        <app-kpi-card title="🎯 Ticket Promedio" [value]="stats.ticketPromedio.value | currency"
+            [change]="stats.ticketPromedio.change" icon="target" [loading]="isLoading"></app-kpi-card>
+    </div>
+
+    <!-- Charts & Tables Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Chart (Depends on implementation, assumes taking 2 columns) -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Tendencia de Ventas</h3>
+            <app-sales-chart *ngIf="stats?.salesTrend" [data]="stats!.salesTrend.data"
+                [labels]="stats!.salesTrend.labels" class="block h-64 w-full">
+            </app-sales-chart>
+        </div>
+
+        <!-- Top Products -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">🏆 Top Productos</h3>
+            <app-top-products-table [products]="topProducts"></app-top-products-table>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mt-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">🕒 Pedidos Recientes</h3>
+        <app-recent-orders-table [orders]="recentOrders"></app-recent-orders-table>
+    </div>
+</div>

@@ -1,0 +1,12 @@
+:host {
+    display: block;
+}
+
+.toggle-checkbox:checked {
+    right: 0;
+    border-color: #10B981;
+
+    +.toggle-label {
+        background-color: #10B981;
+    }
+}

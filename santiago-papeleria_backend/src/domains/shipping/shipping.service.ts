@@ -1,7 +1,7 @@
 
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { ShippingConfig, ShippingConfigDocument } from './schemas/shipping-config.schema';
 import { ShippingZone, ShippingZoneDocument } from './schemas/shipping-zone.schema';
 import { ShippingRate, ShippingRateDocument } from './schemas/shipping-rate.schema';
@@ -137,31 +137,62 @@ export class ShippingService {
 
     async calculateShippingCost(province: string, weightKg: number): Promise<number> {
         const normalizedInput = this.normalizeProvince(province);
-        console.log(`[Shipping] Calculating for: '${province}' (Norm: '${normalizedInput}'), Weight: ${weightKg}`);
+
+        console.log(`[Shipping] Calc for: '${province}' (Norm: '${normalizedInput}'), Weight: ${weightKg}`);
+        console.log(`================ DEBUG ${new Date().toISOString()} ================`);
+        console.log(`Input Province: "${province}"`);
+        console.log(`Normalized Input: "${normalizedInput}"`);
+        console.log(`Input Weight: ${weightKg}`);
 
         // 1. Fetch all active zones
         const allZones = await this.zoneModel.find({ active: true }).exec();
-
         // 2. Find matching zone
         const zone = allZones.find(z =>
             z.provinces.some(p => this.normalizeProvince(p) === normalizedInput)
         );
 
+        if (zone) console.log(`MATCH FOUND! Zone: "${zone.name}" (_id: ${zone._id})`);
+        else console.log(`NO MATCH FOUND for "${normalizedInput}"`);
+
         if (zone) {
             console.log(`[Shipping] Matched Zone: ${zone.name}`);
-            // Find Rate
-            const rate = await this.rateModel.findOne({
-                zone_id: zone._id,
-                active: true,
-                min_weight: { $lte: weightKg },
-                max_weight: { $gte: weightKg } // Ensure weight is within range
-            });
+            try {
+                // Try standard query (Mongoose casts to ObjectId)
+                let rate = await this.rateModel.findOne({
+                    zone_id: zone._id,
+                    active: true,
+                    min_weight: { $lte: weightKg },
+                    max_weight: { $gte: weightKg }
+                });
 
-            if (rate) {
-                console.log(`[Shipping] Matched Rate: $${rate.price}`);
-                return rate.price;
-            } else {
-                console.log(`[Shipping] No rate found for weight ${weightKg} in zone ${zone.name}. Returning 0 as per rule.`);
+                // Fallback: If not found, try query bypassing Mongoose casting using native driver (for String storage support)
+                if (!rate) {
+                    console.log('[Shipping] Standard query failed, trying native driver via model (String ID match)...');
+                    // We use $or in a mongoose query but that might cast. 
+                    // Let's use basic find but iterate? No.
+                    // Use native collection findOne to bypass schema casting
+                    const rawRate = await this.rateModel.collection.findOne({
+                        zone_id: zone._id.toString(), // Explicitly string
+                        active: true,
+                        min_weight: { $lte: weightKg },
+                        max_weight: { $gte: weightKg }
+                    });
+                    if (rawRate) {
+                        // Cast back to Mongoose document if needed, or just return price
+                        console.log(`[Shipping] Matched Rate via Native Query: $${rawRate.price}`);
+                        return rawRate.price;
+                    }
+                }
+
+                if (rate) {
+                    console.log(`[Shipping] Matched Rate: $${rate.price}`);
+                    return rate.price;
+                } else {
+                    console.log(`[Shipping] No rate found for weight ${weightKg} in zone ${zone.name}. Returning 0.`);
+                    return 0;
+                }
+            } catch (err) {
+                console.error(`[Shipping] ERROR finding rate:`, err);
                 return 0;
             }
         } else {

@@ -98,7 +98,7 @@ class IntegracionDobranet {
 }
 
 // Definición principal del Schema
-@Schema()
+@Schema({ collection: 'pedidos' })
 export class Pedido {
   @Prop({ required: true, unique: true })
   numero_pedido_web: number; // Corresponde a "numero_pedido_web"
@@ -125,5 +125,7 @@ export class Pedido {
   @Prop({ type: Date, required: true })
   fecha_compra: Date; // Corresponde a "fecha_compra"
 }
+
+export type PedidoStatus = 'PAGADO' | 'PENDIENTE' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO';
 
 export const PedidoSchema = SchemaFactory.createForClass(Pedido);

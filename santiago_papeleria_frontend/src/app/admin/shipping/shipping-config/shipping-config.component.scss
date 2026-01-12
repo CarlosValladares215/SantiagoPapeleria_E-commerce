@@ -1,0 +1,15 @@
+:host {
+    display: block;
+}
+
+.province-card {
+    transition: all 0.2s ease-in-out;
+
+    &.selected {
+        @apply ring-2 ring-blue-500 bg-blue-50;
+    }
+}
+
+.map-column {
+    @apply flex flex-col gap-2;
+}

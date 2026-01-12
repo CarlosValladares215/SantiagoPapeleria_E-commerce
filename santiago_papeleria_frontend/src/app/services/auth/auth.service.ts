@@ -1,8 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { switchMap, tap, catchError } from 'rxjs/operators';
 import { Usuario } from '../../models/usuario.model';
 import { environment } from '../../../environments/environment';
 
@@ -25,8 +25,28 @@ export class AuthService {
   customerType = computed(() => this.user()?.tipo_cliente || 'MINORISTA');
 
 
+  private CLIENT_TOKEN_KEY = 'token';
+  private ADMIN_TOKEN_KEY = 'admin_token';
+
   constructor(private router: Router, private http: HttpClient) {
     this.hydrateUser();
+  }
+
+  // Helper to get token based on context (URL)
+  getToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    const path = window.location.pathname;
+    if (path.startsWith('/admin') || path.startsWith('/warehouse')) {
+      // Admin session lives in sessionStorage (dies on close)
+      if (typeof sessionStorage !== 'undefined') {
+        return sessionStorage.getItem(this.ADMIN_TOKEN_KEY);
+      }
+    }
+    // Client session lives in localStorage (persists)
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(this.CLIENT_TOKEN_KEY);
+    }
+    return null;
   }
 
   register(userData: Usuario): Observable<Usuario> {
@@ -70,25 +90,58 @@ export class AuthService {
   }
 
   // Login contra el backend calling /login then /me
-  login(credentials: { email: string, password: string }): Observable<Usuario> {
+  login(credentials: { email: string, password: string }): Observable<{ user: Usuario, token: string }> {
     return this.http.post<{ access_token: string }>(`${this.apiUrl}/login`, credentials).pipe(
       switchMap(response => {
-        // Save Token
-        if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-          localStorage.setItem('token', response.access_token);
-        }
-        // Fetch Profile
-        return this.getProfile();
+        // Fetch User first to determine Role, passing token explicitly
+        return this.getProfile(response.access_token).pipe(
+          tap(user => {
+            if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+              if (user.role === 'admin' || user.role === 'warehouse') {
+                // We do NOT save admin token here. We pass it to the new tab via URL.
+                // sessionStorage.setItem(this.ADMIN_TOKEN_KEY, response.access_token);
+              } else {
+                localStorage.setItem(this.CLIENT_TOKEN_KEY, response.access_token);
+              }
+            }
+          }),
+          // Map to return both user and token
+          switchMap(user => new Observable<{ user: Usuario, token: string }>(obs => {
+            obs.next({ user, token: response.access_token });
+            obs.complete();
+          }))
+        );
       }),
-      tap(user => {
-        this.setUserState(user);
+      tap(({ user, token }) => {
+        // Only update global state if we are in the correct context
+        if (user.role !== 'admin' && user.role !== 'warehouse') {
+          this.setUserState(user);
+        } else {
+          // For admin/warehouse, check if we are ALREADY in admin context (e.g. re-login inside admin)
+          const path = typeof window !== 'undefined' ? window.location.pathname : '';
+          if (path.startsWith('/admin') || path.startsWith('/warehouse')) {
+            if (typeof sessionStorage !== 'undefined') {
+              sessionStorage.setItem(this.ADMIN_TOKEN_KEY, token);
+            }
+            this.setUserState(user);
+          } else {
+            // If we are on the client side login page and logged in as admin:
+            // 1. CLEAR any client session remnants to prevent "logged in as admin on client"
+            if (typeof localStorage !== 'undefined') {
+              localStorage.removeItem(this.CLIENT_TOKEN_KEY);
+              localStorage.removeItem('user');
+            }
+            // 2. Ensure the local state signal is empty
+            this.user.set(null);
+          }
+        }
       })
     );
   }
 
   // Fetch full profile from /me using token
-  getProfile(): Observable<Usuario> {
-    const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : '';
+  getProfile(explicitToken?: string): Observable<Usuario> {
+    const token = explicitToken || this.getToken() || '';
     const headers = { Authorization: `Bearer ${token}` };
     return this.http.get<Usuario>(`${this.apiUrl}/me`, { headers });
   }
@@ -97,8 +150,6 @@ export class AuthService {
   private setUserState(user: Usuario) {
     this.user.set(user);
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      // We might not need to store full user in localstorage anymore if we hydrate on load
-      // But for offline/performance it's okay to keep it, but source of truth is /me
       localStorage.setItem('user', JSON.stringify(user));
     }
   }
@@ -115,9 +166,14 @@ export class AuthService {
 
   logout() {
     this.user.set(null);
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.startsWith('/admin') || path.startsWith('/warehouse')) {
+        if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(this.ADMIN_TOKEN_KEY);
+      } else {
+        if (typeof localStorage !== 'undefined') localStorage.removeItem(this.CLIENT_TOKEN_KEY);
+      }
+      if (typeof localStorage !== 'undefined') localStorage.removeItem('user');
     }
     this.router.navigate(['/']);
   }
@@ -140,14 +196,79 @@ export class AuthService {
 
   // Helper to hydrate state on app load
   hydrateUser() {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        this.getProfile().subscribe({
-          next: (user) => this.user.set(user),
-          error: () => this.logout() // Token expired/invalid
-        });
+    if (typeof window !== 'undefined') {
+
+      // Check for token in URL (handoff logic)
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get('token');
+      if (tokenFromUrl) {
+        const path = window.location.pathname;
+        if (path.startsWith('/admin') || path.startsWith('/warehouse')) {
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem(this.ADMIN_TOKEN_KEY, tokenFromUrl);
+            // Remove token from URL and clean history
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+          }
+        }
+      }
+
+      // We don't subscribe here anymore to avoid race conditions with Guards.
+      // The Guards will call checkAuth() -> getProfile() which will hydrate the user.
+      // However, for the main client app which might not have guards on home page, we still might want to load user.
+      // But we can lazy load it or let the first protected route handle it.
+      // Actually, for header user info, we SHOULD try to load.
+      const token = this.getToken();
+      if (token && !this.user()) {
+        this.getProfile().pipe(
+          tap(user => this.setUserState(user)),
+          catchError(() => {
+            this.logout();
+            return of(null); // Return an observable that completes with null
+          })
+        ).subscribe();
       }
     }
+  }
+
+  // --- Methods for Guards (Async Checks) ---
+
+  checkAuth(): Observable<boolean> {
+    // If we already have a user, we are authenticated
+    if (this.user()) return of(true);
+
+    const token = this.getToken();
+    if (!token) return of(false);
+
+    // If we have a token but no user, verify it
+    return this.getProfile().pipe(
+      tap(user => this.setUserState(user)),
+      switchMap(() => of(true)),
+      catchError(() => {
+        this.logout(); // Token expired/invalid, log out
+        return of(false);
+      })
+    );
+  }
+
+  checkAdmin(): Observable<boolean> {
+    return this.checkAuth().pipe(
+      switchMap(isAuthenticated => {
+        if (!isAuthenticated) return of(false);
+        return of(this.isAdmin());
+      }),
+      // Catch errors from checkAuth (e.g. 401) - already handled by checkAuth's catchError
+      // tap({ error: () => this.logout() }) // Redundant if checkAuth handles it
+    );
+  }
+
+  checkWarehouse(): Observable<boolean> {
+    return this.checkAuth().pipe(
+      switchMap(isAuthenticated => {
+        if (!isAuthenticated) return of(false);
+        return of(this.isWarehouse());
+      }),
+      // tap({ error: () => this.logout() }) // Redundant if checkAuth handles it
+    );
   }
 }

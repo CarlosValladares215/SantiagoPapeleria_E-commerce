@@ -1,0 +1,234 @@
+<div class="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+
+    <!-- Toast Notification -->
+    @if (toast()) {
+    <div class="fixed top-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium animate-in slide-in-from-top-2"
+        [class.bg-green-100]="toast()?.type === 'success'" [class.text-green-800]="toast()?.type === 'success'"
+        [class.bg-red-100]="toast()?.type === 'error'" [class.text-red-800]="toast()?.type === 'error'">
+        {{ toast()?.msg }}
+    </div>
+    }
+
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Métodos de Pago</h1>
+            <p class="text-gray-500 mt-1">Activa y configura las opciones de pago disponibles para los clientes.</p>
+        </div>
+        <button (click)="saveConfigAll()" [disabled]="isSaving() || isLoading()"
+            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed">
+            <lucide-icon name="save" class="w-5 h-5"></lucide-icon>
+            {{ isSaving() ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+    </div>
+
+    <!-- Loading Skeleton -->
+    @if (isLoading()) {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 animate-pulse space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                <div class="space-y-2">
+                    <div class="h-4 w-40 bg-gray-200 rounded"></div>
+                    <div class="h-3 w-28 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+            <div class="h-20 bg-gray-100 rounded-xl"></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 animate-pulse space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                <div class="space-y-2">
+                    <div class="h-4 w-36 bg-gray-200 rounded"></div>
+                    <div class="h-3 w-24 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    } @else {
+
+    <div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- 1. TRANSFERENCIA BANCARIA -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <lucide-icon name="university" class="w-6 h-6"></lucide-icon>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900 text-lg">Transferencia Bancaria</h3>
+                            <p class="text-sm text-gray-500">Carga manual de comprobantes</p>
+                        </div>
+                    </div>
+                    <!-- Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" [ngModel]="config().transferActive"
+                            (ngModelChange)="updateConfigField('transferActive', $event)" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                        </div>
+                    </label>
+                </div>
+
+                @if (config().transferActive) {
+                <div class="pt-4 border-t border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="font-bold text-gray-700 text-sm uppercase">Cuentas Bancarias</h4>
+                        <button (click)="openAddAccount()"
+                            class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                            <lucide-icon name="plus" class="w-4 h-4"></lucide-icon> Agregar
+                        </button>
+                    </div>
+
+                    <div class="space-y-3">
+                        @for (acc of config().bankAccounts; track acc.accountNumber) {
+                        <div
+                            class="p-4 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-start group hover:border-blue-200 transition-colors">
+                            <div>
+                                <div class="font-bold text-gray-900 flex items-center gap-2">
+                                    {{ acc.bankName }}
+                                    <span
+                                        class="px-2 py-0.5 bg-white border border-gray-200 rounded text-[10px] text-gray-500 uppercase">{{
+                                        acc.type }}</span>
+                                </div>
+                                <p class="text-sm text-gray-600 font-mono mt-1">{{ acc.accountNumber }}</p>
+                                <p class="text-xs text-gray-400 mt-1">{{ acc.ownerName }} • {{ acc.ownerId }}</p>
+                            </div>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button (click)="editAccount(acc)"
+                                    class="p-1.5 hover:bg-white rounded-lg text-gray-500 hover:text-blue-600">
+                                    <lucide-icon name="pencil" class="w-4 h-4"></lucide-icon>
+                                </button>
+                                <button (click)="deleteAccount(acc.accountNumber)"
+                                    class="p-1.5 hover:bg-white rounded-lg text-gray-500 hover:text-red-600">
+                                    <lucide-icon name="trash-2" class="w-4 h-4"></lucide-icon>
+                                </button>
+                            </div>
+                        </div>
+                        }
+                        @if (config().bankAccounts.length === 0) {
+                        <div
+                            class="text-center py-6 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                            No hay cuentas registradas
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- 2. PAGO CONTRAENTREGA -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-green-50 text-green-600 rounded-xl">
+                            <lucide-icon name="banknote" class="w-6 h-6"></lucide-icon>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900 text-lg">Efectivo / Contraentrega</h3>
+                            <p class="text-sm text-gray-500">Pago al recibir el pedido</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" [ngModel]="config().cashActive"
+                            (ngModelChange)="updateConfigField('cashActive', $event)" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
+                        </div>
+                    </label>
+                </div>
+
+                @if (config().cashActive) {
+                <div class="pt-4 border-t border-gray-100 space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Monto Máximo Permitido ($)</label>
+                        <input type="number" min="0" [ngModel]="config().cashConfig.maxAmount"
+                            (ngModelChange)="updateConfigField('cashConfig', { maxAmount: $event, restrictedZones: config().cashConfig.restrictedZones })"
+                            class="w-full mt-1 p-2 border border-gray-200 rounded-lg text-gray-800 font-medium focus:ring-2 focus:ring-green-100 outline-none">
+                        <p class="text-xs text-gray-400 mt-1">Para pedidos mayores a este monto, se requerirá
+                            transferencia.</p>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- 3. RETIRO EN TIENDA -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="p-3 bg-orange-50 text-orange-600 rounded-xl">
+                            <lucide-icon name="store" class="w-6 h-6"></lucide-icon>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900 text-lg">Retiro en Tienda</h3>
+                            <p class="text-sm text-gray-500">Activado en Checkout y Envíos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-gray-100">
+                    <p class="text-sm text-gray-600 bg-orange-50 p-3 rounded-lg border border-orange-100 flex gap-2">
+                        <lucide-icon name="info" class="w-4 h-4 mt-0.5 text-orange-500"></lucide-icon>
+                        La configuración de sucursales se gestiona actualmente desde el código. Se implementará un
+                        gestor de sucursales en futuras versiones.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    } <!-- End of @else -->
+
+    <!-- MODAL ADD ACCOUNT -->
+    @if (showBankModal) {
+    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-6">
+            <h3 class="text-xl font-bold text-gray-900">{{ isEditingAccount ? 'Editar' : 'Agregar' }} Cuenta Bancaria
+            </h3>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Banco</label>
+                    <input [(ngModel)]="currentAccount.bankName" placeholder="Ej: Banco Pichincha"
+                        class="w-full mt-1 p-2 border rounded-lg outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Tipo</label>
+                        <select [(ngModel)]="currentAccount.type" class="w-full mt-1 p-2 border rounded-lg">
+                            <option value="Ahorros">Ahorros</option>
+                            <option value="Corriente">Corriente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase">Número</label>
+                        <input [(ngModel)]="currentAccount.accountNumber"
+                            class="w-full mt-1 p-2 border rounded-lg focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Titular</label>
+                    <input [(ngModel)]="currentAccount.ownerName"
+                        class="w-full mt-1 p-2 border rounded-lg focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">RUC / Cédula</label>
+                    <input [(ngModel)]="currentAccount.ownerId"
+                        class="w-full mt-1 p-2 border rounded-lg focus:border-blue-500">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button (click)="showBankModal = false"
+                    class="flex-1 py-2.5 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50">Cancelar</button>
+                <button (click)="saveAccount()"
+                    class="flex-1 py-2.5 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700">Guardar</button>
+            </div>
+        </div>
+    </div>
+    }
+
+</div>

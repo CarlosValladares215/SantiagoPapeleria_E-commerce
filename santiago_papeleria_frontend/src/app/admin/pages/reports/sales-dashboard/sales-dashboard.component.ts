@@ -1,174 +1,114 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReportsService, DailySnapshot, SalesData, TopProduct } from '../../../services/reports.service';
-import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { ReportesService, DashboardStats, TopProduct } from '../../../../services/reportes.service';
+import { KpiCardComponent } from '../components/kpi-card/kpi-card.component';
+import { SalesChartComponent } from '../components/sales-chart/sales-chart.component';
+import { TopProductsTableComponent } from '../components/top-products-table/top-products-table.component';
+import { RecentOrdersTableComponent } from '../components/recent-orders-table/recent-orders-table.component';
+import { Subscription, interval } from 'rxjs';
+import { switchMap, startWith } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-    selector: 'app-sales-dashboard',
-    standalone: true,
-    imports: [CommonModule, BaseChartDirective, FormsModule],
-    template: `
-    <div class="p-6">
-      <h1 class="text-2xl font-bold mb-6">Panel de Ventas</h1>
-
-      <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <p class="text-gray-500 text-sm">Ventas de Hoy</p>
-          <p class="text-3xl font-bold text-green-600">{{ dailySnapshot?.totalRevenue | currency }}</p>
-        </div>
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <p class="text-gray-500 text-sm">Pedidos de Hoy</p>
-          <p class="text-3xl font-bold text-blue-600">{{ dailySnapshot?.totalOrders }}</p>
-        </div>
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <p class="text-gray-500 text-sm">Ticket Promedio</p>
-          <p class="text-3xl font-bold text-purple-600">{{ dailySnapshot?.avgTicket | currency }}</p>
-        </div>
-      </div>
-
-      <!-- Filters & Actions -->
-      <div class="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-lg shadow-sm">
-        <div class="flex items-center gap-2">
-            <label class="text-sm font-medium">Desde:</label>
-            <input type="date" [(ngModel)]="startDate" (change)="loadRangeData()" class="border rounded px-2 py-1 text-sm">
-        </div>
-        <div class="flex items-center gap-2">
-            <label class="text-sm font-medium">Hasta:</label>
-            <input type="date" [(ngModel)]="endDate" (change)="loadRangeData()" class="border rounded px-2 py-1 text-sm">
-        </div>
-        <button (click)="exportReport()" class="ml-auto bg-gray-900 text-white px-4 py-2 rounded text-sm hover:bg-gray-800">
-          Exportar Reporte
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Sales Chart -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 class="text-lg font-semibold mb-4">Tendencia de Ventas</h2>
-          <div class="h-[300px]">
-            <canvas baseChart
-              [data]="lineChartData"
-              [options]="lineChartOptions"
-              [type]="'line'">
-            </canvas>
-          </div>
-        </div>
-
-        <!-- Top Products -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 class="text-lg font-semibold mb-4">Productos Más Vendidos</h2>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-              <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                <tr>
-                  <th class="px-4 py-3">Producto</th>
-                  <th class="px-4 py-3 text-right">Cant.</th>
-                  <th class="px-4 py-3 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let product of topProducts" class="border-b hover:bg-gray-50">
-                  <td class="px-4 py-3 font-medium text-gray-900 truncate max-w-[200px]" title="{{product.name}}">
-                    {{ product.name }}
-                  </td>
-                  <td class="px-4 py-3 text-right">{{ product.totalSold }}</td>
-                  <td class="px-4 py-3 text-right">{{ product.revenue | currency }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
+  selector: 'app-sales-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    KpiCardComponent,
+    SalesChartComponent,
+    TopProductsTableComponent,
+    RecentOrdersTableComponent
+  ],
+  templateUrl: './sales-dashboard.component.html',
+  styleUrls: ['./sales-dashboard.component.scss']
 })
-export class SalesDashboardComponent implements OnInit {
-    private reportsService = inject(ReportsService);
+export class SalesDashboardComponent implements OnInit, OnDestroy {
+  stats: DashboardStats | null = null;
+  topProducts: TopProduct[] = [];
+  recentOrders: any[] = [];
+  isLoading = true;
+  lastUpdate: Date = new Date();
 
-    dailySnapshot: DailySnapshot | null = null;
-    startDate: string = '';
-    endDate: string = '';
+  private refreshSubscription: Subscription | null = null;
+  dateRanges = [
+    { label: 'Hoy', value: 'hoy' },
+    { label: 'Ayer', value: 'ayer' },
+    { label: 'Últimos 7 días', value: '7d' },
+    { label: 'Últimos 30 días', value: '30d' },
+    { label: 'Todo el tiempo', value: 'all' }
+  ];
+  selectedRange = 'hoy';
+  showExportMenu = false;
 
-    salesData: SalesData[] = [];
-    topProducts: TopProduct[] = [];
+  constructor(
+    private reportesService: ReportesService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
-    // Chart Configuration
-    lineChartData: ChartConfiguration<'line'>['data'] = {
-        labels: [],
-        datasets: [
-            {
-                data: [],
-                label: 'Ventas ($)',
-                fill: true,
-                tension: 0.4,
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)'
-            }
-        ]
-    };
+  ngOnInit(): void {
+    this.startAutoRefresh();
+    this.loadTopProducts();
+    this.loadRecentOrders();
+  }
 
-    lineChartOptions: ChartOptions<'line'> = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false }
+  ngOnDestroy(): void {
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
+    }
+  }
+
+  startAutoRefresh() {
+    this.refreshSubscription = interval(300000)
+      .pipe(
+        startWith(0),
+        switchMap(() => this.reportesService.getDashboardStats(this.selectedRange))
+      )
+      .subscribe({
+        next: (data) => {
+          this.stats = data;
+          this.lastUpdate = new Date();
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error fetching dashboard stats', err);
+          this.isLoading = false;
         }
-    };
+      });
+  }
 
-    ngOnInit() {
-        this.initDates();
-        this.loadDailySnapshot();
-        this.loadRangeData();
+  loadTopProducts() {
+    this.reportesService.getTopProducts(10).subscribe(products => {
+      this.topProducts = products;
+      this.cdr.detectChanges();
+    });
+  }
+
+  loadRecentOrders() {
+    this.reportesService.getRecentOrders(20).subscribe((orders: any[]) => {
+      this.recentOrders = orders;
+      this.cdr.detectChanges();
+    });
+  }
+
+  onRangeChange(range: string) {
+    this.selectedRange = range;
+    this.isLoading = true;
+    if (this.refreshSubscription) {
+      this.refreshSubscription.unsubscribe();
     }
+    this.startAutoRefresh();
+  }
 
-    initDates() {
-        const end = new Date();
-        const start = new Date();
-        start.setDate(start.getDate() - 30); // Last 30 days
-
-        this.endDate = end.toISOString().split('T')[0];
-        this.startDate = start.toISOString().split('T')[0];
-    }
-
-    loadDailySnapshot() {
-        this.reportsService.getDailySnapshot().subscribe(data => {
-            this.dailySnapshot = data;
-        });
-    }
-
-    loadRangeData() {
-        if (!this.startDate || !this.endDate) return;
-
-        this.reportsService.getSalesByDateRange(this.startDate, this.endDate).subscribe(data => {
-            this.salesData = data;
-            this.updateChart();
-        });
-
-        this.reportsService.getTopSellingProducts(this.startDate, this.endDate).subscribe(data => {
-            this.topProducts = data;
-        });
-    }
-
-    updateChart() {
-        this.lineChartData.labels = this.salesData.map(d => d._id);
-        this.lineChartData.datasets[0].data = this.salesData.map(d => d.totalSales);
-
-        // Force chart update reference
-        this.lineChartData = { ...this.lineChartData };
-    }
-
-    exportReport() {
-        // Export to Excel
-        import('xlsx').then(xlsx => {
-            const ws: any = xlsx.utils.json_to_sheet(this.salesData);
-            const wb: any = xlsx.utils.book_new();
-            xlsx.utils.book_append_sheet(wb, ws, 'Ventas');
-            xlsx.writeFile(wb, `Reporte_Ventas_${this.startDate}_${this.endDate}.xlsx`);
-        });
-
-        // TODO: Add PDF export if needed
-    }
+  exportReport(format: 'pdf' | 'excel') {
+    this.reportesService.exportReport(format, { range: this.selectedRange }).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reporte_ventas_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
 }

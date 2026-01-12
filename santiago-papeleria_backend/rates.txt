@@ -1,0 +1,4 @@
+﻿Fetching rates for zone: 69643f4da9984e488b4cd6b5
+STATUS: 200
+RATES RESPONSE:
+[{"_id":"69644474a9984e488b4ce326","zone_id":"69643f4da9984e488b4cd6b5","min_weight":0,"max_weight":5,"price":10,"active":true,"createdAt":"2026-01-12T00:46:44.959Z","updatedAt":"2026-01-12T00:46:44.959Z","__v":0}]

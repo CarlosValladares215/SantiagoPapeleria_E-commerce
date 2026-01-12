@@ -15,6 +15,8 @@ import { FilesModule } from './shared/files/files.module';
 import { NotificationsModule } from './domains/notifications/notifications.module';
 import { ShippingModule } from './domains/shipping/shipping.module';
 import { ReportsModule } from './domains/reports/reports.module';
+import { PaymentsModule } from './domains/payments/payments.module';
+
 @Module({
   imports: [
     // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
@@ -28,6 +30,7 @@ import { ReportsModule } from './domains/reports/reports.module';
     ErpSyncModule,
     ShippingModule,
     ReportsModule,
+    PaymentsModule,
     FilesModule,
     ConfigModule.forRoot({
       isGlobal: true,

@@ -229,6 +229,7 @@
 
                         <div class="space-y-3">
                             <!-- Transfer -->
+                            @if (cartService.paymentConfig()?.transferActive) {
                             <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-gray-50"
                                 [class.border-[#f2cb07]]="cartService.paymentMethod() === 'transfer'"
                                 [class.bg-yellow-50]="cartService.paymentMethod() === 'transfer'">
@@ -243,13 +244,17 @@
 
                             @if(cartService.paymentMethod() === 'transfer') {
                             <div class="ml-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm animate-fadeIn">
-                                <p class="font-bold text-[#0f4c75] mb-2">Datos para Transferencia:</p>
-                                <div class="text-gray-600 space-y-1 mb-4">
-                                    <p><strong>Banco:</strong> Pichincha</p>
-                                    <p><strong>Tipo Cta:</strong> Ahorros</p>
-                                    <p><strong>Número:</strong> 2204567890</p>
-                                    <p><strong>Beneficiario:</strong> Santiago Papelería</p>
-                                    <p><strong>CI/RUC:</strong> 1104567890</p>
+                                <p class="font-bold text-[#0f4c75] mb-2">Cuentas Disponibles:</p>
+                                <div class="space-y-3 mb-4">
+                                    @for (acc of cartService.paymentConfig()?.bankAccounts; track acc._id) {
+                                    <div class="bg-white p-2 rounded border border-blue-100 shadow-sm">
+                                        <p class="font-bold text-blue-800">{{ acc.bankName }} - {{ acc.type }}</p>
+                                        <p class="text-gray-600 font-mono">{{ acc.accountNumber }}</p>
+                                        <p class="text-xs text-gray-500">{{ acc.ownerName }} ({{ acc.ownerId }})</p>
+                                    </div>
+                                    } @empty {
+                                    <p class="text-xs text-red-500">No hay cuentas configuradas.</p>
+                                    }
                                 </div>
 
                                 <div class="border-t border-blue-100 pt-3">
@@ -267,19 +272,31 @@
                                 </div>
                             </div>
                             }
+                            }
 
                             <!-- Cash -->
+                            @if (cartService.paymentConfig()?.cashActive) {
                             <label class="flex items-center p-3 border rounded cursor-pointer hover:bg-gray-50"
                                 [class.border-[#f2cb07]]="cartService.paymentMethod() === 'cash'"
-                                [class.bg-yellow-50]="cartService.paymentMethod() === 'cash'">
+                                [class.bg-yellow-50]="cartService.paymentMethod() === 'cash'"
+                                [class.opacity-50]="cartService.finalTotal() > (cartService.paymentConfig()?.cashConfig?.maxAmount || 0) && cartService.paymentConfig()?.cashConfig?.maxAmount! > 0">
                                 <input type="radio" name="payment" value="cash" (change)="setPayment('cash')"
-                                    class="accent-[#f2cb07] h-4 w-4">
+                                    class="accent-[#f2cb07] h-4 w-4"
+                                    [disabled]="cartService.finalTotal() > (cartService.paymentConfig()?.cashConfig?.maxAmount || 0) && cartService.paymentConfig()?.cashConfig?.maxAmount! > 0">
                                 <div class="ml-3">
-                                    <div class="font-bold text-[#012e40] text-sm">Efectivo</div>
+                                    <div class="font-bold text-[#012e40] text-sm">Efectivo / Contraentrega</div>
                                     <div class="text-xs text-gray-500">Paga al recibir o retirar</div>
+                                    @if(cartService.finalTotal() > (cartService.paymentConfig()?.cashConfig?.maxAmount
+                                    || 0) && cartService.paymentConfig()?.cashConfig?.maxAmount! > 0) {
+                                    <div class="text-[10px] text-red-500 font-bold mt-0.5">
+                                        No disponible para montos mayores a {{
+                                        cartService.paymentConfig()?.cashConfig?.maxAmount | currency }}
+                                    </div>
+                                    }
                                 </div>
                                 <i class="ri-money-dollar-circle-line ml-auto text-xl text-gray-400"></i>
                             </label>
+                            }
                         </div>
                     </div>
 
@@ -297,7 +314,7 @@
                             <span>{{ cartService.subTotal() | currency }}</span>
                         </div>
                         <div class="flex justify-between text-gray-600 text-sm">
-                            <span>IVA (15%)</span>
+                            <span>IVA ({{ cartService.ivaRate() * 100 | number:'1.0-0' }}%)</span>
                             <span>{{ cartService.totalIva() | currency }}</span>
                         </div>
                         <div class="flex justify-between text-gray-600 text-sm">
