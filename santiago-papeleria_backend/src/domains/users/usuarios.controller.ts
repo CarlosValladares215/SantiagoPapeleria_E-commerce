@@ -323,6 +323,40 @@ export class UsuariosController {
     return { message: 'Contraseña restablecida correctamente. Ahora puedes iniciar sesión.' };
   }
 
+  // POST /usuarios/change-password
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(@Body() body: any, @Headers('authorization') authHeader: string) {
+    const { currentPassword, newPassword } = body;
+    if (!currentPassword || !newPassword) throw new BadRequestException('Current and new passwords are required');
+
+    if (newPassword.length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters');
+    }
+
+    // Get user from token (Guard ensures it's valid, but we need the ID)
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, this.jwtSecret) as any;
+    const user = await this.usuariosService.findById(decoded.sub);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+      throw new UnauthorizedException('La contraseña actual es incorrecta');
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+
+    user.password_hash = hash;
+    await user.save();
+
+    return { message: 'Contraseña actualizada correctamente' };
+  }
+
   // GET /usuarios
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -34,15 +34,22 @@ interface Order {
     paymentProofUrl?: string;
     shippingCost: number;
     subtotal: number;
-    status: 'Pendiente' | 'Preparando' | 'Enviado' | 'Entregado' | 'Cancelado';
+    status: 'Pendiente' | 'Preparando' | 'Enviado' | 'Entregado' | 'Cancelado' | 'Devolucion_Pendiente' | 'Devolucion_Aprobada' | 'Devolucion_Rechazada';
     products: any[];
+    returnRequest?: {
+        reason: string;
+        date: Date;
+        items: any[];
+        status: string;
+        warehouseObservations?: string;
+    };
 }
 
 @Component({
     selector: 'app-warehouse-dashboard',
     standalone: true,
     imports: [CommonModule, FormsModule],
-    providers: [ErpService], // OrderService and ProductService are provided in root
+    providers: [ErpService],
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss']
 })
@@ -50,7 +57,7 @@ export class WarehouseDashboardComponent implements OnInit {
 
     private router = inject(Router);
 
-    activeTab: 'orders' | 'inventory' = 'orders';
+    activeTab: 'orders' | 'returns' = 'orders';
     isStatusDropdownOpen = false;
     // KPI Data
     stats = {
@@ -61,34 +68,27 @@ export class WarehouseDashboardComponent implements OnInit {
         cancelled: 0
     };
 
-    // Mock Orders Data
-    orders: Order[] = [];
-
-    // Inventory Data
-    inventoryStats = {
-        totalProducts: 0,
-        lowStock: 0,
-        totalValue: 0,
-        avgStock: 0
+    // Returns KPI
+    returnStats = {
+        pending: 0,
+        approved: 0,
+        rejected: 0
     };
 
-    inventoryItems: any[] = [];
+    orders: Order[] = [];
 
-    private productService = inject(ProductService);
+    // Derived lists
+    get pendingReturns(): Order[] {
+        return this.orders.filter(o => o.status === 'Devolucion_Pendiente');
+    }
+
+    private productService = inject(ProductService); // Keep product service if needed for general purposes, otherwise could remove if strictly no inventory. Keeping for now as it might be used elsewhere.
 
     constructor(
         private erpService: ErpService,
         private cd: ChangeDetectorRef,
         private orderService: OrderService
-    ) {
-        // Sync Inventory when ProductService updates
-        effect(() => {
-            const products = this.productService.products();
-            if (products.length > 0) {
-                this.mapInventoryItems(products);
-            }
-        });
-    }
+    ) { }
 
     ngOnInit() {
         this.checkSyncState();
@@ -96,7 +96,6 @@ export class WarehouseDashboardComponent implements OnInit {
     }
 
     checkSyncState() {
-        // Verificar si la sesión ya estaba sincronizada (persistencia tras recarga)
         if (typeof window !== 'undefined' && sessionStorage.getItem('dobranet_sync_active') === 'true') {
             console.log('🔄 Sesión de DobraNet restaurada.');
             this.isConnected = true;
@@ -105,9 +104,7 @@ export class WarehouseDashboardComponent implements OnInit {
     }
 
     loadDashboardData() {
-        // this.loadOrders(); // Deshabilitado: Se cargan solo al Sincronizar
-        // Trigger fetch products (will trigger effect)
-        this.productService.fetchProducts({} as any);
+        // this.loadOrders(); 
     }
 
     loadOrders() {
@@ -123,7 +120,6 @@ export class WarehouseDashboardComponent implements OnInit {
 
     downloadGuide(order: Order) {
         if (!order) return;
-        // Use _id (Mongo ID) which works with backend findOne
         const url = this.router.serializeUrl(
             this.router.createUrlTree(['/orders/guide', order._id])
         );
@@ -131,7 +127,6 @@ export class WarehouseDashboardComponent implements OnInit {
     }
 
     mapBackendOrder(backendOrder: BackendOrder): Order {
-        // Safe check for client data if populated or not
         const user = backendOrder.usuario_id as any;
         const isPopulated = user && typeof user === 'object';
 
@@ -144,6 +139,27 @@ export class WarehouseDashboardComponent implements OnInit {
         const address = backendOrder.datos_envio?.direccion_destino;
         const fullAddress = address ? address.calle : 'No especificada';
         const city = address ? address.ciudad : 'N/A';
+
+        // Map Return Data
+        let returnRequest = undefined;
+        if (backendOrder.datos_devolucion) {
+            returnRequest = {
+                reason: backendOrder.datos_devolucion.motivo,
+                date: new Date(backendOrder.datos_devolucion.fecha_solicitud),
+                items: backendOrder.datos_devolucion.items,
+                status: backendOrder.datos_devolucion.estado, // PENDIENTE_REVISION, APROBADA, RECHAZADA
+                warehouseObservations: (backendOrder.datos_devolucion as any).observaciones_bodega
+            };
+        }
+
+        // Map Status (backendStatusMap inverse not strictly needed if we use same strings, but mapping for display)
+        let displayStatus = this.mapStatus(backendOrder.estado_pedido);
+
+        // Custom mapping for returns
+        if (backendOrder.estado_pedido === 'PENDIENTE_REVISION') displayStatus = 'Devolucion_Pendiente';
+        if (backendOrder.estado_pedido === 'DEVOLUCION_APROBADA') displayStatus = 'Devolucion_Aprobada';
+        if (backendOrder.estado_pedido === 'DEVOLUCION_RECHAZADA') displayStatus = 'Devolucion_Rechazada';
+
 
         return {
             _id: backendOrder._id,
@@ -163,7 +179,7 @@ export class WarehouseDashboardComponent implements OnInit {
                 postalCode: address?.codigo_postal || 'N/A',
                 reference: address?.referencia || 'N/A'
             },
-            observations: 'Ninguna', // Placeholder as DB has no field yet
+            observations: 'Ninguna',
             date: new Date(backendOrder.fecha_compra),
             itemsCount: backendOrder.items.length,
             totalUnits: backendOrder.items.reduce((acc, item) => acc + item.cantidad, 0),
@@ -172,7 +188,7 @@ export class WarehouseDashboardComponent implements OnInit {
             shippingCost: backendOrder.resumen_financiero.costo_envio || 0,
             paymentMethod: backendOrder.resumen_financiero.metodo_pago,
             paymentProofUrl: backendOrder.resumen_financiero.comprobante_pago ? `http://localhost:3000${backendOrder.resumen_financiero.comprobante_pago}` : undefined,
-            status: this.mapStatus(backendOrder.estado_pedido),
+            status: displayStatus,
             products: backendOrder.items.map(item => ({
                 code: item.codigo_dobranet || 'GEN',
                 name: item.nombre,
@@ -180,42 +196,25 @@ export class WarehouseDashboardComponent implements OnInit {
                 price: item.precio_unitario_aplicado,
                 subtotal: item.subtotal
             })),
+            returnRequest
         };
     }
 
     mapStatus(backendStatus: string): any {
-        // Map backend Enums to Frontend Display Strings
         const statusMap: { [key: string]: string } = {
-            'PAGADO': 'Pendiente', // Consolidated
+            'PAGADO': 'Pendiente',
             'CONFIRMADO': 'Pendiente',
             'PENDIENTE': 'Pendiente',
             'EN_PREPARACION': 'Preparando',
             'PREPARANDO': 'Preparando',
             'ENVIADO': 'Enviado',
             'ENTREGADO': 'Entregado',
-            'CANCELADO': 'Cancelado'
+            'CANCELADO': 'Cancelado',
+            'PENDIENTE_REVISION': 'Devolucion_Pendiente',
+            'DEVOLUCION_APROBADA': 'Devolucion_Aprobada',
+            'DEVOLUCION_RECHAZADA': 'Devolucion_Rechazada'
         };
         return statusMap[backendStatus] || 'Pendiente';
-    }
-
-    mapInventoryItems(products: any[]) {
-        this.inventoryItems = products.map(p => ({
-            code: p.sku || p.internal_id || 'N/A',
-            name: p.name,
-            description: p.description || '',
-            category: p.category,
-            stock: p.stock,
-            min: 50, // Default or fetch if available
-            max: 500, // Default
-            status: p.stock < 50 ? 'Stock Bajo' : 'Stock Normal',
-            price: p.price
-        }));
-
-        // Update Stats
-        this.inventoryStats.totalProducts = products.length;
-        this.inventoryStats.totalValue = products.reduce((acc, p) => acc + (p.price * p.stock), 0);
-        this.inventoryStats.avgStock = Math.floor(products.reduce((acc, p) => acc + p.stock, 0) / (products.length || 1));
-        this.inventoryStats.lowStock = products.filter(p => p.stock < 50).length;
     }
 
     updateOrderStats() {
@@ -226,6 +225,11 @@ export class WarehouseDashboardComponent implements OnInit {
             delivered: this.orders.filter(o => o.status === 'Entregado').length,
             cancelled: this.orders.filter(o => o.status === 'Cancelado').length,
         };
+        this.returnStats = {
+            pending: this.orders.filter(o => o.status === 'Devolucion_Pendiente').length,
+            approved: this.orders.filter(o => o.status === 'Devolucion_Aprobada').length,
+            rejected: this.orders.filter(o => o.status === 'Devolucion_Rechazada').length,
+        }
     }
 
     getStatusClass(status: string): string {
@@ -235,6 +239,9 @@ export class WarehouseDashboardComponent implements OnInit {
             case 'Enviado': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'Entregado': return 'bg-green-100 text-green-700 border-green-200';
             case 'Cancelado': return 'bg-gray-100 text-gray-700 border-gray-200';
+            case 'Devolucion_Pendiente': return 'bg-purple-100 text-purple-700 border-purple-200';
+            case 'Devolucion_Aprobada': return 'bg-teal-100 text-teal-700 border-teal-200';
+            case 'Devolucion_Rechazada': return 'bg-red-100 text-red-700 border-red-200';
             default: return 'bg-gray-100 text-gray-700';
         }
     }
@@ -246,27 +253,11 @@ export class WarehouseDashboardComponent implements OnInit {
             case 'Enviado': return 'ri-truck-line';
             case 'Entregado': return 'ri-checkbox-circle-line';
             case 'Cancelado': return 'ri-close-circle-line';
+            case 'Devolucion_Pendiente': return 'ri-arrow-go-back-line';
+            case 'Devolucion_Aprobada': return 'ri-check-double-line';
+            case 'Devolucion_Rechazada': return 'ri-close-line';
             default: return 'ri-question-line';
         }
-    }
-
-    getInventoryStatusClass(status: string): string {
-        switch (status) {
-            case 'Stock Normal': return 'bg-blue-100 text-blue-700';
-            case 'Stock Bajo': return 'bg-red-100 text-red-700';
-            case 'Exceso Stock': return 'bg-yellow-100 text-yellow-700';
-            default: return 'bg-gray-100 text-gray-700';
-        }
-    }
-
-    getStockProgressColor(current: number, min: number, max: number): string {
-        if (current <= min) return 'bg-red-500';
-        if (current >= max) return 'bg-green-500';
-        return 'bg-blue-500';
-    }
-
-    getStockPercentage(current: number, max: number): number {
-        return Math.min((current / max) * 100, 100);
     }
 
     // ================= FILTERS & FILTERING LOGIC =================
@@ -277,24 +268,24 @@ export class WarehouseDashboardComponent implements OnInit {
 
     get filteredOrders(): Order[] {
         return this.orders.filter(order => {
-            // 1. Text Search (ID, Guide, Client Name)
+            // Exclude Returns from main list if needed, or keeping them mixed?
+            // Usually dashboard "Pedidos" shows all sales. Returns might be mixed or filtered.
+            // If status is 'Devolucion_Pendiente', it's still an order.
             const term = this.searchTerm.toLowerCase();
             const matchesText = !term ||
                 order.id.toLowerCase().includes(term) ||
                 (order.guide && order.guide.toLowerCase().includes(term)) ||
                 order.client.name.toLowerCase().includes(term);
 
-            // 2. Status Filter
             const matchesStatus = this.filterStatus === 'Todos los estados' || order.status === this.filterStatus;
 
-            // 3. Date Range Filter
             let matchesDate = true;
             if (this.startDate) {
                 matchesDate = matchesDate && new Date(order.date) >= new Date(this.startDate);
             }
             if (this.endDate) {
                 const end = new Date(this.endDate);
-                end.setHours(23, 59, 59, 999); // End of day
+                end.setHours(23, 59, 59, 999);
                 matchesDate = matchesDate && new Date(order.date) <= end;
             }
 
@@ -302,18 +293,24 @@ export class WarehouseDashboardComponent implements OnInit {
         });
     }
 
+    get returnOrders(): Order[] {
+        return this.orders.filter(order =>
+            ['Devolucion_Pendiente', 'Devolucion_Aprobada', 'Devolucion_Rechazada'].includes(order.status)
+        );
+    }
+
     // Modal Logic
     selectedOrder: Order | null = null;
     orderProducts: any[] = [];
     viewOrder(order: Order) {
         this.selectedOrder = order;
-        this.pendingStatus = null; // Reset pending status
+        this.pendingStatus = null;
         this.orderProducts = order.products || [];
     }
 
     closeModal() {
         this.selectedOrder = null;
-        this.pendingStatus = null; // Reset pending status
+        this.pendingStatus = null;
         this.isStatusDropdownOpen = false;
     }
 
@@ -325,20 +322,6 @@ export class WarehouseDashboardComponent implements OnInit {
     pendingStatus: string | null = null;
     selectStatus(status: any) {
         if (!this.selectedOrder) return;
-
-        // HU58: Validate Transitions
-        const current = this.selectedOrder.status;
-        if (current === 'Cancelado') {
-            alert('No se puede cambiar el estado de un pedido cancelado.');
-            return;
-        }
-        if (current === 'Entregado' && status !== 'Entregado') {
-            // Optional: Allow reverting only if admin, but for warehouse usually restricted or warns.
-            // letting it strict for now as per "Validar transiciones"
-            const confirmRevert = confirm('El pedido ya está entregado. ¿Seguro que desea cambiar su estado?');
-            if (!confirmRevert) return;
-        }
-
         this.pendingStatus = status;
         this.isStatusDropdownOpen = false;
     }
@@ -349,7 +332,6 @@ export class WarehouseDashboardComponent implements OnInit {
         }
     }
 
-    // HU61: Mark as Delivered Action
     markAsDelivered(order: Order) {
         if (order.status === 'Entregado') return;
         if (confirm(`¿Marcar pedido ${order.id} como ENTREGADO?`)) {
@@ -363,17 +345,17 @@ export class WarehouseDashboardComponent implements OnInit {
             'Preparando': 'PREPARANDO',
             'Enviado': 'ENVIADO',
             'Entregado': 'ENTREGADO',
-            'Cancelado': 'CANCELADO'
+            'Cancelado': 'CANCELADO',
+            'Devolucion_Pendiente': 'PENDIENTE_REVISION', // Though usually status update doesn't trigger this manually from dropdown
         };
 
         const backendStatus = backendStatusMap[newStatus] || newStatus;
 
         this.orderService.updateOrderStatus(order._id, backendStatus).subscribe({
             next: () => {
-                console.log(`Estado actualizado a ${newStatus}`);
-                order.status = newStatus as any; // Commit change locally
-                this.pendingStatus = null; // Clear pending
-                this.updateOrderStats(); // Refresh KPIs
+                order.status = newStatus as any;
+                this.pendingStatus = null;
+                this.updateOrderStats();
                 this.cd.detectChanges();
             },
             error: (err) => {
@@ -383,47 +365,62 @@ export class WarehouseDashboardComponent implements OnInit {
         });
     }
 
-    // ================= ADD STOCK MODAL LOGIC =================
-    selectedInventoryItem: any | null = null;
-    stockReasons = [
-        'Compra a Proveedor',
-        'Devolución de Cliente',
-        'Ajuste de Inventario',
-        'Transferencia de Bodega'
-    ];
-
-    stockForm = {
-        quantity: null as number | null,
-        reason: 'Compra a Proveedor',
-        provider: '',
-        notes: ''
+    // ================= RETURN VALIDATION LOGIC =================
+    selectedReturnOrder: Order | null = null;
+    returnValidationForm = {
+        observations: ''
     };
 
-    openStockModal(item: any) {
-        this.selectedInventoryItem = item;
-        this.stockForm = {
-            quantity: null,
-            reason: 'Compra a Proveedor',
-            provider: '',
-            notes: ''
-        };
+    openReturnValidation(order: Order) {
+        this.selectedReturnOrder = order;
+        this.returnValidationForm.observations = '';
     }
 
-    closeStockModal() {
-        this.selectedInventoryItem = null;
+    closeReturnValidation() {
+        this.selectedReturnOrder = null;
     }
 
-    saveStock() {
-        if (this.selectedInventoryItem && this.stockForm.quantity) {
-            // Mock logic to update stock
-            const newStock = this.selectedInventoryItem.stock + this.stockForm.quantity;
-            this.selectedInventoryItem.stock = newStock;
+    validateReturn(decision: 'APPROVE' | 'REJECT') {
+        if (!this.selectedReturnOrder) return;
 
-            // Re-calculate mock inventory stats
-            this.inventoryStats.avgStock = Math.floor((this.inventoryStats.avgStock * 15 + this.stockForm.quantity) / 15);
+        const confirmMsg = decision === 'APPROVE'
+            ? '¿Aprobar esta devolución? El estado cambiará a DEVOLUCIÓN APROBADA.'
+            : '¿Rechazar esta devolución? El pedido mantendrá su estado original o pasará a Rechazado.';
 
-            this.closeStockModal();
-        }
+        if (!confirm(confirmMsg)) return;
+
+        const url = `${this.orderService['apiUrl']}/${this.selectedReturnOrder._id}/return/validate`;
+
+        // HACK: calling http directly or need to extend order service. 
+        // Better extend order service properly, but for speed injecting HttpClient here or assuming OrderService has generic method?
+        // Let's add validateReturn to OrderService frontend first to be clean, OR use direct call via OrderService if exposed.
+        // I will assume I need to add it to OrderService TS as well.
+        // But first, let's just use existing updateStatus? No, it's a specific endpoint.
+        // Let's modify OrderService on the fly or add it here using OrderService.http if public (it's not).
+        // Call validateReturn directly from OrderService
+        this.orderService.validateReturn(this.selectedReturnOrder._id.replace('ORD-WEB-', ''), decision, this.returnValidationForm.observations).subscribe({
+            next: (updatedOrder: any) => {
+                console.log('✅ [Frontend] ValidateReturn Success. Updated Order:', updatedOrder);
+                console.log('✅ [Frontend] Updated Order Status:', updatedOrder.estado_pedido);
+
+                // Manually update local state to reflect change immediately
+                this.orders = this.orders.map(o => {
+                    if (o._id === updatedOrder._id) {
+                        return this.mapBackendOrder(updatedOrder);
+                    }
+                    return o;
+                });
+                this.updateOrderStats();
+
+                alert(`Devolución ${decision === 'APPROVE' ? 'APROBADA' : 'RECHAZADA'} exitosamente.`);
+                this.closeReturnValidation();
+                setTimeout(() => this.loadOrders(), 500); // Small delay to allow DB propagation
+            },
+            error: (err: any) => {
+                console.error('❌ [Frontend] Error validando devolución', err);
+                alert('Error al validar la devolución');
+            }
+        });
     }
 
     // ================= SYNC LOGIC =================
@@ -432,67 +429,34 @@ export class WarehouseDashboardComponent implements OnInit {
 
     syncDobranet() {
         if (this.isSyncing) return;
-
         this.isSyncing = true;
-        console.log('Iniciando sincronización (Lectura) con DobraNet desde Bodega...');
-
-        // Using getRawData() to match Admin's 'ManualSyncComponent' behavior
         this.erpService.getRawData()
             .pipe(
-                // Simulate realistic processing time (5 seconds) as requested
-                delay(5000),
-                timeout(35000), // Timeout after 35s
+                delay(2000), // Reduced delay for better UX
+                timeout(35000),
                 finalize(() => {
                     this.isSyncing = false;
-                    console.log('Sincronización finalizada (Loading stopped)');
                 })
             )
             .subscribe({
                 next: (data: any[]) => {
-                    console.log('Datos recibidos de DobraNet:', data);
-
-                    // Force update immediately
                     this.isSyncing = false;
                     this.isConnected = true;
-                    // Guardar estado en SessionStorage para persistir tras recarga
                     sessionStorage.setItem('dobranet_sync_active', 'true');
-
-                    this.loadOrders(); // Cargar pedidos SOLO después de sincronizar
-                    this.cd.detectChanges(); // Ensure UI updates BEFORE alert
-
+                    this.loadOrders();
+                    this.cd.detectChanges();
                     setTimeout(() => {
-                        if (Array.isArray(data)) {
-                            // Update local stats first to show "immediate" effect
-                            this.inventoryStats.totalProducts = data.length;
-                            this.inventoryStats.totalValue = data.reduce((acc, curr) => acc + (Number(curr.PVP) || 0), 0);
-
-                            alert(`Sincronización completada con DobraNet.\n\nSe procesaron exitosamente ${data.length} productos del catálogo ERP.`);
-                        } else {
-                            alert('Conexión establecida, pero el formato de datos es inesperado.');
-                        }
-                    }, 500); // 500ms slight delay to ensure user sees the Green state first
+                        alert(`Sincronización completada.`);
+                    }, 500);
                 },
                 error: (error: any) => {
-                    console.error('Error al obtener datos de DobraNet:', error);
-
-                    // Force update immediately
                     this.isSyncing = false;
                     this.isConnected = false;
-                    this.cd.detectChanges(); // Ensure UI updates BEFORE alert
-
+                    this.cd.detectChanges();
                     setTimeout(() => {
-                        alert('Error al conectar con DobraNet. Asegúrese de que el simulador esté activo.');
+                        alert('Error al conectar con DobraNet.');
                     }, 500);
                 }
             });
-    }
-
-    refreshMetrics() {
-        this.erpService.getDashboardMetrics().subscribe((metrics: any) => {
-            if (metrics && metrics.metrics) {
-                this.inventoryStats.totalProducts = metrics.metrics.totalProducts;
-                this.cd.detectChanges();
-            }
-        });
     }
 }

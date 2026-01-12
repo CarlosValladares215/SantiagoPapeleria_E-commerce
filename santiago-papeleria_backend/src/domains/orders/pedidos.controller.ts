@@ -80,4 +80,27 @@ export class PedidosController {
     }
     return this.pedidosService.requestCancellation(id, userId);
   }
+
+  // POST /pedidos/:id/return
+  @Post(':id/return')
+  async requestReturn(
+    @Param('id') id: string,
+    @Body() body: any,
+  ): Promise<PedidoDocument> {
+    const { userId, items, motivo } = body;
+    if (!userId || !items || !motivo) {
+      throw new ForbiddenException('Datos incompletos para la devolución');
+    }
+    return this.pedidosService.requestReturn(id, userId, { items, motivo });
+  }
+
+  // POST /pedidos/:id/return/validate
+  @Post(':id/return/validate')
+  async validateReturn(
+    @Param('id') id: string,
+    @Body() body: any,
+  ): Promise<PedidoDocument> {
+    const { decision, observations } = body;
+    return this.pedidosService.validateReturn(id, decision, observations);
+  }
 }

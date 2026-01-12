@@ -15,6 +15,7 @@ import { FilesModule } from './shared/files/files.module';
 import { NotificationsModule } from './domains/notifications/notifications.module';
 import { ShippingModule } from './domains/shipping/shipping.module';
 import { ReportsModule } from './domains/reports/reports.module';
+import { ChatbotModule } from './domains/chatbot/chatbot.module';
 import { PaymentsModule } from './domains/payments/payments.module';
 
 @Module({
@@ -32,6 +33,7 @@ import { PaymentsModule } from './domains/payments/payments.module';
     ReportsModule,
     PaymentsModule,
     FilesModule,
+    ChatbotModule,
     ConfigModule.forRoot({
       isGlobal: true,
     })

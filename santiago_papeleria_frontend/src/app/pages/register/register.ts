@@ -25,6 +25,7 @@ export class Register {
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
+      confirm_password: ['', [Validators.required]],
       nombres: ['', Validators.required],
       cedula: [''], // Inicialmente vacío
       telefono: [''], // Inicialmente vacío
@@ -46,11 +47,16 @@ export class Register {
       preferencias: this.fb.group({
         acepta_boletin: [true]
       })
-    });
+    }, { validators: this.passwordMatchValidator });
 
     this.onTypeChange();
     // Ejecutar validación inicial
     this.updateValidators();
+  }
+
+  passwordMatchValidator(g: FormGroup) {
+    return g.get('password')?.value === g.get('confirm_password')?.value
+      ? null : { 'mismatch': true };
   }
 
   onTypeChange() {
@@ -132,15 +138,19 @@ export class Register {
           console.log('Registro exitoso', res);
 
           if (res.access_token && res.user) {
-            // AUTO-LOGIN
-            if (typeof localStorage !== 'undefined') {
-              localStorage.setItem('token', res.access_token);
+            if (res.access_token && res.user) {
+              // NO AUTO-LOGIN YET
+              // Redirect to Verify and pass email for context
+              console.log('Registro exitoso, redirigiendo a verificación');
+              this.router.navigate(['/verify-email'], {
+                queryParams: { email: formValue.email }
+              });
+            } else {
+              // Fallback (should be same behavior actually)
+              this.router.navigate(['/verify-email'], {
+                queryParams: { email: formValue.email }
+              });
             }
-            // Update Auth State
-            this.authService.setSession(res.user);
-
-            // Redirect to Home
-            this.router.navigate(['/']);
           } else {
             // Fallback
             this.router.navigate(['/verify-email'], {

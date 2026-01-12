@@ -97,6 +97,24 @@ class IntegracionDobranet {
   ultimo_error: string; // Último error de sincronización
 }
 
+// 6. Datos Devolución
+class DatosDevolucion {
+  @Prop({ required: true })
+  motivo: string;
+
+  @Prop({ required: true, default: Date.now })
+  fecha_solicitud: Date;
+
+  @Prop({ type: [{ codigo: String, nombre: String, cantidad: Number }], default: [] })
+  items: { codigo: string; nombre: string; cantidad: number }[];
+
+  @Prop({ default: 'PENDIENTE_REVISION' })
+  estado: string; // 'PENDIENTE_REVISION', 'APROBADA', 'RECHAZADA'
+
+  @Prop({ required: false })
+  observaciones_bodega: string;
+}
+
 // Definición principal del Schema
 @Schema({ collection: 'pedidos' })
 export class Pedido {
@@ -124,6 +142,12 @@ export class Pedido {
 
   @Prop({ type: Date, required: true })
   fecha_compra: Date; // Corresponde a "fecha_compra"
+
+  @Prop({ type: Date, default: null })
+  fecha_entrega: Date;
+
+  @Prop({ type: DatosDevolucion, default: null })
+  datos_devolucion: DatosDevolucion;
 }
 
 export type PedidoStatus = 'PAGADO' | 'PENDIENTE' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO';
