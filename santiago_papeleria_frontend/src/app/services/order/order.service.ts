@@ -37,6 +37,13 @@ export interface Order {
             referencia?: string;
         };
     };
+    datos_devolucion?: {
+        motivo: string;
+        fecha_solicitud: string; // ISO Date string
+        items: any[];
+        estado: 'PENDIENTE_REVISION' | 'APROBADA' | 'RECHAZADA';
+        observaciones_bodega?: string;
+    };
     integracion_dobranet: {
         sincronizado: boolean;
         intentos: number;
@@ -55,7 +62,7 @@ export class OrderService {
     orders = signal<Order[]>([]);
 
     getOrders(): Observable<Order[]> {
-        return this.http.get<Order[]>(this.apiUrl);
+        return this.http.get<Order[]>(`${this.apiUrl}?t=${Date.now()}`);
     }
 
     getOrdersByUser(userId: string): Observable<any[]> {
@@ -74,7 +81,15 @@ export class OrderService {
         return this.http.patch(`${this.apiUrl}/${id}/status`, { status });
     }
 
-    cancelOrder(id: string, userId: string): Observable<any> {
-        return this.http.patch(`${this.apiUrl}/${id}/cancel`, { userId });
+    cancelOrder(orderId: string, userId: string): Observable<Order> {
+        return this.http.patch<Order>(`${this.apiUrl}/${orderId}/cancel`, { userId });
+    }
+
+    requestReturn(orderId: string, userId: string, data: any): Observable<Order> {
+        return this.http.post<Order>(`${this.apiUrl}/${orderId}/return`, { userId, ...data });
+    }
+
+    validateReturn(orderId: string, decision: 'APPROVE' | 'REJECT', observations: string): Observable<Order> {
+        return this.http.post<Order>(`${this.apiUrl}/${orderId}/return/validate`, { decision, observations });
     }
 }

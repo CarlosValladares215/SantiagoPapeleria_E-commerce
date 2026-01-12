@@ -312,4 +312,59 @@ Si no solicitaste esto, ignora este mensaje.
             // No lanzamos error para no interrumpir el flujo de sincronización
         }
     }
+
+    /**
+     * Envía email con la decisión de la devolución (Aprobada/Rechazada) (HU048)
+     */
+    async sendReturnDecision(email: string, order: any, decision: 'APPROVE' | 'REJECT', observations: string): Promise<void> {
+        const appName = 'Santiago Papelería';
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        const isApproved = decision === 'APPROVE';
+        const decisionText = isApproved ? 'APROBADA' : 'RECHAZADA';
+        const color = isApproved ? '#10B981' : '#EF4444'; // Green or Red
+
+        const instructions = isApproved
+            ? `<p><strong>Próximos Pasos:</strong> Por favor envíe el producto a nuestra dirección principal: Av. Los Paltas y Brasil, Loja. Asegúrese de incluir el número de pedido en el paquete.</p>`
+            : '';
+
+        const observationsHtml = observations
+            ? `<p><strong>Observaciones de Bodega:</strong><br><i>"${observations}"</i></p>`
+            : '';
+
+        const htmlContent = `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                <h2 style="color: ${color}; text-align: center;">Solicitud de Devolución ${decisionText}</h2>
+                <p>Hola estimado cliente,</p>
+                <p>Le informamos que su solicitud de devolución para el pedido <strong>#${order.numero_pedido_web}</strong> ha sido <strong>${decisionText}</strong>.</p>
+                
+                ${observationsHtml}
+                ${instructions}
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="${frontendUrl}/orders" style="background-color: #012E40; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Ver Mis Pedidos</a>
+                </div>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+                <p style="font-size: 12px; color: #999; text-align: center;">
+                    ${appName}<br>
+                    Tu aliado en útiles escolares y de oficina
+                </p>
+            </div>
+        `;
+
+        const fromAddress = this.configService.get<string>('SMTP_FROM', `"${appName}" <noreply@santiagopapeleria.com>`);
+
+        try {
+            await this.transporter.sendMail({
+                from: fromAddress,
+                to: email,
+                subject: `Devolución ${decisionText} - Pedido #${order.numero_pedido_web}`,
+                html: htmlContent,
+            });
+            this.logger.log(`Return decision email sent to ${email} for Order #${order.numero_pedido_web}`);
+        } catch (error) {
+            this.logger.error(`Failed to send return decision email to ${email}`, error);
+        }
+    }
 }

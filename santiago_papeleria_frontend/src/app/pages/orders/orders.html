@@ -120,6 +120,35 @@
 
                             <h3 class="text-sm font-bold text-[#012e40] mb-4">Productos</h3>
 
+                            <!-- Return Details (New for HU048) -->
+                            <div *ngIf="order.status.includes('Devolución')" class="mb-6 p-4 rounded-lg border"
+                                [ngClass]="{
+                                     'bg-red-50 border-red-100': order.status.includes('Rechazada'),
+                                     'bg-green-50 border-green-100': order.status.includes('Aprobada'),
+                                     'bg-yellow-50 border-yellow-100': order.status.includes('Pendiente')
+                                 }">
+                                <h3 class="text-sm font-bold mb-2 flex items-center gap-2" [ngClass]="{
+                                        'text-red-700': order.status.includes('Rechazada'),
+                                        'text-green-700': order.status.includes('Aprobada'),
+                                        'text-yellow-700': order.status.includes('Pendiente')
+                                    }">
+                                    <i class="ri-information-fill text-lg"></i>
+                                    Detalle de Devolución
+                                </h3>
+                                <p class="text-sm">
+                                    <span class="font-medium">Estado:</span> {{ order.status }}
+                                </p>
+                                <div *ngIf="order.warehouseObservations" class="mt-2 pt-2 border-t border-gray-200/50">
+                                    <p class="text-xs font-bold uppercase opacity-70 mb-1">Observaciones de Bodega:</p>
+                                    <p class="text-sm italic">"{{ order.warehouseObservations }}"</p>
+                                </div>
+                                <div *ngIf="order.status.includes('Aprobada')"
+                                    class="mt-3 text-sm text-green-800 bg-green-100/50 p-3 rounded">
+                                    <strong>Instrucciones:</strong> Por favor envíe el producto a nuestra dirección
+                                    principal. Revise su correo para más detalles.
+                                </div>
+                            </div>
+
                             <!-- Product List -->
                             <div class="space-y-3 mb-8">
                                 <div *ngFor="let product of order.products"
@@ -218,6 +247,10 @@
                                         class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-colors text-sm flex items-center gap-2 cursor-pointer no-underline">
                                         <i class="ri-repeat-line"></i> Volver a Comprar
                                     </a>
+                                    <button *ngIf="canReturn(order)" (click)="initiateReturn(order)"
+                                        class="bg-white border border-gray-300 text-gray-700 font-bold py-2.5 px-6 rounded-md hover:bg-gray-50 transition-colors text-sm flex items-center gap-2">
+                                        <i class="ri-arrow-go-back-line"></i> Solicitar Devolución
+                                    </button>
                                 </ng-container>
 
                                 <!-- Status: Enviado -->
@@ -278,6 +311,64 @@
                         Sí, cancelar
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Request Modal (HU046) -->
+    <div *ngIf="showReturnModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+        <div
+            class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-[#012e40]">Solicitar Devolución</h3>
+                <button (click)="closeReturnModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-gray-500 mb-4">Selecciona los productos que deseas devolver y el motivo. Recuerda
+                    que la solicitud será revisada por nuestro equipo.</p>
+
+                <!-- Product Selection -->
+                <div class="space-y-3 mb-6">
+                    <div *ngFor="let item of returnForm.items" class="flex items-center gap-3 p-3 border rounded-lg"
+                        [class.border-[#0f4c75]]="item.selected">
+                        <input type="checkbox" [(ngModel)]="item.selected"
+                            class="w-5 h-5 rounded border-gray-300 text-[#0f4c75] focus:ring-[#0f4c75]">
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-[#012e40]">{{ item.name }}</p>
+                            <p class="text-xs text-gray-500">Comprado: {{ item.max }}</p>
+                        </div>
+                        <div class="w-20" *ngIf="item.selected">
+                            <label class="text-[10px] text-gray-500 block mb-1">Cantidad</label>
+                            <input type="number" [(ngModel)]="item.quantity" min="1" [max]="item.max"
+                                class="w-full text-xs p-1 border rounded text-center">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reason -->
+                <div>
+                    <label class="block text-sm font-bold text-[#012e40] mb-2">Motivo de la devolución *</label>
+                    <textarea [(ngModel)]="returnForm.motivo" rows="3"
+                        class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:border-[#0f4c75] focus:ring-1 focus:ring-[#0f4c75]"
+                        placeholder="Describe por qué deseas devolver los productos..."></textarea>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-gray-100 bg-gray-50 flex gap-3">
+                <button (click)="closeReturnModal()"
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-bold hover:bg-white transition-colors">
+                    Cancelar
+                </button>
+                <button (click)="submitReturn()" [disabled]="isReturning"
+                    class="flex-1 px-4 py-2 bg-[#0f4c75] text-white rounded-lg font-bold hover:bg-[#0b3a5a] transition-colors shadow-lg flex justify-center items-center gap-2">
+                    <span *ngIf="isReturning"
+                        class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Enviar Solicitud
+                </button>
             </div>
         </div>
     </div>

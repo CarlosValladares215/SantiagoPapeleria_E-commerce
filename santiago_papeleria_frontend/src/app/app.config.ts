@@ -5,7 +5,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
 
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
-import { LucideAngularModule, University, Plus, Pencil, Trash2, Banknote, Store, Info, Save } from 'lucide-angular';
+import { LucideAngularModule, University, Plus, Pencil, Trash2, Banknote, Store, Info, Save, MessageCircle, X, Send, Minimize2 } from 'lucide-angular';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -16,6 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideCharts(withDefaultRegisterables()),
+    importProvidersFrom(LucideAngularModule.pick({ MessageCircle, X, Send, Minimize2 })),
     importProvidersFrom(LucideAngularModule.pick({ University, Plus, Pencil, Trash2, Banknote, Store, Info, Save }))
   ]
 };

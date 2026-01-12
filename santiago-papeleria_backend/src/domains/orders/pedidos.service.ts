@@ -193,6 +193,12 @@ export class PedidosService {
     console.log(`ℹ️ [Backend] Estado anterior: ${oldStatus}`);
 
     pedido.estado_pedido = status;
+
+    // Set fecha_entrega if status is ENTREGADO
+    if (status.toUpperCase() === 'ENTREGADO') {
+      pedido.fecha_entrega = new Date();
+    }
+
     const saveResult = await pedido.save();
 
     // Create Notification if status changed
@@ -229,6 +235,140 @@ export class PedidosService {
     }
 
     return saveResult;
+  }
+
+  // Solicitar devolución de un pedido
+  async requestReturn(id: string, userId: string, returnData: any): Promise<PedidoDocument> {
+    const pedido = await this.findOne(id);
+    if (!pedido) {
+      throw new Error('Pedido no encontrado');
+    }
+
+    // 1. Verify Ownership
+    if (pedido.usuario_id.toString() !== userId && (pedido.usuario_id as any)._id?.toString() !== userId) {
+      throw new Error('No autorizado para solicitar devolución de este pedido');
+    }
+
+    // 2. Verify Status is ENTREGADO
+    if (pedido.estado_pedido.toUpperCase() !== 'ENTREGADO') {
+      throw new Error('Solo se pueden devolver pedidos entregados');
+    }
+
+    // 3. Verify Date Eligibility (5 days)
+    const deliveryDate = pedido.fecha_entrega || pedido.fecha_compra; // Fallback to purchase date if delivery date missing
+    const diffTime = Math.abs(new Date().getTime() - new Date(deliveryDate).getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 5) {
+      throw new Error(`El plazo de devolución (5 días) ha expirado. Han pasado ${diffDays} días.`);
+    }
+
+    // 4. Update Status and Save Data
+    pedido.estado_pedido = 'PENDIENTE_REVISION';
+    pedido.datos_devolucion = {
+      motivo: returnData.motivo,
+      fecha_solicitud: new Date(),
+      items: returnData.items,
+      estado: 'PENDIENTE_REVISION',
+      observaciones_bodega: ''
+    };
+
+    const saved = await pedido.save();
+
+    // Notify Admin (Log for now)
+    this.logger.log(`↩️ Solicitud de devolución creada para pedido #${pedido.numero_pedido_web}`);
+
+    return saved;
+  }
+
+
+
+  // Validar devolución (Bodega)
+  async validateReturn(id: string, decision: 'APPROVE' | 'REJECT', observations: string): Promise<PedidoDocument> {
+    const pedido = await this.findOne(id);
+    if (!pedido) {
+      throw new Error('Pedido no encontrado');
+    }
+
+    if (pedido.estado_pedido !== 'PENDIENTE_REVISION') {
+      throw new Error('El pedido no está en revisión de devolución');
+    }
+
+    // Log status change attempt
+    this.logger.log(`🔍 [ValidateReturn] Order ${id} - Decision: ${decision}`);
+    this.logger.log(`🔍 [ValidateReturn] Current Status: ${pedido.estado_pedido}`);
+
+    const newStatus = decision === 'APPROVE' ? 'DEVOLUCION_APROBADA' : 'DEVOLUCION_RECHAZADA';
+    const returnStatus = decision === 'APPROVE' ? 'APROBADA' : 'RECHAZADA';
+
+    pedido.estado_pedido = newStatus;
+    this.logger.log(`🔍 [ValidateReturn] New Status Set: ${newStatus}`);
+
+    // Update datos_devolucion (ensure it exists)
+    if (!pedido.datos_devolucion) {
+      // Fallback if data missing, though it should exist
+      pedido.datos_devolucion = {
+        motivo: 'N/A',
+        fecha_solicitud: new Date(),
+        items: [],
+        estado: returnStatus,
+        observaciones_bodega: ''
+      };
+    } else {
+      pedido.datos_devolucion.estado = returnStatus;
+      if (observations) {
+        (pedido.datos_devolucion as any).observaciones_bodega = observations;
+      }
+    }
+
+    const saved = await pedido.save();
+    this.logger.log(`✅ [ValidateReturn] Saved Status: ${saved.estado_pedido}`);
+
+    // Create Notification
+    const notiTitle = decision === 'APPROVE' ? 'Devolución Aprobada' : 'Devolución Rechazada';
+    const notiMsg = decision === 'APPROVE'
+      ? `Tu solicitud de devolución para el pedido #${pedido.numero_pedido_web} ha sido APROBADA.`
+      : `Tu solicitud de devolución para el pedido #${pedido.numero_pedido_web} ha sido RECHAZADA. Observaciones: ${observations}`;
+
+    // Extract User ID safely (handle populated field)
+    let userIdStr = '';
+    if (pedido.usuario_id && (pedido.usuario_id as any)._id) {
+      userIdStr = (pedido.usuario_id as any)._id.toString();
+    } else {
+      userIdStr = pedido.usuario_id.toString();
+    }
+
+    this.notificationsService.create({
+      usuario_id: userIdStr,
+      titulo: notiTitle,
+      mensaje: notiMsg,
+      tipo: 'return_status',
+      metadata: { orderId: id, decision }
+    });
+
+    // Send Email Notification (HU048)
+    try {
+      // Assuming populate('usuario_id') includes email. If simple string ID, we need to fetch user.
+      // But findOne() populates usuario_id. Let's force check or fetch.
+      let userEmail = '';
+      if (typeof pedido.usuario_id === 'object' && (pedido.usuario_id as any).email) {
+        userEmail = (pedido.usuario_id as any).email;
+      } else {
+        // Fetch user if email not present (safety fallback)
+        const user = await this.usuariosService.findById(pedido.usuario_id.toString());
+        if (user) userEmail = user.email;
+      }
+
+      if (userEmail) {
+        await this.emailService.sendReturnDecision(userEmail, pedido, decision, observations);
+      } else {
+        this.logger.warn(`Could not send return email for Order ${id}: User email not found`);
+      }
+    } catch (emailErr) {
+      this.logger.error(`Error sending return email for Order ${id}`, emailErr);
+    }
+
+    return saved;
   }
 
   // Request cancellation by User

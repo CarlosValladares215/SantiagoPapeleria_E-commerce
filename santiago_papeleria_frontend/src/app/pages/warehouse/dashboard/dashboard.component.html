@@ -51,10 +51,10 @@
                 <i class="ri-file-list-3-line"></i> Gestión de Pedidos
             </button>
             <button class="pb-3 border-b-2 px-2 font-semibold text-sm flex items-center gap-2 transition-colors"
-                [class.border-[#F2CB07]]="activeTab === 'inventory'" [class.text-[#012E40]]="activeTab === 'inventory'"
-                [class.border-transparent]="activeTab !== 'inventory'" [class.text-gray-500]="activeTab !== 'inventory'"
-                (click)="activeTab = 'inventory'">
-                <i class="ri-box-3-line"></i> Gestión de Inventario
+                [class.border-[#F2CB07]]="activeTab === 'returns'" [class.text-[#012E40]]="activeTab === 'returns'"
+                [class.border-transparent]="activeTab !== 'returns'" [class.text-gray-500]="activeTab !== 'returns'"
+                (click)="activeTab = 'returns'">
+                <i class="ri-arrow-go-back-line"></i> Gestión de Devoluciones
             </button>
         </div>
     </div>
@@ -314,166 +314,88 @@
         </div>
         }
 
-        <!-- ================= INVENTORY VIEW ================= -->
-        @if (activeTab === 'inventory') {
-        <!-- INVENTORY KPIs -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-            <!-- Total Products -->
+        <!-- ================= RETURNS VIEW ================= -->
+        @if (activeTab === 'returns') {
+        <!-- RETURN KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Pending -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
                 <div>
-                    <h3 class="text-xs text-gray-500 mb-1">Total Productos</h3>
-                    <span class="text-3xl font-bold text-blue-600">{{ inventoryStats.totalProducts }}</span>
+                    <h3 class="text-xs text-gray-500 mb-1">Solicitudes Pendientes</h3>
+                    <span class="text-3xl font-bold text-purple-600">{{ returnStats.pending }}</span>
                 </div>
-                <div
-                    class="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                    <i class="ri-box-3-fill text-2xl"></i>
+                <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
+                    <i class="ri-arrow-go-back-line text-2xl"></i>
                 </div>
             </div>
-
-            <!-- Low Stock -->
+            <!-- Approved -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
                 <div>
-                    <h3 class="text-xs text-gray-500 mb-1">Stock Bajo</h3>
-                    <span class="text-3xl font-bold text-red-600">{{ inventoryStats.lowStock }}</span>
+                    <h3 class="text-xs text-gray-500 mb-1">Aprobadas</h3>
+                    <span class="text-3xl font-bold text-teal-600">{{ returnStats.approved }}</span>
                 </div>
-                <div
-                    class="w-12 h-12 rounded-lg bg-red-500 flex items-center justify-center text-white shadow-lg shadow-red-200">
-                    <i class="ri-error-warning-fill text-2xl"></i>
+                <div class="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600">
+                    <i class="ri-check-double-line text-2xl"></i>
                 </div>
             </div>
-
-            <!-- Total Value -->
+            <!-- Rejected -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
                 <div>
-                    <h3 class="text-xs text-gray-500 mb-1">Valor Total Inventario</h3>
-                    <span class="text-3xl font-bold text-green-600">{{ inventoryStats.totalValue | currency }}</span>
+                    <h3 class="text-xs text-gray-500 mb-1">Rechazadas</h3>
+                    <span class="text-3xl font-bold text-red-600">{{ returnStats.rejected }}</span>
                 </div>
-                <div
-                    class="w-12 h-12 rounded-lg bg-green-500 flex items-center justify-center text-white shadow-lg shadow-green-200">
-                    <i class="ri-money-dollar-circle-fill text-2xl"></i>
-                </div>
-            </div>
-
-            <!-- Avg Stock -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-start justify-between">
-                <div>
-                    <h3 class="text-xs text-gray-500 mb-1">Stock Promedio</h3>
-                    <span class="text-3xl font-bold text-purple-600">{{ inventoryStats.avgStock }}</span>
-                </div>
-                <div
-                    class="w-12 h-12 rounded-lg bg-purple-500 flex items-center justify-center text-white shadow-lg shadow-purple-200">
-                    <i class="ri-bar-chart-fill text-2xl"></i>
+                <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
+                    <i class="ri-close-line text-2xl"></i>
                 </div>
             </div>
         </div>
 
-        <!-- INVENTORY FILTERS -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col lg:flex-row gap-6 items-end">
-            <div class="flex-grow space-y-1.5 w-full">
-                <label class="block text-xs font-bold text-gray-600">Buscar Producto</label>
-                <div class="relative">
-                    <i class="ri-search-line absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" placeholder="Código o nombre..."
-                        class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none">
-                </div>
-            </div>
-
-            <div class="flex-grow space-y-1.5 w-full">
-                <label class="block text-xs font-bold text-gray-600">Categoría</label>
-                <select
-                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none bg-white">
-                    <option>Todas las categorías</option>
-                    <option>Papel</option>
-                    <option>Escritura</option>
-                </select>
-            </div>
-
-            <div class="flex-grow space-y-1.5 w-full">
-                <label class="block text-xs font-bold text-gray-600">Estado de Stock</label>
-                <select
-                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:border-blue-500 outline-none bg-white">
-                    <option>Todos los estados</option>
-                    <option>Stock Normal</option>
-                    <option>Stock Bajo</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- INVENTORY TABLE -->
+        <!-- RETURNS TABLE -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-[#012E40] text-white">
+                <h3 class="font-bold flex items-center gap-2">
+                    <i class="ri-arrow-go-back-line"></i> Solicitudes de Devolución
+                </h3>
+            </div>
             <div class="overflow-x-auto">
-                <table class="w-full bg-[#012E40] text-white">
-                    <thead class="text-xs uppercase font-bold tracking-wider text-left border-b border-[#104D73]">
+                <table class="w-full">
+                    <thead class="bg-gray-50 text-xs text-gray-500 uppercase font-bold tracking-wider text-left">
                         <tr>
-                            <th class="px-6 py-4 bg-[#012E40]">Código</th>
-                            <th class="px-6 py-4 bg-[#012E40]">Producto</th>
-                            <th class="px-6 py-4 bg-[#012E40]">Categoría</th>
-                            <th class="px-6 py-4 bg-[#012E40]">Stock Actual</th>
-                            <th class="px-6 py-4 bg-[#012E40]">Stock Mín/Máx</th>
-                            <th class="px-6 py-4 bg-[#012E40]">Estado</th>
-                            <th class="px-6 py-4 bg-[#012E40]">Precio Unit.</th>
-                            <th class="px-6 py-4 bg-[#012E40] text-right">Acciones</th>
+                            <th class="px-6 py-4">ID Pedido</th>
+                            <th class="px-6 py-4">Cliente</th>
+                            <th class="px-6 py-4">Fecha Solicitud</th>
+                            <th class="px-6 py-4">Motivo</th>
+                            <th class="px-6 py-4">Estado</th>
+                            <th class="px-6 py-4 text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white text-gray-800 divide-y divide-gray-100">
-                        <tr *ngFor="let item of inventoryItems" class="hover:bg-gray-50 transition-colors">
-
-                            <!-- Code -->
-                            <td class="px-6 py-4 text-sm font-bold text-[#104D73]">{{ item.code }}</td>
-
-                            <!-- Product -->
+                    <tbody class="divide-y divide-gray-100">
+                        <tr *ngFor="let order of returnOrders" class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 font-bold text-[#012E40]">{{ order.id }}</td>
                             <td class="px-6 py-4">
-                                <div class="font-bold text-[#012E40]">{{ item.name }}</div>
-                                <div class="text-xs text-gray-500">{{ item.description }}</div>
+                                <div class="font-bold text-sm">{{ order.client.name }}</div>
+                                <div class="text-xs text-gray-500">{{ order.client.email }}</div>
                             </td>
-
-                            <!-- Category -->
-                            <td class="px-6 py-4">
-                                <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">
-                                    {{ item.category }}
-                                </span>
-                            </td>
-
-                            <!-- Stock Actual -->
-                            <td class="px-6 py-4 w-48">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-bold text-lg">{{ item.stock }}</span>
-                                </div>
-                                <!-- Progress Bar -->
-                                <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                    <div class="h-1.5 rounded-full"
-                                        [style.width.%]="getStockPercentage(item.stock, item.max)"
-                                        [class]="getStockProgressColor(item.stock, item.min, item.max)">
-                                    </div>
-                                </div>
-                            </td>
-
-                            <!-- Min/Max -->
-                            <td class="px-6 py-4 text-xs">
-                                <div class="text-red-500 font-medium">Mín: {{ item.min }}</div>
-                                <div class="text-green-600 font-medium">Máx: {{ item.max }}</div>
-                            </td>
-
-                            <!-- Estado -->
+                            <td class="px-6 py-4 text-sm">{{ order.returnRequest?.date | date:'short' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600 italic">"{{ order.returnRequest?.reason }}"</td>
                             <td class="px-6 py-4">
                                 <span
-                                    class="px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit bg-blue-100 text-blue-700">
-                                    <i class="ri-information-fill"></i> {{ item.status }}
+                                    class="px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1 w-fit"
+                                    [ngClass]="getStatusClass(order.status)">
+                                    <i [class]="getStatusIcon(order.status)"></i>
+                                    {{ order.status }}
                                 </span>
                             </td>
-
-                            <!-- Price -->
-                            <td class="px-6 py-4 font-bold text-[#012E40]">
-                                {{ item.price | currency }}
-                            </td>
-
-                            <!-- Actions -->
-                            <td class="px-6 py-4 text-right">
-                                <button (click)="openStockModal(item)"
+                            <td class="px-6 py-4 text-center">
+                                <button (click)="openReturnValidation(order)"
                                     class="bg-[#F2CB07] hover:bg-[#e0bc06] text-[#012E40] px-4 py-2 rounded-md text-xs font-bold transition-colors shadow-sm inline-flex items-center gap-2">
-                                    <i class="ri-add-circle-fill text-base"></i> Añadir Stock
+                                    <i class="ri-search-eye-line text-base"></i> Validar
                                 </button>
+                            </td>
+                        </tr>
+                        <tr *ngIf="returnOrders.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                No hay solicitudes de devolución pendientes.
                             </td>
                         </tr>
                     </tbody>
@@ -483,413 +405,390 @@
         }
 
     </div>
-
-    <!-- ================= ORDER DETAIL MODAL ================= -->
-    @if (selectedOrder) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-[#F8FAFC] rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
-
-            <!-- Modal Header -->
-            <div class="bg-[#012E40] text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-                <div class="flex items-center gap-3">
-                    <div class="bg-[#F2CB07] text-[#012E40] w-10 h-10 rounded-lg flex items-center justify-center">
-                        <i class="ri-file-list-3-fill text-xl"></i>
-                    </div>
-                    <div>
-                        <h2 class="font-bold text-lg">Detalle del Pedido</h2>
-                        <p class="text-xs text-gray-300 font-mono">{{ selectedOrder.id }}</p>
-                    </div>
-                </div>
-                <button (click)="closeModal()"
-                    class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                    <i class="ri-close-line text-xl"></i>
-                </button>
-            </div>
-
-            <div class="p-6 space-y-6">
-
-                <!-- Action Buttons -->
-                <div class="flex flex-wrap gap-4">
-                    <button (click)="downloadGuide(selectedOrder)"
-                        class="bg-[#104D73] hover:bg-[#0e4363] text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
-                        <i class="ri-download-line text-lg"></i> Descargar Guía
-                    </button>
-                    <button
-                        class="bg-[#F59E0B] hover:bg-[#d97706] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
-                        <i class="ri-printer-line"></i> Imprimir
-                    </button>
-
-                    <!-- Status Button -->
-
-                    <button *ngIf="selectedOrder.status === 'Enviado'" (click)="selectStatus('Entregado')"
-                        class="bg-[#10B981] hover:bg-[#059669] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
-                        <i class="ri-checkbox-circle-line"></i> Marcar Entregado
-                    </button>
-                </div>
-
-                <!-- Info Cards Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <!-- Client Info -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
-                            <i class="ri-user-line text-lg"></i>
-                            <h3 class="font-bold text-sm">Información del Cliente</h3>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Nombre</p>
-                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.name }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">RUC/Cédula</p>
-                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.ruc }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Tipo de Cliente</p>
-                                <p
-                                    class="text-gray-800 font-medium bg-gray-100 px-2 py-1 rounded inline-block text-xs uppercase">
-                                    {{ selectedOrder.client.type }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Teléfono</p>
-                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.phone }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Email</p>
-                                <p class="text-gray-800 font-medium">{{ selectedOrder.client.email }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Shipping Info -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
-                            <i class="ri-map-pin-line text-lg"></i>
-                            <h3 class="font-bold text-sm">Dirección de Envío</h3>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Dirección Completa</p>
-                                <p class="text-gray-800 font-medium">{{ selectedOrder.shippingAddress.full }}</p>
-                                <p *ngIf="selectedOrder.shippingAddress.reference && selectedOrder.shippingAddress.reference !== 'N/A'"
-                                    class="text-xs text-gray-500 italic mt-1">
-                                    "{{ selectedOrder.shippingAddress.reference }}"
-                                </p>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-xs text-gray-500 font-bold mb-1">Ciudad / Provincia</p>
-                                    <p class="text-gray-800 font-medium">
-                                        {{ selectedOrder.shippingAddress.city }}, {{
-                                        selectedOrder.shippingAddress.province }}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 font-bold mb-1">Código Postal</p>
-                                    <p class="text-gray-800 font-medium">{{ selectedOrder.shippingAddress.postalCode }}
-                                    </p>
-                                </div>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Número de Guía</p>
-                                <p class="font-bold text-[#012E40]">{{ selectedOrder.guide || 'N/A' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Status & Payment Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <!-- Update Status -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div class="flex items-center gap-2 mb-4 text-[#012E40]">
-                            <i class="ri-refresh-line text-lg"></i>
-                            <h3 class="font-bold text-sm">Actualizar Estado</h3>
-                        </div>
-
-                        <div class="relative">
-                            <!-- Dropdown Trigger -->
-                            <button (click)="toggleStatusDropdown()"
-                                class="w-full border-2 border-[#104D73] rounded-lg px-4 py-3 text-sm font-bold text-[#012E40] bg-white flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                <span class="flex items-center gap-2">
-                                    {{ pendingStatus || selectedOrder.status }}
-                                    <span *ngIf="pendingStatus && pendingStatus !== selectedOrder.status"
-                                        class="text-xs text-orange-500 font-normal italic">(Pendiente de
-                                        confirmar)</span>
-                                </span>
-                                <i class="ri-arrow-down-s-line text-lg transition-transform duration-200"
-                                    [class.rotate-180]="isStatusDropdownOpen"></i>
-                            </button>
-
-                            <!-- Dropdown Menu -->
-                            <div *ngIf="isStatusDropdownOpen"
-                                class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-20 py-1 overflow-hidden">
-
-                                <!-- Pendiente -->
-                                <button (click)="selectStatus('Pendiente')"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                    <i class="ri-time-line text-orange-500 text-lg"></i>
-                                    <span class="font-bold text-gray-700 text-sm">Pendiente</span>
-                                </button>
-
-                                <!-- Preparando -->
-                                <button (click)="selectStatus('Preparando')"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                    <i class="ri-box-3-line text-blue-500 text-lg"></i>
-                                    <span class="font-bold text-gray-700 text-sm">Preparando</span>
-                                </button>
-
-                                <!-- Enviado -->
-                                <button (click)="selectStatus('Enviado')"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                    <i class="ri-truck-line text-yellow-600 text-lg"></i>
-                                    <span class="font-bold text-gray-700 text-sm">Enviado</span>
-                                </button>
-
-                                <!-- Entregado -->
-                                <button (click)="selectStatus('Entregado')"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
-                                    <i class="ri-checkbox-circle-line text-green-500 text-lg"></i>
-                                    <span class="font-bold text-gray-700 text-sm">Entregado</span>
-                                </button>
-
-                                <!-- Cancelado -->
-                                <button (click)="selectStatus('Cancelado')"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors border-t border-gray-100">
-                                    <i class="ri-close-circle-line text-gray-400 text-lg"></i>
-                                    <span class="font-bold text-gray-700 text-sm">Cancelado</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Confirm Button -->
-                        <div *ngIf="pendingStatus && pendingStatus !== selectedOrder.status"
-                            class="mt-3 animate-fadeIn">
-                            <button (click)="confirmStatusUpdate()"
-                                class="w-full bg-[#F2CB07] hover:bg-[#e0bc06] text-[#012E40] py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2">
-                                <i class="ri-check-double-line"></i> Confirmar Cambio de Estado
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Payment Info -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <div class="flex items-center justify-between mb-4 text-[#012E40]">
-                            <div class="flex items-center gap-2">
-                                <i class="ri-bank-card-line text-lg"></i>
-                                <h3 class="font-bold text-sm">Método de Pago</h3>
-                            </div>
-                            <!-- View Proof Button -->
-                            <a *ngIf="selectedOrder.paymentMethod === 'TRANSFERENCIA' && selectedOrder.paymentProofUrl"
-                                [href]="selectedOrder.paymentProofUrl" target="_blank"
-                                class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors flex items-center gap-1 font-medium">
-                                <i class="ri-file-search-line"></i> Ver Comprobante
-                            </a>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Método</p>
-                                <p class="text-gray-800 font-bold text-lg">{{ selectedOrder.paymentMethod }}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Costo de Envío</p>
-                                <p class="text-gray-800 font-bold text-lg">{{ selectedOrder.shippingCost | currency }}
-                                </p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Total a Cobrar</p>
-                                <p class="text-[#012E40] font-bold text-2xl">${{ selectedOrder.total |
-                                    number:'1.2-2' }}
-                                </p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 font-bold mb-1">Observaciones</p>
-                                <p class="text-gray-600 text-sm">{{ selectedOrder.observations }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Products Table -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100">
-                        <h3 class="font-bold text-[#012E40] flex items-center gap-2">
-                            <i class="ri-shopping-cart-2-line"></i> Productos del Pedido
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead
-                                class="bg-gray-50 text-xs text-gray-500 uppercase font-bold tracking-wider text-left">
-                                <tr>
-                                    <th class="px-6 py-4">COD</th>
-                                    <th class="px-6 py-4">Producto</th>
-                                    <th class="px-6 py-4">Cantidad</th>
-                                    <th class="px-6 py-4">Precio Unit.</th>
-                                    <th class="px-6 py-4">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100">
-                                <tr *ngFor="let product of orderProducts">
-                                    <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ product.code }}</td>
-                                    <td class="px-6 py-4">
-                                        <div class="font-bold text-[#012E40] text-sm">{{ product.name }}</div>
-                                        <div class="text-xs text-gray-500">{{ product.description }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 font-bold text-gray-800">{{ product.quantity }}</td>
-                                    <td class="px-6 py-4 text-gray-600">{{ product.price | currency }}</td>
-                                    <td class="px-6 py-4 font-bold text-[#012E40]">{{ product.subtotal | currency }}
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tfoot class="bg-[#012E40] text-white">
-                                <tr>
-                                    <td colspan="4"
-                                        class="px-6 py-2 text-right font-medium text-xs uppercase opacity-80">Subtotal:
-                                    </td>
-                                    <td class="px-6 py-2 font-medium text-sm">{{ selectedOrder.subtotal | currency }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4"
-                                        class="px-6 py-2 text-right font-medium text-xs uppercase opacity-80">Envío:
-                                    </td>
-                                    <td class="px-6 py-2 font-medium text-sm">{{ selectedOrder.shippingCost | currency
-                                        }}</td>
-                                </tr>
-                                <tr class="border-t border-[#104D73]">
-                                    <td colspan="4" class="px-6 py-4 text-right font-bold text-sm uppercase">Total:</td>
-                                    <td class="px-6 py-4 font-bold text-xl text-[#F2CB07]">{{ selectedOrder.total |
-                                        currency }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-    }
-
-    <!-- ================= ADD STOCK MODAL ================= -->
-    @if (selectedInventoryItem) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="bg-[#F8FAFC] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-
-            <!-- Modal Header -->
-            <div class="bg-[#012E40] text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-                <div class="flex items-center gap-3">
-                    <div class="bg-[#F2CB07] text-[#012E40] w-10 h-10 rounded-lg flex items-center justify-center">
-                        <i class="ri-add-line text-2xl font-bold"></i>
-                    </div>
-                    <div>
-                        <h2 class="font-bold text-lg">Añadir Stock</h2>
-                        <p class="text-xs text-gray-300">Actualizar inventario de producto</p>
-                    </div>
-                </div>
-                <button (click)="closeStockModal()"
-                    class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
-                    <i class="ri-close-line text-xl"></i>
-                </button>
-            </div>
-
-            <div class="p-6 space-y-6">
-
-                <!-- Product Info Card -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">Producto</p>
-                            <h3 class="font-bold text-[#012E40] text-lg leading-tight">{{ selectedInventoryItem.name }}
-                            </h3>
-                            <p class="text-xs text-gray-400 mt-1">{{ selectedInventoryItem.description }}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs text-gray-500 mb-1">Código</p>
-                            <p class="font-bold text-[#104D73]">{{ selectedInventoryItem.code }}</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-4 border-t border-gray-50 pt-4">
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">Stock Actual</p>
-                            <p class="text-2xl font-bold text-[#012E40]">{{ selectedInventoryItem.stock }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">Stock Mínimo</p>
-                            <p class="text-2xl font-bold text-red-500">{{ selectedInventoryItem.min }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">Stock Máximo</p>
-                            <p class="text-2xl font-bold text-green-500">{{ selectedInventoryItem.max }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Form Fields -->
-                <div class="space-y-4">
-
-                    <!-- Quantity -->
-                    <div>
-                        <label class="block text-sm font-bold text-[#012E40] mb-2">Cantidad a Añadir <span
-                                class="text-red-500">*</span></label>
-                        <input type="number" [(ngModel)]="stockForm.quantity" placeholder="Ingrese la cantidad"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#104D73] focus:ring-1 focus:ring-[#104D73] outline-none text-[#012E40] placeholder-gray-400">
-                    </div>
-
-                    <!-- Reason -->
-                    <div>
-                        <label class="block text-sm font-bold text-[#012E40] mb-2">Motivo <span
-                                class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <select [(ngModel)]="stockForm.reason"
-                                class="w-full px-4 py-3 border border-[#012E40] rounded-lg text-sm font-medium focus:outline-none appearance-none bg-white text-[#012E40] shadow-sm">
-                                <option *ngFor="let reason of stockReasons" [value]="reason">{{ reason }}</option>
-                            </select>
-                            <i
-                                class="ri-arrow-down-s-line absolute right-4 top-3.5 text-[#012E40] text-lg pointer-events-none"></i>
-                        </div>
-                    </div>
-
-                    <!-- Provider -->
-                    @if (stockForm.reason === 'Compra a Proveedor') {
-                    <div>
-                        <label class="block text-sm font-bold text-[#012E40] mb-2">Proveedor</label>
-                        <input type="text" [(ngModel)]="stockForm.provider" placeholder="Nombre del proveedor"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#104D73] focus:ring-1 focus:ring-[#104D73] outline-none text-[#012E40] placeholder-gray-400">
-                    </div>
-                    }
-
-                    <!-- Notes -->
-                    <div>
-                        <label class="block text-sm font-bold text-[#012E40] mb-2">Notas Adicionales</label>
-                        <textarea [(ngModel)]="stockForm.notes" rows="3" maxlength="500"
-                            placeholder="Información adicional sobre esta entrada de stock..."
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:border-[#104D73] focus:ring-1 focus:ring-[#104D73] outline-none text-[#012E40] placeholder-gray-400 resize-none"></textarea>
-                        <div class="text-right mt-1">
-                            <span class="text-xs text-gray-400">{{ stockForm.notes.length }}/500 caracteres</span>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Footer Actions -->
-                <div class="flex gap-4 pt-2">
-                    <button (click)="closeStockModal()"
-                        class="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-700 font-bold text-sm hover:bg-gray-50 transition-colors">
-                        Cancelar
-                    </button>
-                    <button (click)="saveStock()"
-                        class="flex-1 px-4 py-3 rounded-lg bg-[#F2CB07] text-[#012E40] font-bold text-sm hover:bg-[#d9b506] transition-colors flex items-center justify-center gap-2 shadow-sm">
-                        <i class="ri-save-line text-lg"></i> Guardar Cambios
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-    }
 </div>
+
+<!-- ================= ORDER DETAIL MODAL ================= -->
+@if (selectedOrder) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-[#F8FAFC] rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
+
+        <!-- Modal Header -->
+        <div class="bg-[#012E40] text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#F2CB07] text-[#012E40] w-10 h-10 rounded-lg flex items-center justify-center">
+                    <i class="ri-file-list-3-fill text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-lg">Detalle del Pedido</h2>
+                    <p class="text-xs text-gray-300 font-mono">{{ selectedOrder.id }}</p>
+                </div>
+            </div>
+            <button (click)="closeModal()"
+                class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                <i class="ri-close-line text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-4">
+                <button (click)="downloadGuide(selectedOrder)"
+                    class="bg-[#104D73] hover:bg-[#0e4363] text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors">
+                    <i class="ri-download-line text-lg"></i> Descargar Guía
+                </button>
+                <button
+                    class="bg-[#F59E0B] hover:bg-[#d97706] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
+                    <i class="ri-printer-line"></i> Imprimir
+                </button>
+
+                <!-- Status Button -->
+
+                <button *ngIf="selectedOrder.status === 'Enviado'" (click)="selectStatus('Entregado')"
+                    class="bg-[#10B981] hover:bg-[#059669] text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors">
+                    <i class="ri-checkbox-circle-line"></i> Marcar Entregado
+                </button>
+            </div>
+
+            <!-- Info Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Client Info -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4 text-[#012E40]">
+                        <i class="ri-user-line text-lg"></i>
+                        <h3 class="font-bold text-sm">Información del Cliente</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Nombre</p>
+                            <p class="text-gray-800 font-medium">{{ selectedOrder.client.name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">RUC/Cédula</p>
+                            <p class="text-gray-800 font-medium">{{ selectedOrder.client.ruc }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Tipo de Cliente</p>
+                            <p
+                                class="text-gray-800 font-medium bg-gray-100 px-2 py-1 rounded inline-block text-xs uppercase">
+                                {{ selectedOrder.client.type }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Teléfono</p>
+                            <p class="text-gray-800 font-medium">{{ selectedOrder.client.phone }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Email</p>
+                            <p class="text-gray-800 font-medium">{{ selectedOrder.client.email }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Info -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4 text-[#012E40]">
+                        <i class="ri-map-pin-line text-lg"></i>
+                        <h3 class="font-bold text-sm">Dirección de Envío</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Dirección Completa</p>
+                            <p class="text-gray-800 font-medium">{{ selectedOrder.shippingAddress.full }}</p>
+                            <p *ngIf="selectedOrder.shippingAddress.reference && selectedOrder.shippingAddress.reference !== 'N/A'"
+                                class="text-xs text-gray-500 italic mt-1">
+                                "{{ selectedOrder.shippingAddress.reference }}"
+                            </p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Ciudad / Provincia</p>
+                                <p class="text-gray-800 font-medium">
+                                    {{ selectedOrder.shippingAddress.city }}, {{
+                                    selectedOrder.shippingAddress.province }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 font-bold mb-1">Código Postal</p>
+                                <p class="text-gray-800 font-medium">{{ selectedOrder.shippingAddress.postalCode }}
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Número de Guía</p>
+                            <p class="font-bold text-[#012E40]">{{ selectedOrder.guide || 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status & Payment Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Update Status -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4 text-[#012E40]">
+                        <i class="ri-refresh-line text-lg"></i>
+                        <h3 class="font-bold text-sm">Actualizar Estado</h3>
+                    </div>
+
+                    <div class="relative">
+                        <!-- Dropdown Trigger -->
+                        <button (click)="toggleStatusDropdown()"
+                            class="w-full border-2 border-[#104D73] rounded-lg px-4 py-3 text-sm font-bold text-[#012E40] bg-white flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <span class="flex items-center gap-2">
+                                {{ pendingStatus || selectedOrder.status }}
+                                <span *ngIf="pendingStatus && pendingStatus !== selectedOrder.status"
+                                    class="text-xs text-orange-500 font-normal italic">(Pendiente de
+                                    confirmar)</span>
+                            </span>
+                            <i class="ri-arrow-down-s-line text-lg transition-transform duration-200"
+                                [class.rotate-180]="isStatusDropdownOpen"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div *ngIf="isStatusDropdownOpen"
+                            class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-100 z-20 py-1 overflow-hidden">
+
+                            <!-- Pendiente -->
+                            <button (click)="selectStatus('Pendiente')"
+                                class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                <i class="ri-time-line text-orange-500 text-lg"></i>
+                                <span class="font-bold text-gray-700 text-sm">Pendiente</span>
+                            </button>
+
+                            <!-- Preparando -->
+                            <button (click)="selectStatus('Preparando')"
+                                class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                <i class="ri-box-3-line text-blue-500 text-lg"></i>
+                                <span class="font-bold text-gray-700 text-sm">Preparando</span>
+                            </button>
+
+                            <!-- Enviado -->
+                            <button (click)="selectStatus('Enviado')"
+                                class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                <i class="ri-truck-line text-yellow-600 text-lg"></i>
+                                <span class="font-bold text-gray-700 text-sm">Enviado</span>
+                            </button>
+
+                            <!-- Entregado -->
+                            <button (click)="selectStatus('Entregado')"
+                                class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors">
+                                <i class="ri-checkbox-circle-line text-green-500 text-lg"></i>
+                                <span class="font-bold text-gray-700 text-sm">Entregado</span>
+                            </button>
+
+                            <!-- Cancelado -->
+                            <button (click)="selectStatus('Cancelado')"
+                                class="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors border-t border-gray-100">
+                                <i class="ri-close-circle-line text-gray-400 text-lg"></i>
+                                <span class="font-bold text-gray-700 text-sm">Cancelado</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Button -->
+                    <div *ngIf="pendingStatus && pendingStatus !== selectedOrder.status" class="mt-3 animate-fadeIn">
+                        <button (click)="confirmStatusUpdate()"
+                            class="w-full bg-[#F2CB07] hover:bg-[#e0bc06] text-[#012E40] py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2">
+                            <i class="ri-check-double-line"></i> Confirmar Cambio de Estado
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Info -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-4 text-[#012E40]">
+                        <div class="flex items-center gap-2">
+                            <i class="ri-bank-card-line text-lg"></i>
+                            <h3 class="font-bold text-sm">Método de Pago</h3>
+                        </div>
+                        <!-- View Proof Button -->
+                        <a *ngIf="selectedOrder.paymentMethod === 'TRANSFERENCIA' && selectedOrder.paymentProofUrl"
+                            [href]="selectedOrder.paymentProofUrl" target="_blank"
+                            class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors flex items-center gap-1 font-medium">
+                            <i class="ri-file-search-line"></i> Ver Comprobante
+                        </a>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Método</p>
+                            <p class="text-gray-800 font-bold text-lg">{{ selectedOrder.paymentMethod }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Costo de Envío</p>
+                            <p class="text-gray-800 font-bold text-lg">{{ selectedOrder.shippingCost | currency }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Total a Cobrar</p>
+                            <p class="text-[#012E40] font-bold text-2xl">${{ selectedOrder.total |
+                                number:'1.2-2' }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold mb-1">Observaciones</p>
+                            <p class="text-gray-600 text-sm">{{ selectedOrder.observations }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <h3 class="font-bold text-[#012E40] flex items-center gap-2">
+                        <i class="ri-shopping-cart-2-line"></i> Productos del Pedido
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 text-xs text-gray-500 uppercase font-bold tracking-wider text-left">
+                            <tr>
+                                <th class="px-6 py-4">COD</th>
+                                <th class="px-6 py-4">Producto</th>
+                                <th class="px-6 py-4">Cantidad</th>
+                                <th class="px-6 py-4">Precio Unit.</th>
+                                <th class="px-6 py-4">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr *ngFor="let product of orderProducts">
+                                <td class="px-6 py-4 text-xs font-bold text-gray-500">{{ product.code }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-[#012E40] text-sm">{{ product.name }}</div>
+                                    <div class="text-xs text-gray-500">{{ product.description }}</div>
+                                </td>
+                                <td class="px-6 py-4 font-bold text-gray-800">{{ product.quantity }}</td>
+                                <td class="px-6 py-4 text-gray-600">{{ product.price | currency }}</td>
+                                <td class="px-6 py-4 font-bold text-[#012E40]">{{ product.subtotal | currency }}
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-[#012E40] text-white">
+                            <tr>
+                                <td colspan="4" class="px-6 py-2 text-right font-medium text-xs uppercase opacity-80">
+                                    Subtotal:
+                                </td>
+                                <td class="px-6 py-2 font-medium text-sm">{{ selectedOrder.subtotal | currency }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="px-6 py-2 text-right font-medium text-xs uppercase opacity-80">
+                                    Envío:
+                                </td>
+                                <td class="px-6 py-2 font-medium text-sm">{{ selectedOrder.shippingCost | currency
+                                    }}</td>
+                            </tr>
+                            <tr class="border-t border-[#104D73]">
+                                <td colspan="4" class="px-6 py-4 text-right font-bold text-sm uppercase">Total:</td>
+                                <td class="px-6 py-4 font-bold text-xl text-[#F2CB07]">{{ selectedOrder.total |
+                                    currency }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+}
+
+<!-- ================= RETURN VALIDATION MODAL ================= -->
+@if (selectedReturnOrder) {
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-[#F8FAFC] rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+
+        <!-- Modal Header -->
+        <div class="bg-[#012E40] text-white px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#F2CB07] text-[#012E40] w-10 h-10 rounded-lg flex items-center justify-center">
+                    <i class="ri-search-eye-line text-xl font-bold"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-lg">Validar Devolución</h2>
+                    <p class="text-xs text-gray-300">Revisión de solicitud de cliente</p>
+                </div>
+            </div>
+            <button (click)="closeReturnValidation()"
+                class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                <i class="ri-close-line text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+
+            <!-- Order/Client Summary -->
+            <div class="flex gap-4 p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
+                <div class="flex-1">
+                    <div class="text-xs text-gray-500 font-bold uppercase">Pedido</div>
+                    <div class="font-bold text-[#012E40]">{{ selectedReturnOrder.id }}</div>
+                </div>
+                <div class="flex-1">
+                    <div class="text-xs text-gray-500 font-bold uppercase">Cliente</div>
+                    <div class="font-bold text-[#012E40]">{{ selectedReturnOrder.client.name }}</div>
+                </div>
+                <div class="flex-1">
+                    <div class="text-xs text-gray-500 font-bold uppercase">Fecha Solicitud</div>
+                    <div class="font-bold text-[#012E40]">{{ selectedReturnOrder.returnRequest?.date |
+                        date:'shortDate' }}</div>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                <h3 class="text-sm font-bold text-orange-800 mb-1">Motivo de Devolución</h3>
+                <p class="text-sm text-gray-700 italic">"{{ selectedReturnOrder.returnRequest?.reason }}"
+                </p>
+            </div>
+
+            <!-- Items Table -->
+            <div>
+                <h3 class="font-bold text-[#012E40] mb-2 flex items-center gap-2">
+                    <i class="ri-shopping-cart-line"></i> Productos a Devolver
+                </h3>
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-500 font-bold">
+                            <tr>
+                                <th class="px-4 py-2 text-left">Producto</th>
+                                <th class="px-4 py-2 text-center">Cant.</th>
+                                <th class="px-4 py-2 text-left">Código</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr *ngFor="let item of selectedReturnOrder.returnRequest?.items">
+                                <td class="px-4 py-3 font-medium text-gray-800">{{ item.nombre }}</td>
+                                <td class="px-4 py-3 text-center font-bold">{{ item.cantidad }}</td>
+                                <td class="px-4 py-3 text-gray-500 text-xs">{{ item.codigo }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Warehouse Observations -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Observaciones de Bodega</label>
+                <textarea [(ngModel)]="returnValidationForm.observations" rows="3"
+                    placeholder="Ingrese detalles sobre la inspección, estado del producto, o motivo del rechazo..."
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:border-[#104D73] focus:ring-1 focus:ring-[#104D73] outline-none transition-colors"></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                <button (click)="validateReturn('REJECT')"
+                    class="px-4 py-3 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-lg border border-red-200 flex items-center justify-center gap-2 transition-colors">
+                    <i class="ri-close-circle-line text-lg"></i> Rechazar Devolución
+                </button>
+                <button (click)="validateReturn('APPROVE')"
+                    class="px-4 py-3 bg-[#104D73] hover:bg-[#0e4363] text-white font-bold rounded-lg flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-900/20">
+                    <i class="ri-check-double-line text-lg"></i> Aprobar Devolución
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+}
