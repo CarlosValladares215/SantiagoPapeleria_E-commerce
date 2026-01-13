@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface ShippingConfig {
@@ -9,7 +9,7 @@ export interface ShippingConfig {
     ratePerKg: number;
     ivaRate: number;
     isActive: boolean;
-    freeShippingThreshold?: number; // Optional until backend fully propagated or default 0
+    freeShippingThreshold?: number;
 }
 
 export interface ShippingZone {
@@ -17,6 +17,7 @@ export interface ShippingZone {
     name: string;
     provinces: string[];
     active: boolean;
+    multiplier?: number;
 }
 
 export interface ShippingRate {
@@ -26,6 +27,16 @@ export interface ShippingRate {
     max_weight: number;
     price: number;
     active: boolean;
+}
+
+export interface ShippingCity {
+    _id?: string;
+    name: string;
+    province: string;
+    distance_km: number;
+    is_custom_rate: boolean;
+    custom_price?: number;
+    coordinates?: { lat: number; lng: number };
 }
 
 @Injectable({
@@ -66,6 +77,10 @@ export class ShippingService {
         return this.http.get<ShippingRate[]>(`${this.apiUrl}/zones/${zoneId}/rates`);
     }
 
+    getAllRates(): Observable<ShippingRate[]> {
+        return this.http.get<ShippingRate[]>(`${this.apiUrl}/rates`);
+    }
+
     createRate(zoneId: string, data: Partial<ShippingRate>): Observable<ShippingRate> {
         return this.http.post<ShippingRate>(`${this.apiUrl}/zones/${zoneId}/rates`, data);
     }
@@ -76,6 +91,29 @@ export class ShippingService {
 
     deleteRate(id: string): Observable<any> {
         return this.http.delete(`${this.apiUrl}/rates/${id}`);
+    }
+
+    // Cities
+    getCities(): Observable<ShippingCity[]> {
+        console.log('[ShippingService] Fetching cities from:', `${this.apiUrl}/cities`);
+        return this.http.get<ShippingCity[]>(`${this.apiUrl}/cities`).pipe(
+            tap({
+                next: (cities: ShippingCity[]) => console.log(`[ShippingService] Loaded ${cities.length} cities`),
+                error: (err: any) => console.error('[ShippingService] Error loading cities:', err)
+            })
+        );
+    }
+
+    createCity(city: Partial<ShippingCity>): Observable<ShippingCity> {
+        return this.http.post<ShippingCity>(`${this.apiUrl}/cities`, city);
+    }
+
+    updateCity(id: string, city: Partial<ShippingCity>): Observable<ShippingCity> {
+        return this.http.put<ShippingCity>(`${this.apiUrl}/cities/${id}`, city);
+    }
+
+    deleteCity(id: string): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/cities/${id}`);
     }
 
     // Import

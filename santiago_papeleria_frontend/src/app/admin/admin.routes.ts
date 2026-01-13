@@ -19,6 +19,9 @@ export const ADMIN_ROUTES: Routes = [
     // Shipping Config
     { path: 'shipping', loadComponent: () => import('./shipping/shipping-config/shipping-config.component').then(m => m.ShippingConfigComponent) },
 
+    // Inventory
+    { path: 'inventory', loadComponent: () => import('./inventory/inventory-dashboard/inventory-dashboard').then(m => m.InventoryDashboardComponent) },
+
     // Promociones
     { path: 'promociones', loadChildren: () => import('./promociones/promociones.module').then(m => m.PromocionesModule) },
 

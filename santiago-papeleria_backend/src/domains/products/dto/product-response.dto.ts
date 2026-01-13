@@ -138,11 +138,19 @@ export class ProductResponseDto {
   attributes: any[];
 
   @Expose()
-  @Transform(({ obj }) => obj.weight_kg || 0)
-  weight: number;
+  @Transform(({ obj }) => obj.peso_kg || 0)
+  peso_kg: number; // Raw field name from schema
 
   @Expose()
-  @Transform(({ obj }) => obj.dimensions || {})
+  @Transform(({ obj }) => obj.peso_kg || 0)
+  weight: number; // Alias for frontend compatibility
+
+  @Expose()
+  @Transform(({ obj }) => obj.dimensiones || {})
+  dimensiones: any;
+
+  @Expose()
+  @Transform(({ obj }) => obj.dimensiones || {})
   dimensions: any;
 
   @Expose()

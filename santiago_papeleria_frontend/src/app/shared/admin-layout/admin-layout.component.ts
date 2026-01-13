@@ -39,6 +39,11 @@ export class AdminLayoutComponent {
             path: '/admin/products'
         },
         {
+            icon: 'ri-archive-line',
+            label: 'Inventario',
+            path: '/admin/inventory'
+        },
+        {
             icon: 'ri-percent-line',
             label: 'Promociones',
             path: '/admin/promociones'

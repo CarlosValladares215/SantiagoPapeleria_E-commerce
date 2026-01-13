@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { ShippingConfig, ShippingConfigDocument } from './schemas/shipping-config.schema';
 import { ShippingZone, ShippingZoneDocument } from './schemas/shipping-zone.schema';
 import { ShippingRate, ShippingRateDocument } from './schemas/shipping-rate.schema';
+import { ShippingCity, ShippingCityDocument } from './schemas/shipping-city.schema';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UsuariosService } from '../users/usuarios.service';
 import * as XLSX from 'xlsx';
@@ -15,6 +16,7 @@ export class ShippingService {
         @InjectModel(ShippingConfig.name) private shippingModel: Model<ShippingConfigDocument>,
         @InjectModel(ShippingZone.name) private zoneModel: Model<ShippingZoneDocument>,
         @InjectModel(ShippingRate.name) private rateModel: Model<ShippingRateDocument>,
+        @InjectModel(ShippingCity.name) private cityModel: Model<ShippingCityDocument>,
         private readonly notificationsService: NotificationsService,
         private readonly usuariosService: UsuariosService,
     ) { }
@@ -60,6 +62,10 @@ export class ShippingService {
     // --- RATES ---
     async getRates(zoneId: string): Promise<ShippingRate[]> {
         return this.rateModel.find({ zone_id: zoneId, active: true }).sort({ min_weight: 1 }).exec();
+    }
+
+    async getAllRates(): Promise<ShippingRate[]> {
+        return this.rateModel.find({ active: true }).exec();
     }
 
     async createRate(zoneId: string, data: Partial<ShippingRate>): Promise<ShippingRate> {
@@ -139,75 +145,91 @@ export class ShippingService {
         const normalizedInput = this.normalizeProvince(province);
 
         console.log(`[Shipping] Calc for: '${province}' (Norm: '${normalizedInput}'), Weight: ${weightKg}`);
-        console.log(`================ DEBUG ${new Date().toISOString()} ================`);
-        console.log(`Input Province: "${province}"`);
-        console.log(`Normalized Input: "${normalizedInput}"`);
-        console.log(`Input Weight: ${weightKg}`);
 
-        // 1. Fetch all active zones
-        const allZones = await this.zoneModel.find({ active: true }).exec();
-        // 2. Find matching zone
-        const zone = allZones.find(z =>
-            z.provinces.some(p => this.normalizeProvince(p) === normalizedInput)
-        );
+        // 1. Check if we have a specific City configuration
+        let city = await this.cityModel.findOne({
+            $or: [
+                { name: { $regex: new RegExp(`^${normalizedInput}$`, 'i') } },
+                { province: { $regex: new RegExp(`^${normalizedInput}$`, 'i') } }
+            ]
+        });
 
-        if (zone) console.log(`MATCH FOUND! Zone: "${zone.name}" (_id: ${zone._id})`);
-        else console.log(`NO MATCH FOUND for "${normalizedInput}"`);
+        let distance = 0;
 
-        if (zone) {
-            console.log(`[Shipping] Matched Zone: ${zone.name}`);
-            try {
-                // Try standard query (Mongoose casts to ObjectId)
-                let rate = await this.rateModel.findOne({
-                    zone_id: zone._id,
-                    active: true,
-                    min_weight: { $lte: weightKg },
-                    max_weight: { $gte: weightKg }
-                });
-
-                // Fallback: If not found, try query bypassing Mongoose casting using native driver (for String storage support)
-                if (!rate) {
-                    console.log('[Shipping] Standard query failed, trying native driver via model (String ID match)...');
-                    // We use $or in a mongoose query but that might cast. 
-                    // Let's use basic find but iterate? No.
-                    // Use native collection findOne to bypass schema casting
-                    const rawRate = await this.rateModel.collection.findOne({
-                        zone_id: zone._id.toString(), // Explicitly string
-                        active: true,
-                        min_weight: { $lte: weightKg },
-                        max_weight: { $gte: weightKg }
-                    });
-                    if (rawRate) {
-                        // Cast back to Mongoose document if needed, or just return price
-                        console.log(`[Shipping] Matched Rate via Native Query: $${rawRate.price}`);
-                        return rawRate.price;
-                    }
-                }
-
-                if (rate) {
-                    console.log(`[Shipping] Matched Rate: $${rate.price}`);
-                    return rate.price;
-                } else {
-                    console.log(`[Shipping] No rate found for weight ${weightKg} in zone ${zone.name}. Returning 0.`);
-                    return 0;
-                }
-            } catch (err) {
-                console.error(`[Shipping] ERROR finding rate:`, err);
-                return 0;
+        if (city) {
+            console.log(`[Shipping] Found City/Province config: ${city.name}, Distance: ${city.distance_km}km`);
+            if (city.is_custom_rate) {
+                console.log(`[Shipping] City has CUSTOM RATE: $${city.custom_price}`);
+                return city.custom_price || 0;
             }
+            distance = city.distance_km;
         } else {
-            console.log(`[Shipping] No Zone matched for '${normalizedInput}'`);
+            console.log(`[Shipping] No specific City/Province config found for '${normalizedInput}'. Assuming distance 0 (or fallback).`);
         }
 
-        // 3. Fallback (Global)
-        // Only use BaseRate + (Weight * PerKg). Ignore PerKm as we don't have distance.
-        const globalConfig = await this.getConfig();
-        if (!globalConfig.isActive) return 0;
+        // 2. Find matching Zone
+        const allZones = await this.zoneModel.find({ active: true }).exec();
+        // Match zone by stored province list OR by the found city's province
+        const zone = allZones.find(z =>
+            z.provinces?.some(p => this.normalizeProvince(p) === normalizedInput) ||
+            (city && z.provinces?.some(p => this.normalizeProvince(p) === this.normalizeProvince(city.province)))
+        );
 
-        const fallbackPrice = globalConfig.baseRate + (weightKg * globalConfig.ratePerKg);
-        console.log(`[Shipping] Using Fallback: ${globalConfig.baseRate} + (${weightKg} * ${globalConfig.ratePerKg}) = ${fallbackPrice}`);
+        if (!zone) {
+            console.log(`[Shipping] No Zone matched for '${normalizedInput}'`);
+            // 3. Fallback (Global)
+            const globalConfig = await this.getConfig();
+            if (!globalConfig.isActive) return 0;
+            return globalConfig.baseRate + (weightKg * globalConfig.ratePerKg);
+        }
 
-        return fallbackPrice;
+        console.log(`[Shipping] Matched Zone: ${zone.name}, Multiplier: $${zone.multiplier}/km`);
+
+        // 3. Find Base Rate for Weight
+        let basePrice = 0;
+        try {
+            const rate = await this.rateModel.findOne({
+                zone_id: zone._id,
+                active: true,
+                min_weight: { $lte: weightKg },
+                max_weight: { $gte: weightKg }
+            });
+
+            if (rate) {
+                basePrice = rate.price;
+                console.log(`[Shipping] Base Rate for ${weightKg}kg: $${basePrice}`);
+            } else {
+                console.log(`[Shipping] No specific rate for ${weightKg}kg in zone. Using 0 base.`);
+            }
+        } catch (e) {
+            console.error("Error finding rate", e);
+        }
+
+        // 4. Calculate Final Cost
+        // Cost = (Distance * ZoneMultiplier) + BaseWeightPrice
+        const mileageCost = distance * (zone.multiplier || 0);
+        const totalCost = mileageCost + basePrice;
+
+        console.log(`[Shipping] Calculation: (${distance}km * $${zone.multiplier}) + $${basePrice} = $${totalCost}`);
+
+        return Number(totalCost.toFixed(2));
+    }
+
+    // --- CITIES ---
+    async getCities(): Promise<ShippingCityDocument[]> {
+        return this.cityModel.find().sort({ name: 1 }).exec();
+    }
+
+    async createCity(data: Partial<ShippingCityDocument>): Promise<ShippingCityDocument> {
+        return this.cityModel.create(data);
+    }
+
+    async updateCity(id: string, data: Partial<ShippingCityDocument>): Promise<ShippingCityDocument> {
+        return this.cityModel.findByIdAndUpdate(id, data, { new: true }).exec() as Promise<ShippingCityDocument>;
+    }
+
+    async deleteCity(id: string): Promise<any> {
+        return this.cityModel.findByIdAndDelete(id);
     }
 
     private async notifyAdmins() {

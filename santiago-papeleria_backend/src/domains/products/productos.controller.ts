@@ -76,6 +76,22 @@ export class ProductosController {
     return this.productosService.getMergedProducts(filterDto);
   }
 
+  @Get('admin/stats')
+  async getInventoryStats(): Promise<any> {
+    return this.productosService.getInventoryStats();
+  }
+
+  @Get(':sku/history')
+  async getProductHistory(@Param('sku') sku: string): Promise<any> {
+    return this.productosService.getProductHistory(sku);
+  }
+
+  @Get('admin/last-movements')
+  async getLastMovements(@Query('limit') limit: number): Promise<any> {
+    return this.productosService.getLastMovements(limit || 20);
+  }
+
+
   /**
    * Maneja GET /productos/:id
    */
@@ -96,6 +112,8 @@ export class ProductosController {
       excludeExtraneousValues: false,
     });
   }
+
+
 
   @Put(':id/enrich')
   async enrichProduct(

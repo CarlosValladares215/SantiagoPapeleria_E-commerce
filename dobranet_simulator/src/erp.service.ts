@@ -207,6 +207,26 @@ export class ErpService implements OnModuleInit {
         // Basic Total Validations
         const total = data.ITEMS.reduce((sum: number, item: any) => sum + (item.UND * item.PRE), 0);
 
+        // --- STOCK REDUCTION LOGIC ---
+        // Validate and reduce stock
+        for (const item of data.ITEMS) {
+            const product = this.products.find(p => p.COD === item.COD);
+            if (!product) {
+                return { STA: 'ERROR', MSG: `PRODUCTO NO ENCONTRADO: ${item.COD}` };
+            }
+            if (product.STK < item.UND) {
+                return { STA: 'ERROR', MSG: `STOCK INSUFICIENTE PARA: ${item.COD}. STK ACTUAL: ${product.STK}` };
+            }
+        }
+
+        // If all valid, commit reductions
+        for (const item of data.ITEMS) {
+            const product = this.products.find(p => p.COD === item.COD);
+            if (product) {
+                product.STK -= item.UND;
+            }
+        }
+
         // Mock Response
         const randomId = Math.floor(Math.random() * 900000) + 100000;
         return {

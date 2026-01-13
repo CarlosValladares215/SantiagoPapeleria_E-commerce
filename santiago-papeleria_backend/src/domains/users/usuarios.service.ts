@@ -91,6 +91,6 @@ export class UsuariosService {
 
   // Buscar por ID
   async findById(id: string): Promise<UsuarioDocument | null> {
-    return this.usuarioModel.findById(id).exec();
+    return this.usuarioModel.findById(id).populate('carrito.product').exec();
   }
 }

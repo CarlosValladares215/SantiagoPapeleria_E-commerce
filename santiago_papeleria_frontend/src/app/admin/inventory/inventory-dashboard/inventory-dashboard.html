@@ -1,0 +1,160 @@
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Control de Inventario</h1>
+            <p class="text-gray-600 mt-1">Supervisión en tiempo real del stock sincronizado con DobraNet</p>
+        </div>
+        <button (click)="loadStats()" class="text-[#104D73] hover:text-[#0c3b5e] text-sm flex items-center gap-1">
+            <i class="ri-refresh-line"></i> Actualizar
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="h-32 flex items-center justify-center bg-white rounded-lg shadow-sm">
+        <div class="flex items-center gap-2 text-gray-500">
+            <i class="ri-loader-4-line animate-spin text-xl"></i>
+            <span>Cargando métricas...</span>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div *ngIf="!isLoading()" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+        <!-- Total Products -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Total Referencias</p>
+                <h3 class="text-3xl font-bold text-gray-900">{{stats().total}}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <i class="ri-archive-line text-xl"></i>
+            </div>
+        </div>
+
+        <!-- Out of Stock (Critical) -->
+        <a [routerLink]="['/admin/products']" [queryParams]="{stockStatus: 'out_of_stock'}"
+            class="bg-white rounded-xl shadow-sm border border-l-4 border-l-red-500 border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-shadow group cursor-pointer">
+            <div>
+                <p class="text-sm font-medium text-red-600 mb-1 flex items-center gap-1">
+                    <i class="ri-error-warning-fill"></i> Agotados
+                </p>
+                <h3 class="text-3xl font-bold text-gray-900">{{stats().outOfStock}}</h3>
+                <span class="text-xs text-red-400 group-hover:underline">Ver productos →</span>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-600">
+                <i class="ri-alarm-warning-line text-xl"></i>
+            </div>
+        </a>
+
+        <!-- Low Stock (Warning) -->
+        <a [routerLink]="['/admin/products']" [queryParams]="{stockStatus: 'low'}"
+            class="bg-white rounded-xl shadow-sm border border-l-4 border-l-yellow-500 border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-shadow group cursor-pointer">
+            <div>
+                <p class="text-sm font-medium text-yellow-700 mb-1 flex items-center gap-1">
+                    <i class="ri-alert-fill"></i> Stock Bajo (≤ 5)
+                </p>
+                <h3 class="text-3xl font-bold text-gray-900">{{stats().lowStock}}</h3>
+                <span class="text-xs text-yellow-600 group-hover:underline">Ver detalle →</span>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600">
+                <i class="ri-dropbox-line text-xl"></i>
+            </div>
+        </a>
+
+        <!-- Healthy Stock -->
+        <div
+            class="bg-white rounded-xl shadow-sm border border-l-4 border-l-green-500 border-gray-100 p-6 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-green-700 mb-1">Stock Saludable</p>
+                <h3 class="text-3xl font-bold text-gray-900">{{stats().normalStock}}</h3>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                <i class="ri-check-double-line text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-[#104D73] rounded-lg p-6 text-white flex justify-between items-center shadow-md">
+        <div>
+            <h3 class="font-bold text-lg mb-1">🔄 Sincronización ERP</h3>
+            <p class="text-blue-100 text-sm max-w-xl">
+                El stock se sincroniza automáticamente cada 24 horas.
+                Las ventas web descuentan stock en tiempo real.
+            </p>
+        </div>
+        <a routerLink="/admin/erp-sync/dashboard"
+            class="px-4 py-2 bg-white text-[#104D73] rounded-md text-sm font-bold shadow hover:bg-gray-100 transition-colors">
+            Gestionar Sincronización
+        </a>
+    </div>
+
+    <!-- Recent Movements Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-800">Últimos Movimientos de Stock</h2>
+            <button (click)="loadMovements()" class="text-gray-400 hover:text-[#104D73]">
+                <i class="ri-refresh-line"></i>
+            </button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-600">
+                <thead class="bg-gray-50 text-gray-700 font-semibold uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-3">Fecha</th>
+                        <th class="px-6 py-3">Producto</th>
+                        <th class="px-6 py-3">Tipo</th>
+                        <th class="px-6 py-3 text-right">Cambio</th>
+                        <th class="px-6 py-3 text-right">Stock Final</th>
+                        <th class="px-6 py-3">Referencia</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <tr *ngFor="let mov of movements()" class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-3 whitespace-nowrap">
+                            {{ mov.fecha | date:'dd/MM/yyyy HH:mm' }}
+                        </td>
+                        <td class="px-6 py-3">
+                            <div class="flex items-center gap-3">
+                                <img [src]="mov.producto_id?.imagen || 'assets/placeholder.png'"
+                                    class="w-8 h-8 rounded bg-gray-100 object-cover border border-gray-200" alt="Prod">
+                                <div>
+                                    <p class="font-medium text-gray-900 truncate w-48"
+                                        [title]="mov.producto_id?.nombre || 'Producto Desconocido'">
+                                        {{ mov.producto_id?.nombre || 'Producto Desconocido' }}
+                                    </p>
+                                    <p class="text-xs text-gray-400">{{ mov.sku }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-3">
+                            <span
+                                [class]="getStatusBadgeClass(mov.tipo) + ' text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase tracking-wide'">
+                                {{ mov.tipo.replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 text-right font-mono font-medium"
+                            [ngClass]="mov.cantidad < 0 ? 'text-red-600' : 'text-green-600'">
+                            {{ mov.cantidad > 0 ? '+' : '' }}{{ mov.cantidad }}
+                        </td>
+                        <td class="px-6 py-3 text-right font-mono text-gray-900">
+                            {{ mov.stock_nuevo }}
+                        </td>
+                        <td class="px-6 py-3 text-xs text-gray-500">
+                            {{ mov.referencia }}
+                        </td>
+                    </tr>
+                    <tr *ngIf="movements().length === 0">
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-400">
+                            <div class="flex flex-col items-center">
+                                <i class="ri-file-list-3-line text-3xl mb-2 opacity-50"></i>
+                                <span class="text-sm">No hay movimientos recientes registrados</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

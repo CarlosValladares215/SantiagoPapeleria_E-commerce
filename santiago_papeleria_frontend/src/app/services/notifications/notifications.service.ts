@@ -27,24 +27,26 @@ export class NotificationsService {
 
     constructor(private http: HttpClient, private auth: AuthService) {
         // Auto-fetch notifications when user logs in
-        effect(() => {
+        effect((onCleanup) => {
             const user = this.auth.user();
             if (user && user._id) {
                 this.fetchNotifications(user._id);
 
-                // Optional: Set up polling every 60 seconds
                 const interval = setInterval(() => {
+                    // Use untracked to avoid cyclic dependency if user() updates within interval (unlikely but safe)
                     const currentUser = this.auth.user();
                     if (currentUser && currentUser._id) {
                         this.fetchNotifications(currentUser._id);
-                    } else {
-                        clearInterval(interval);
                     }
                 }, 60000);
+
+                onCleanup(() => {
+                    clearInterval(interval);
+                });
             } else {
                 this.notifications.set([]);
             }
-        }, { allowSignalWrites: true });
+        });
     }
 
     fetchNotifications(userId: string) {

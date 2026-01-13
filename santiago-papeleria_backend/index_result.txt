@@ -1,0 +1,7 @@
+Connecting to: mongodb://localhost:27017/PapeleriaSantiago
+Connected!
+
+=== CURRENT INDEXES ===
+ERROR: ns does not exist: PapeleriaSantiago.productos
+
+Done.

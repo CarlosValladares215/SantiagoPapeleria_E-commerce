@@ -61,10 +61,10 @@ export class ErpService {
                     erpName: "DobraNet ERP",
                     metrics: {
                         totalProducts: metrics.totalProducts,
-                        todayNewProducts: 0, // Not yet implemented in backend
-                        successRate: parseFloat(metrics.successRate) || 0,
+                        todayNewProducts: metrics.todayNewProducts || 0,
+                        successRate: typeof metrics.successRate === 'number' ? metrics.successRate : parseFloat(metrics.successRate) || 0,
                         lastSyncDuration: metrics.lastSync?.duration || "N/A",
-                        pendingErrors: 0 // Not yet implemented
+                        pendingErrors: metrics.pendingErrors || 0
                     },
                     recentSyncs: logs.map(log => ({
                         id: log._id,
@@ -116,5 +116,13 @@ export class ErpService {
 
     syncCategories(): Observable<any> {
         return this.http.post(`${this.apiUrl}/erp-sync/sync-categories`, {});
+    }
+
+    getInventoryStats(): Observable<any> {
+        return this.http.get(`${this.apiUrl}/productos/admin/stats`);
+    }
+
+    getRecentMovements(limit = 20): Observable<any[]> {
+        return this.http.get<any[]>(`${this.apiUrl}/productos/admin/last-movements?limit=${limit}`);
     }
 }

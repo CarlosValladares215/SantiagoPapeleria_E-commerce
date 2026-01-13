@@ -42,6 +42,10 @@ export class ProductFilterDto {
   status?: string; // 'pending' | 'draft' | 'complete'
 
   @IsOptional()
+  @IsString()
+  stockStatus?: string; // 'low' | 'out_of_stock' | 'normal'
+
+  @IsOptional()
   @IsBooleanString()
   isVisible?: string; // 'true' | 'false'
 

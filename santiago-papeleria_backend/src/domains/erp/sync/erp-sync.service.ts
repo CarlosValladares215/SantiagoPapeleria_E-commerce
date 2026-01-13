@@ -9,6 +9,7 @@ import { Producto } from '../../products/schemas/producto.schema';
 import { SyncLog } from './schemas/sync-log.schema';
 import { ErpConfig } from './schemas/erp-config.schema';
 import { EmailService } from '../../users/services/email.service';
+import { MovimientosService } from '../../products/movimientos.service';
 
 @Injectable()
 export class ErpSyncService {
@@ -24,7 +25,10 @@ export class ErpSyncService {
         private readonly httpService: HttpService,
         @Inject(forwardRef(() => EmailService))
         private emailService: EmailService,
+        private movimientosService: MovimientosService
     ) { }
+
+    // ... existing code ...
 
     /**
      * Test connection to ERP
@@ -184,40 +188,71 @@ export class ErpSyncService {
     private async syncToERPCollection(erpProducts: any[]): Promise<void> {
         if (erpProducts.length === 0) return;
 
-        const bulkOps = erpProducts.map(product => ({
-            updateOne: {
-                filter: { codigo: product.COD },
-                update: {
-                    $set: {
-                        nombre: product.NOM,
-                        descripcion: product.NOT || '',
-                        imagen: product.FOT || '',
-                        linea_codigo: product.LIN || '',
-                        row_id: product.ROW || 0,
-                        marca: product.MRK || '',
-                        categoria_g1: product.G1 || '',
-                        categoria_g2: product.G2 || '',
-                        categoria_g3: product.G3 || '',
-                        precio_pvp: product.PVP || 0,
-                        precio_pvm: product.PVM || 0,
-                        stock: product.STK || 0,
-                        iva: product.IVA === 15 || product.IVA === true,
-                        codigo_barras: product.BAR || '',
-                        ultima_sync: new Date(),
-                        activo: true,
-                        peso_erp: product.PES || 0,
-                        dimensiones_erp: product.DIM || { L: 0, A: 0, H: 0 },
-                        specs_erp: product.SPC || [],
+        this.logger.log(`💾 Syncing ${erpProducts.length} products to Local ERP Collection...`);
+
+        // We use bulkWrite but we also want to log changes. 
+        // To do this efficiently, we might need to fetch existing stocks first.
+        // Or we can iterate one by one if performance permits (for < 2000 products it's okay).
+        // Let's iterate for better control over logging.
+
+        const operations: any[] = [];
+
+        for (const product of erpProducts) {
+            const productCode = product.COD;
+            const newStock = Number(product.STK) || 0;
+
+            // Fetch previous to compare stock
+            const previous = await this.productERPModel.findOne({ codigo: productCode }).select('stock').lean();
+
+            if (previous && previous.stock !== newStock) {
+                // Log Movement
+                await this.movimientosService.registrarMovimiento({
+                    producto_id: previous._id as any,
+                    sku: productCode,
+                    tipo: 'SYNC_ERP',
+                    cantidad: newStock - previous.stock,
+                    stock_anterior: previous.stock,
+                    stock_nuevo: newStock,
+                    referencia: 'SYNC_AUTO'
+                });
+            }
+
+            operations.push({
+                updateOne: {
+                    filter: { codigo: productCode },
+                    update: {
+                        $set: {
+                            nombre: product.NOM,
+                            descripcion: product.NOT || '',
+                            imagen: product.FOT || '',
+                            linea_codigo: product.LIN || '',
+                            row_id: product.ROW || 0,
+                            marca: product.MRK || '',
+                            categoria_g1: product.G1 || '',
+                            categoria_g2: product.G2 || '',
+                            categoria_g3: product.G3 || '',
+                            precio_pvp: product.PVP || 0,
+                            precio_pvm: product.PVM || 0,
+                            stock: newStock,
+                            iva: product.IVA === 15 || product.IVA === true,
+                            codigo_barras: product.BAR || '',
+                            ultima_sync: new Date(),
+                            activo: true,
+                            peso_erp: product.PES || 0,
+                            dimensiones_erp: product.DIM || { L: 0, A: 0, H: 0 },
+                            specs_erp: product.SPC || [],
+                        },
                     },
+                    upsert: true,
                 },
-                upsert: true,
-            },
-        }));
+            });
+        }
 
-        const result = await this.productERPModel.bulkWrite(bulkOps);
-        this.logger.log(`📦 ERP Collection: ${result.upsertedCount} nuevos, ${result.modifiedCount} actualizados`);
+        if (operations.length > 0) {
+            const result = await this.productERPModel.bulkWrite(operations as any[]);
+            this.logger.log(`📦 ERP Collection: ${result.upsertedCount} nuevos, ${result.modifiedCount} actualizados`);
+        }
     }
-
     /**
      * Sync from productos_erp to productos (enriched)
      */
@@ -407,6 +442,20 @@ export class ErpSyncService {
 
         const successRate = totalLogs > 0 ? Math.round((successLogs / totalLogs) * 100) : 100;
 
+        // Calculate today's new products
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayNewProducts = await this.productoModel.countDocuments({
+            'auditoria.fecha_creacion': { $gte: todayStart }
+        });
+
+        // Calculate pending errors from recent syncs
+        const recentErrorLogs = await this.syncLogModel.find({
+            startTime: { $gte: thirtyDaysAgo },
+            'errors.0': { $exists: true } // Has at least one error
+        });
+        const pendingErrors = recentErrorLogs.reduce((acc, log) => acc + (log.errors?.length || 0), 0);
+
         return {
             totalProducts,
             lastSync: lastSync ? {
@@ -414,7 +463,9 @@ export class ErpSyncService {
                 status: lastSync.status,
                 duration: lastSync.duration
             } : null,
-            successRate: `${successRate}%`,
+            successRate, // Now a number, not a string with %
+            todayNewProducts,
+            pendingErrors,
             nextSync: this.getNextCronTime()
         };
     }

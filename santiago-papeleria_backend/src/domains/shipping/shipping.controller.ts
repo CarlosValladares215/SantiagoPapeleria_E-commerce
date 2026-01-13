@@ -6,6 +6,7 @@ import { ShippingService } from './shipping.service';
 import { ShippingConfig } from './schemas/shipping-config.schema';
 import { ShippingZone } from './schemas/shipping-zone.schema';
 import { ShippingRate } from './schemas/shipping-rate.schema';
+import { ShippingCity } from './schemas/shipping-city.schema';
 
 @Controller('shipping')
 export class ShippingController {
@@ -53,6 +54,11 @@ export class ShippingController {
         return this.shippingService.getRates(zoneId);
     }
 
+    @Get('rates')
+    async getAllRates(): Promise<ShippingRate[]> {
+        return (this.shippingService as any).getAllRates();
+    }
+
     @Post('zones/:id/rates')
     async createRate(@Param('id') zoneId: string, @Body() data: Partial<ShippingRate>): Promise<ShippingRate> {
         return this.shippingService.createRate(zoneId, data);
@@ -66,6 +72,27 @@ export class ShippingController {
     @Delete('rates/:id')
     async deleteRate(@Param('id') id: string): Promise<any> {
         return this.shippingService.deleteRate(id);
+    }
+
+    // --- CITIES ---
+    @Get('cities')
+    async getCities(): Promise<any[]> {
+        return this.shippingService.getCities();
+    }
+
+    @Post('cities')
+    async createCity(@Body() data: any): Promise<any> {
+        return this.shippingService.createCity(data);
+    }
+
+    @Put('cities/:id')
+    async updateCity(@Param('id') id: string, @Body() data: any): Promise<any> {
+        return this.shippingService.updateCity(id, data);
+    }
+
+    @Delete('cities/:id')
+    async deleteCity(@Param('id') id: string): Promise<any> {
+        return this.shippingService.deleteCity(id);
     }
 
     @Post('calculate')

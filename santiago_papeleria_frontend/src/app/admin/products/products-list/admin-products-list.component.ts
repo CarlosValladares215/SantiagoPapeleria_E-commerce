@@ -43,7 +43,7 @@ export class AdminProductsListComponent implements OnInit {
     searchTerm = signal('');
     statusFilter = signal('all');
     visibilityFilter = signal('all');
-    inStockOnly = signal(true); // Default: Prioritize stock
+    stockStatusFilter = signal('all'); // Replaces simple boolean
 
     // Computed filtered products - NOW PASS-THROUGH (Server side does the work)
     filteredProducts = computed(() => this.products());
@@ -79,8 +79,8 @@ export class AdminProductsListComponent implements OnInit {
             params.isVisible = this.visibilityFilter() === 'visible' ? 'true' : 'false';
         }
 
-        if (this.inStockOnly()) {
-            params.inStock = 'true';
+        if (this.stockStatusFilter() !== 'all') {
+            params.stockStatus = this.stockStatusFilter();
         }
 
         this.erpService.getAdminProducts(params)
@@ -122,8 +122,8 @@ export class AdminProductsListComponent implements OnInit {
         this.loadProducts();
     }
 
-    toggleStock() {
-        this.inStockOnly.update(v => !v);
+    updateStockStatus(status: string) {
+        this.stockStatusFilter.set(status);
         this.page.set(1);
         this.loadProducts();
     }

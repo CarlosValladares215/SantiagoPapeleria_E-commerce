@@ -6,29 +6,26 @@ import { ProductosService } from './productos.service';
 import { ProductosController } from './productos.controller';
 import { Producto, ProductoSchema } from './schemas/producto.schema';
 import { ProductERP, ProductERPSchema } from './schemas/product-erp.schema';
+import { MovimientoStock, MovimientoStockSchema } from './schemas/movimiento-stock.schema';
 
 import { HttpModule } from '@nestjs/axios';
 
 import { forwardRef } from '@nestjs/common';
-import { ErpSyncModule } from '../erp/sync/erp-sync.module'; // Adjust path if needed
+import { MovimientosService } from './movimientos.service';
+import { ErpSyncModule } from '../erp/sync/erp-sync.module';
 
 @Module({
   imports: [
     HttpModule,
-    forwardRef(() => ErpSyncModule), // Circular dependency resolution
     MongooseModule.forFeature([
-      {
-        name: Producto.name, // enriched
-        schema: ProductoSchema,
-      },
-      {
-        name: ProductERP.name, // erp_source
-        schema: ProductERPSchema,
-      },
+      { name: Producto.name, schema: ProductoSchema },
+      { name: ProductERP.name, schema: ProductERPSchema },
+      { name: MovimientoStock.name, schema: MovimientoStockSchema },
     ]),
+    forwardRef(() => ErpSyncModule),
   ],
   controllers: [ProductosController],
-  providers: [ProductosService],
-  exports: [ProductosService, MongooseModule] // Export MongooseModule so ErpSyncService can use models
+  providers: [ProductosService, MovimientosService],
+  exports: [ProductosService, MovimientosService, MongooseModule]
 })
 export class ProductosModule { }

@@ -1,5 +1,4 @@
-
-import { Injectable, signal, computed, inject, effect, Injector } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, Injector, untracked } from '@angular/core';
 import { UiService } from '../ui/ui.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DireccionEntrega } from '../../models/usuario.model';
@@ -8,6 +7,8 @@ import { AuthService } from '../auth/auth.service';
 import { ShippingService } from '../../services/shipping.service';
 import { PaymentService, PaymentConfig } from '../../services/payment.service';
 import { environment } from '../../../environments/environment';
+import { ShippingCalculatorService, CalculatedShipping } from '../../admin/shipping/services/shipping-calculator.service';
+import { ShippingStateService } from '../../admin/shipping/services/shipping-state.service';
 
 export interface CartItem {
     id: string;
@@ -22,6 +23,7 @@ export interface CartItem {
     options?: any;
     vat_included?: boolean;
     weight_kg?: number;
+    product?: any; // Populated from backend
     dimensions?: {
         largo: number;
         ancho: number;
@@ -39,12 +41,13 @@ export class CartService {
     private authService = inject(AuthService);
     private shippingService = inject(ShippingService);
     private paymentService = inject(PaymentService);
+    private shippingCalculator = inject(ShippingCalculatorService);
+    private shippingState = inject(ShippingStateService);
 
     // API URLs
     private apiUrl = `${environment.baseApiUrl}/usuarios`;
     private ordersUrl = `${environment.baseApiUrl}/pedidos`;
     private filesUrl = `${environment.baseApiUrl}/files`;
-    private shippingUrl = `${environment.baseApiUrl}/shipping`;
 
     // Sync with UiService
     private _isOpen = toSignal(this.uiService.isCartOpen$, { initialValue: false });
@@ -57,6 +60,8 @@ export class CartService {
     shippingCost = signal<number>(0);
     deliveryMethod = signal<'shipping' | 'pickup'>('shipping');
     paymentMethod = signal<'transfer' | 'cash' | null>(null);
+    isFreeShipping = signal<boolean>(false);
+    shippingBreakdown = signal<CalculatedShipping | null>(null);
 
     // Payment Config State
     paymentConfig = signal<PaymentConfig | null>(null);
@@ -70,8 +75,8 @@ export class CartService {
     ];
     selectedBranch = signal(this.branches[0]);
 
-    // Dynamic IVA Rate
-    ivaRate = signal<number>(0.15); // Default fallback
+    // Dynamic IVA Rate linked to ShippingState
+    ivaRate = computed(() => this.shippingState.config().ivaRate || 0.15);
 
     // Computed Values
     isOpen = computed(() => this._isOpen());
@@ -114,19 +119,28 @@ export class CartService {
     cartCount = this.totalItems;
 
     constructor() {
-        this.loadShippingConfig();
+        this.shippingState.loadAll(); // Ensure shipping state is loaded for calculator and IVA
         this.loadPaymentConfig();
 
+        // 1. Effect: Sync changes TO LocalStorage & Backend
         // 1. Effect: Sync changes TO LocalStorage & Backend
         effect(() => {
             const items = this.cartItemsSignal();
             this.saveToStorage(items);
             this.calculateShipping();
 
-            // Sync to Backend if User is Logged In
-            const user = this.authService.user();
+            // Use untracked to prevent loop if saveCartToBackend triggers user update
+            const user = untracked(() => this.authService.user());
             if (user && user._id) {
-                this.saveCartToBackend(user._id, items);
+                // Prevent infinite loop by checking if cart is already synced
+                const currentBackendCart = untracked(() =>
+                    user.carrito?.map((c: any) => ({ id: c.id || c._id, qty: c.quantity })) || []
+                );
+                const newCartSimple = items.map(c => ({ id: c.id, qty: c.quantity }));
+
+                if (JSON.stringify(currentBackendCart) !== JSON.stringify(newCartSimple)) {
+                    this.saveCartToBackend(user._id, items);
+                }
             }
         });
 
@@ -142,37 +156,37 @@ export class CartService {
             if (user) {
                 // User Logged In: Load their cart
                 if (user.carrito && Array.isArray(user.carrito)) {
-                    const mappedCart = user.carrito.map((c: any) => ({
-                        ...c,
-                        id: c.id || c._id
-                    }));
+                    const mappedCart = user.carrito
+                        .map((c: any) => ({
+                            ...c,
+                            id: c.id || c._id,
+                            weight_kg: Number(c.product?.peso_kg || c.weight_kg || c.peso_kg || 0)
+                        }))
+                        .filter((c: CartItem) => c && c.id && typeof c.id === 'string' && c.id.trim().length > 0 && c.id !== 'undefined');
+
+                    console.log(`[CartService] Backend Sync: Valid items ${mappedCart.length}/${user.carrito.length}`);
                     this.cartItemsSignal.set(mappedCart);
                 }
 
-                // Auto-select Default Address if available and none selected
-                if (user.direcciones_entrega && user.direcciones_entrega.length > 0 && !this.selectedAddress()) {
-                    // Ideally check for 'isDefault' flag, mostly first one is default
-                    this.setAddress(user.direcciones_entrega[0]);
-                }
+                // Auto-selection removed based on user feedback
+                // if (user.direcciones_entrega && user.direcciones_entrega.length > 0 && !this.selectedAddress()) {
+                //    this.setAddress(user.direcciones_entrega[0]);
+                // }
             } else {
                 // User Logged Out: Clear Cart
                 this.cartItemsSignal.set([]);
                 this.selectedAddress.set(null);
             }
         }, { allowSignalWrites: true });
-    }
 
-    loadShippingConfig() {
-        this.shippingService.getConfig().subscribe({
-            next: (config) => {
-                // Ensure rate is valid number
-                const rate = Number(config.ivaRate);
-                if (!isNaN(rate) && rate >= 0) {
-                    this.ivaRate.set(rate);
-                }
-            },
-            error: (err) => console.error('Error loading shipping config for IVA', err)
-        });
+        // 4. Effect: Re-calculate if shipping state changes (e.g. rates loaded)
+        effect(() => {
+            // Depend on underlying signals to trigger recalc
+            this.shippingState.zones();
+            this.shippingState.allRates();
+            this.shippingState.cities(); // Depend on cities loaded
+            this.calculateShipping();
+        }, { allowSignalWrites: true });
     }
 
     loadPaymentConfig() {
@@ -190,6 +204,7 @@ export class CartService {
     }
 
     addToCart(product: any, quantity: number = 1, options: any = {}) {
+        console.log('[AddToCart] Product received:', product.name || product.nombre, 'peso_kg:', product.peso_kg);
         const currentItems = this.cartItemsSignal();
         const productId = product.id || product._id || product.internal_id;
 
@@ -232,9 +247,6 @@ export class CartService {
             }
         } else {
             const applicablePrice = this.calculatePrice(quantity, retailPrice, wholesalePrice, isMayoristaUser);
-            // Ensure promo price applies if lower than any wholesale calculation (unless wholesale is better)
-            // But calculatePrice logic might return wholesale if applicable.
-            // If retailPrice IS the promo price, calculatePrice returns it for non-wholesale.
 
             const newItem: CartItem = {
                 id: productId,
@@ -248,8 +260,8 @@ export class CartService {
                 sku: product.sku || product.codigo_interno || '',
                 options: options,
                 vat_included: product.vat_included !== undefined ? product.vat_included : true,
-                weight_kg: product.weight_kg || product.weight || 0,
-                dimensions: product.dimensions,
+                weight_kg: product.peso_kg || product.weight_kg || product.weight || 0,
+                dimensions: product.dimensiones || product.dimensions,
                 promocion_id: promoId
             };
             this.cartItemsSignal.set([...currentItems, newItem]);
@@ -343,6 +355,7 @@ export class CartService {
     private calculateShipping() {
         if (this.deliveryMethod() === 'pickup') {
             this.shippingCost.set(0);
+            this.isFreeShipping.set(false);
             return;
         }
 
@@ -351,29 +364,9 @@ export class CartService {
 
         if (!address || items.length === 0) {
             this.shippingCost.set(0);
+            this.isFreeShipping.set(false);
             return;
         }
-
-        // Check for Free Shipping Rule Locally first (Optimization)
-        // We need to fetch global shipping config to know the threshold if not part of calculation response
-        // Better: The calculateShipping endpoint should handle it. But currently endpoint returns cost based on weight/zone.
-        // Let's rely on backend returning 0 if free shipping applies? 
-        // Or we can check threshold here if we have it.
-        // The backend logic is: zone -> rate. 
-        // We need to update backend calculation to check threshold.
-        // However, we recently updated ShippingConfig schema. 
-        // Let's update this method to just call backend, assuming backend handles logic or we handle it here.
-        // Let's handle it here for now if we can get config, otherwise rely on backend.
-        // Since we don't hold ShippingConfig here, let's trust backend returns correct cost.
-        // WAIT: I only updated ShippingConfig Schema, not the calculation logic in backend to use it.
-        // I should fix backend calculation logic to use threshold.
-        // OR I can fetch ShippingConfig here and apply it.
-
-        // Let's do a quick fetch of shipping config alongside payment? No, let's keep it simple.
-        // I will update the backend calculation logic in proper task or now.
-        // Actually, the plan said: "Implement free shipping logic in calculateShipping".
-
-        // Let's fetch shipping config once on load too.
 
         console.log('Calculating shipping for:', address.alias);
 
@@ -381,9 +374,10 @@ export class CartService {
         let totalVolumetricWeight = 0;
 
         items.forEach(item => {
+
             const q = item.quantity;
-            // Support both backend 'peso_kg' and frontend 'weight_kg'
             const w = Number((item as any).peso_kg || item.weight_kg || 0);
+            console.log(`[Weight Debug] Item: ${item.name}, peso_kg: ${(item as any).peso_kg}, weight_kg: ${item.weight_kg}, qty: ${q}, contribution: ${w * q}kg`);
             totalRealWeight += w * q;
 
             if (item.dimensions) {
@@ -396,32 +390,32 @@ export class CartService {
         });
 
         const chargeableWeight = Math.max(totalRealWeight, totalVolumetricWeight);
-        const locationName = address.provincia || address.ciudad || '';
-        const subTotal = this.subTotal(); // Use subTotal to check threshold
+        const searchName = this.normalize(address.provincia || address.ciudad || '');
 
-        // Call Backend for Calculation
-        this.shippingService.calculateShipping(locationName, chargeableWeight).subscribe({
-            next: (res) => {
-                // Check Free Shipping Logic here if backend doesn't do it yet
-                // Or better, fetch config and checking.
-                // For now, let's assume standard calculation. 
-                // To support free shipping properly, I'll fetch shipping config in CartService as well.
-                this.shippingCost.set(res.cost);
+        console.log(`[CartService] Weight: ${chargeableWeight}kg, City/Prov: '${searchName}'`);
 
-                // Override if Free Shipping Threshold met (Client Side Logic for immediate feedback)
-                this.shippingService.getConfig().subscribe(config => {
-                    if (config.freeShippingThreshold && config.freeShippingThreshold > 0) {
-                        if (subTotal >= config.freeShippingThreshold) {
-                            this.shippingCost.set(0);
-                        }
-                    }
-                });
-            },
-            error: (err) => {
-                console.error('Error calculating shipping:', err);
-                this.shippingCost.set(0);
-            }
-        });
+        // Find configured city ID
+        const cities = this.shippingState.cities();
+        const foundCity = cities.find(c =>
+            this.normalize(c.name) === searchName ||
+            this.normalize(c.province) === searchName
+        );
+
+        console.log(`[CartService] Looked for '${searchName}' in ${cities.length} cities. Found:`, foundCity ? foundCity.name : 'NULL');
+
+        const cityId = foundCity?._id || '';
+
+        const subTotal = this.subTotal(); // Ensure we use the signal value
+        const result = this.shippingCalculator.calculateEstimatedShipping(cityId, chargeableWeight, subTotal);
+
+        this.shippingCost.set(result.total);
+        this.isFreeShipping.set(result.isFreeShipping);
+
+        console.log('[CartService] Result:', result);
+    }
+
+    private normalize(str: string): string {
+        return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     }
 
     private saveToStorage(items: CartItem[]) {
@@ -429,9 +423,14 @@ export class CartService {
     }
 
     private loadFromStorage(): CartItem[] {
+        if (typeof localStorage === 'undefined') return [];
         const stored = localStorage.getItem('cart');
         try {
-            return stored ? JSON.parse(stored) : [];
+            const parsed = stored ? JSON.parse(stored) : [];
+            // Critical: Filter out corrupted items immediately to prevent NG0955 and 0kg issues
+            return Array.isArray(parsed)
+                ? parsed.filter((i: any) => i.id && i.id.trim() !== '' && i.id !== 'undefined')
+                : [];
         } catch (e) {
             console.error('Failed to parse cart', e);
             return [];

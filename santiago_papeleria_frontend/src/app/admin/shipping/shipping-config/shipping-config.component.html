@@ -26,6 +26,13 @@
                 [class.hover:bg-white/60]="currentTab() !== 'zones'">
                 <lucide-icon name="map" class="w-5 h-5"></lucide-icon> Zonas y Tarifas
             </button>
+            <button (click)="switchTab('cities')"
+                class="w-full text-left px-4 py-3 rounded-xl font-medium transition-all flex items-center gap-3"
+                [class.bg-white]="currentTab() === 'cities'" [class.shadow-sm]="currentTab() === 'cities'"
+                [class.text-blue-600]="currentTab() === 'cities'" [class.text-slate-600]="currentTab() !== 'cities'"
+                [class.hover:bg-white/60]="currentTab() !== 'cities'">
+                <lucide-icon name="map-pin" class="w-5 h-5"></lucide-icon> Ciudades / Distancias
+            </button>
             <button (click)="switchTab('import')"
                 class="w-full text-left px-4 py-3 rounded-xl font-medium transition-all flex items-center gap-3"
                 [class.bg-white]="currentTab() === 'import'" [class.shadow-sm]="currentTab() === 'import'"
@@ -53,6 +60,10 @@
 
             @if (currentTab() === 'zones') {
             <app-zones />
+            }
+
+            @if (currentTab() === 'cities') {
+            <app-city-config />
             }
 
             @if (currentTab() === 'import') {

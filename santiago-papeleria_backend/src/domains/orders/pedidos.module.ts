@@ -8,6 +8,7 @@ import { Pedido, PedidoSchema } from './schemas/pedido.schema';
 import { ContadoresModule } from '../../core/counters/contadores.module';
 import { UsuariosModule } from '../users/usuarios.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { ProductosModule } from '../products/productos.module';
 import { ErpSyncModule } from '../erp/sync/erp-sync.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { ErpSyncModule } from '../erp/sync/erp-sync.module';
     ContadoresModule,
     UsuariosModule,
     NotificationsModule,
+    ProductosModule,
     forwardRef(() => ErpSyncModule), // Integración con DobraNet ERP
   ],
   controllers: [PedidosController],

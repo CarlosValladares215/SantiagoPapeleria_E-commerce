@@ -11,6 +11,9 @@ export class ShippingZone {
     @Prop({ type: [String], default: [] })
     provinces: string[]; // List of provinces/cities belonging to this zone
 
+    @Prop({ default: 0 })
+    multiplier: number; // Cost per km in USD (e.g., 0.05)
+
     @Prop({ default: true })
     active: boolean;
 }

@@ -1,7 +1,7 @@
 import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LucideAngularModule, Save } from 'lucide-angular';
+import { LucideAngularModule } from 'lucide-angular';
 import { ShippingStateService } from '../../services/shipping-state.service';
 import { ShippingConfig } from '../../../../services/shipping.service';
 
@@ -9,9 +9,6 @@ import { ShippingConfig } from '../../../../services/shipping.service';
     selector: 'app-general-config',
     standalone: true,
     imports: [CommonModule, FormsModule, LucideAngularModule],
-    providers: [
-        { provide: LucideAngularModule, useValue: LucideAngularModule.pick({ Save }) }
-    ],
     templateUrl: './general-config.component.html',
 })
 export class GeneralConfigComponent {
@@ -33,6 +30,12 @@ export class GeneralConfigComponent {
     updateField(field: keyof ShippingConfig, value: any) {
         const current = this.state.config();
         this.state.updateConfig({ ...current, [field]: value });
+    }
+
+    preventSymbols(event: KeyboardEvent) {
+        if (['+', '-', 'e', 'E'].includes(event.key)) {
+            event.preventDefault();
+        }
     }
 
     save() {

@@ -9,6 +9,7 @@ import { ContadoresService } from '../../core/counters/contadores.service';
 import { UsuariosService } from '../users/usuarios.service';
 import { EmailService } from '../users/services/email.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ProductosService } from '../products/productos.service';
 import { ErpSyncService } from '../erp/sync/erp-sync.service';
 
 @Injectable()
@@ -23,6 +24,7 @@ export class PedidosService {
     private notificationsService: NotificationsService,
     @Inject(forwardRef(() => ErpSyncService))
     private erpSyncService: ErpSyncService,
+    private productosService: ProductosService
   ) { }
 
   // Crea un nuevo pedido (usado en el POST)
@@ -49,6 +51,20 @@ export class PedidosService {
 
     // 3. Guardar en la base de datos
     const savedPedido = await createdPedido.save();
+
+    // 3.1 Descontar Stock Localmente (RN-STOCK-001)
+    // Esto asegura que el stock baje inmediatamente antes de la sync con ERP
+    for (const item of savedPedido.items) {
+      if (item.codigo_dobranet) {
+        await this.productosService.updateStock(
+          item.codigo_dobranet,
+          -item.cantidad,
+          `PEDIDO-${savedPedido.numero_pedido_web}`,
+          'VENTA',
+          savedPedido.usuario_id.toString()
+        );
+      }
+    }
 
     // 4. Enviar correo de confirmación (Asíncrono)
     this.sendConfirmationEmail(createPedidoDto.usuario_id, savedPedido);

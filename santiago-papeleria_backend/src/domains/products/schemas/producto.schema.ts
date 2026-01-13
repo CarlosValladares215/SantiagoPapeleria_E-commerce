@@ -137,44 +137,8 @@ export class Dimensiones {
   alto: number;
 }
 
-@Schema()
-export class GrupoVariante {
-  @Prop({ required: true })
-  id: string; // Timestamp o ID único
-
-  @Prop({ required: true })
-  nombre: string; // "Color", "Talla"
-
-  @Prop({ enum: ['color', 'size', 'material', 'custom'], default: 'custom' })
-  tipo: string;
-
-  @Prop({ type: [String], default: [] })
-  opciones: string[];
-}
-
-@Schema()
-export class Variante {
-  @Prop({ required: true })
-  id: string;
-
-  @Prop({ type: Object, required: true })
-  combinacion: Record<string, string>; // { "Color": "Rojo", "Talla": "S" }
-
-  @Prop({ required: true })
-  sku: string;
-
-  @Prop()
-  precio_especifico: number; // Override del precio base
-
-  @Prop({ default: 0 })
-  stock: number;
-
-  @Prop({ default: true })
-  activo: boolean;
-
-  @Prop({ type: [String], default: [] })
-  imagenes: string[];
-}
+// NOTA: Las clases GrupoVariante y Variante fueron eliminadas porque no se usaban
+// y causaban errores de índice duplicado en MongoDB (variantes.sku_1)
 
 // 7. Promocion Activa (Denormalized)
 @Schema()
@@ -251,14 +215,9 @@ export class Producto {
   @Prop({ default: false })
   permite_mensaje_personalizado: boolean;
 
-  @Prop({ default: false })
-  tiene_variantes: boolean;
 
-  @Prop({ type: [GrupoVariante], default: [] })
-  grupos_variantes: GrupoVariante[];
+  // NOTA: tiene_variantes, grupos_variantes y variantes fueron eliminados
 
-  @Prop({ type: [Variante], default: [] })
-  variantes: Variante[];
 
   @Prop()
   descripcion_extendida: string;

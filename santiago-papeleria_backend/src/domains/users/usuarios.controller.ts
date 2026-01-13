@@ -384,7 +384,14 @@ export class UsuariosController {
     @Param('id') id: string,
     @Body() cartItems: any[],
   ) {
-    const updatedUser = await this.usuariosService.update(id, { carrito: cartItems });
+    // Map items to include the 'product' reference expecting ObjectId
+    // Assuming item.id is the valid Product ID
+    const mappedItems = cartItems.map(item => ({
+      ...item,
+      product: item.id
+    }));
+
+    const updatedUser = await this.usuariosService.update(id, { carrito: mappedItems });
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }

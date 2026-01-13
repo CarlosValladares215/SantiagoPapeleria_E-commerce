@@ -1,7 +1,7 @@
 // src/usuarios/schemas/usuario.schema.ts
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type UsuarioDocument = Usuario & Document;
 
@@ -74,6 +74,9 @@ class DatosNegocio {
 class CartItem {
   @Prop({ required: true })
   id: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Producto' })
+  product: Types.ObjectId;
 
   @Prop({ required: true })
   quantity: number;

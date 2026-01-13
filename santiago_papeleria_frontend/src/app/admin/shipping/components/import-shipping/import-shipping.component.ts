@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, CloudUpload, FileSpreadsheet } from 'lucide-angular';
+import { LucideAngularModule } from 'lucide-angular';
 import { ShippingStateService } from '../../services/shipping-state.service';
 import { ShippingService } from '../../../../services/shipping.service';
 
@@ -8,9 +8,6 @@ import { ShippingService } from '../../../../services/shipping.service';
     selector: 'app-import-shipping',
     standalone: true,
     imports: [CommonModule, LucideAngularModule],
-    providers: [
-        { provide: LucideAngularModule, useValue: LucideAngularModule.pick({ CloudUpload, FileSpreadsheet }) }
-    ],
     templateUrl: './import-shipping.component.html',
 })
 export class ImportShippingComponent {

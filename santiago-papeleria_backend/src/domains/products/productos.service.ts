@@ -5,6 +5,7 @@ import { Producto, ProductoDocument } from './schemas/producto.schema';
 import { ProductERP, ProductERPDocument } from './schemas/product-erp.schema';
 import { ProductFilterDto } from './dto/product-filter.dto';
 import { ErpSyncService } from '../erp/sync/erp-sync.service';
+import { MovimientosService } from './movimientos.service';
 
 // Definition of the Resolved Product (merged in memory)
 export interface ResolvedProduct {
@@ -33,7 +34,8 @@ export class ProductosService {
   constructor(
     @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,
     @InjectModel(ProductERP.name) private productErpModel: Model<ProductERPDocument>,
-    @Inject(forwardRef(() => ErpSyncService)) private readonly erpSyncService: ErpSyncService
+    @Inject(forwardRef(() => ErpSyncService)) private readonly erpSyncService: ErpSyncService,
+    private movimientosService: MovimientosService
   ) { }
 
   // --- CORE: HELPER DE FUSIÓN (PURE LOGIC) ---
@@ -135,6 +137,17 @@ export class ProductosService {
 
     if (status && status !== 'all') {
       mergedProducts = mergedProducts.filter(p => p.enrichmentStatus === status);
+    }
+
+    if (filterDto.stockStatus && filterDto.stockStatus !== 'all') {
+      const umbral = 5; // Configurable ideally, but fixed per requirements for now
+      if (filterDto.stockStatus === 'out_of_stock') {
+        mergedProducts = mergedProducts.filter(p => p.stock === 0);
+      } else if (filterDto.stockStatus === 'low') {
+        mergedProducts = mergedProducts.filter(p => p.stock > 0 && p.stock <= umbral);
+      } else if (filterDto.stockStatus === 'normal') {
+        mergedProducts = mergedProducts.filter(p => p.stock > umbral);
+      }
     }
 
     if (filterDto.isVisible) {
@@ -249,6 +262,8 @@ export class ProductosService {
       },
       es_publico: true,
       enriquecido: true,
+      peso_kg: p.weight_kg || 0,
+      dimensiones: p.dimensions || {},
       promocion_activa: p._enrichedData?.promocion_activa
     }));
   }
@@ -296,7 +311,9 @@ export class ProductosService {
       stock: { total_disponible: resolve.stock },
       precios: { pvp: resolve.price, pvm: resolve.wholesalePrice, incluye_iva: true },
       specs: resolve._enrichedData?.specs || [],
+      peso_kg: resolve._enrichedData?.peso_kg || 0,
       weight_kg: resolve._enrichedData?.peso_kg || 0,
+      dimensiones: resolve._enrichedData?.dimensiones || null,
       dimensions: resolve._enrichedData?.dimensiones || null,
       promocion_activa: resolve._enrichedData?.promocion_activa
     };
@@ -404,5 +421,101 @@ export class ProductosService {
 
   async getBrands(): Promise<string[]> {
     return this.productErpModel.distinct('marca', { activo: true }).exec();
+  }
+
+  async getInventoryStats(): Promise<any> {
+    const totalProducts = await this.productErpModel.countDocuments({ activo: true });
+
+    // We can't query 'stock' directly on ERP model easily for ranges if it's string, 
+    // but assuming it's number because of Schema.
+    // Stock > 0 && <= 5
+    const lowStock = await this.productErpModel.countDocuments({
+      activo: true,
+      stock: { $gt: 0, $lte: 5 }
+    });
+
+    const outOfStock = await this.productErpModel.countDocuments({
+      activo: true,
+      stock: 0
+    });
+
+    const normalStock = await this.productErpModel.countDocuments({
+      activo: true,
+      stock: { $gt: 5 }
+    });
+
+    return {
+      total: totalProducts,
+      lowStock,
+      outOfStock,
+      normalStock,
+      timestamp: new Date()
+    };
+  }
+
+  async getProductHistory(sku: string): Promise<any[]> {
+    return this.movimientosService.getHistorial(sku);
+  }
+
+  async getLastMovements(limit: number = 20): Promise<any[]> {
+    return this.movimientosService.getUltimosMovimientos(limit);
+  }
+
+  /**
+   * Updates stock locally...
+
+   * Used by PedidosService when an order is placed.
+   * @param sku Product SKU
+   * @param delta Change in stock (negative for reduction)
+   * @param reference Order ID or reference
+   * @param type Movement type
+   * @param userId User causing the change
+   */
+
+
+  async updateStock(sku: string, delta: number, reference: string, type: 'VENTA' | 'DEVOLUCION' | 'AJUSTE_MANUAL', userId?: string): Promise<void> {
+    // 1. Update ProductERP (Source) - Find by COD
+    const erpProduct = await this.productErpModel.findOne({ codigo: sku });
+    if (!erpProduct) {
+      // Can happen if product is not in ERP collection yet?
+      // Fallback to finding by enriched code if sync logic differs
+      console.warn(`[Stock] Product SKU ${sku} not found in ERP Collection`);
+      return;
+    }
+
+    const oldStock = Number(erpProduct.stock) || 0;
+    const newStock = oldStock + delta; // delta is usually negative for sales
+
+    // Only update if changed
+    if (oldStock !== newStock) {
+      erpProduct.stock = newStock;
+      await erpProduct.save();
+
+      // 2. Update Enriched Product (Cache/View)
+      // We update specifically total_disponible and recalculate status
+      const enriched = await this.productoModel.findOne({ codigo_interno: sku });
+      if (enriched) {
+        enriched.stock.total_disponible = newStock;
+        enriched.stock.estado_stock = newStock <= 0 ? 'agotado' : (newStock <= (enriched.stock.umbral_stock_alerta || 5) ? 'bajo' : 'normal');
+        await enriched.save();
+      }
+
+      // 3. Log Movement
+      try {
+        await this.movimientosService.registrarMovimiento({
+          producto_id: (enriched?._id || erpProduct._id) as any,
+          sku: sku,
+          tipo: type,
+          cantidad: delta,
+          stock_anterior: oldStock,
+          stock_nuevo: newStock,
+          referencia: reference,
+          usuario_id: userId
+        });
+      } catch (logErr) {
+        console.error(`[Stock] Error logging movement for ${sku}:`, logErr);
+        // Don't fail the transaction just because log failed (?)
+      }
+    }
   }
 }

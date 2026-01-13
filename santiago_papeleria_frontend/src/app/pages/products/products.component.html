@@ -28,7 +28,7 @@
 
                 <!-- Products Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8" data-product-shop>
-                    @for (product of currentProducts(); track product.sku) {
+                    @for (product of currentProducts(); track $index) {
                     <app-product-card [product]="product" (viewDetails)="navigateToProduct($event)"
                         (addToCart)="handleAddToCart($event)">
                     </app-product-card>

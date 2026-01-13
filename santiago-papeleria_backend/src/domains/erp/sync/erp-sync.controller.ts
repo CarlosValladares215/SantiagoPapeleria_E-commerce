@@ -1,9 +1,34 @@
 import { Controller, Get, Post, Query, Body } from '@nestjs/common';
 import { ErpSyncService } from './erp-sync.service';
+import { InjectConnection } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
 
 @Controller('erp-sync')
 export class ErpSyncController {
-    constructor(private readonly erpSyncService: ErpSyncService) { }
+    constructor(
+        private readonly erpSyncService: ErpSyncService,
+        @InjectConnection() private readonly connection: Connection,
+    ) { }
+
+    // TEMPORARY: Endpoint to drop the problematic variantes.sku_1 index
+    @Post('drop-variantes-index')
+    async dropVariantesIndex() {
+        try {
+            const collection = this.connection.collection('productos');
+            const indexes = await collection.indexes();
+            const targetIndex = 'variantes.sku_1';
+            const hasIndex = indexes.some((i: any) => i.name === targetIndex);
+
+            if (hasIndex) {
+                await collection.dropIndex(targetIndex);
+                return { success: true, message: `Index "${targetIndex}" dropped successfully` };
+            } else {
+                return { success: true, message: `Index "${targetIndex}" not found - nothing to drop` };
+            }
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
 
     @Get('test-connection')
     async testConnection() {

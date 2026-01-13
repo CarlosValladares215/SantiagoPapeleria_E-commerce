@@ -22,7 +22,7 @@
             <div class="lg:col-span-2 space-y-6">
                 <!-- Products List -->
                 <div class="space-y-4">
-                    @for (item of cartService.cartItems(); track item.id) {
+                    @for (item of cartService.cartItems(); track $index) {
                     <div
                         class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex gap-4 items-start sm:items-center">
                         <!-- Image -->
@@ -163,7 +163,7 @@
                                 <select (change)="onAddressChange($event)"
                                     class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm focus:border-[#f2cb07] outline-none">
                                     <option value="" selected>Seleccionar...</option>
-                                    @for (addr of addresses(); track addr.alias; let i = $index) {
+                                    @for (addr of addresses(); track $index; let i = $index) {
                                     <option [value]="i">{{ addr.alias }} - {{ addr.ciudad }}</option>
                                     }
                                 </select>
@@ -322,7 +322,39 @@
                             @if (cartService.deliveryMethod() === 'pickup') {
                             <span class="text-green-600 font-bold">Gratis (Retiro)</span>
                             } @else if (cartService.selectedAddress()) {
-                            <span>{{ cartService.shippingCost() | currency }}</span>
+                            <div class="flex flex-col items-end">
+                                @if (cartService.isFreeShipping()) {
+                                <span class="text-green-600 font-bold">¡Envío Gratis!</span>
+                                } @else {
+                                <span>{{ cartService.shippingCost() | currency }}</span>
+                                }
+
+                                @if (cartService.shippingBreakdown(); as bd) {
+                                <span class="text-[10px] text-gray-400 mt-1 text-right">
+                                    @switch (bd.appliedRule) {
+                                    @case ('CUSTOM_CITY') {
+                                    <span class="block">Tarifa Fija Ciudad</span>
+                                    }
+                                    @case ('DISTANCE') {
+                                    <span class="block">Por Distancia ({{ bd.distancePart | currency }})</span>
+                                    @if (bd.weightPart > 0) { <span class="block">+ Peso ({{ bd.weightPart | currency
+                                        }})</span> }
+                                    }
+                                    @case ('ZONE_WEIGHT') {
+                                    <span class="block">Por Peso (Zona)</span>
+                                    }
+                                    @case ('GLOBAL_FALLBACK') {
+                                    <span class="block">Tarifa Base Global</span>
+                                    }
+                                    }
+                                    @if (cartService.selectedAddress(); as addr) {
+                                    <span class="block text-[9px] italic mt-0.5 max-w-[120px] truncate">
+                                        Enviando a: {{ addr.alias }} ({{ addr.ciudad }})
+                                    </span>
+                                    }
+                                </span>
+                                }
+                            </div>
                             } @else {
                             <span class="text-xs text-gray-400 italic">Por calcular</span>
                             }
