@@ -1,4 +1,4 @@
-import { Component, computed, signal, WritableSignal, effect, untracked, ViewChild, OnDestroy } from '@angular/core';
+import { Component, computed, signal, WritableSignal, effect, untracked, ViewChild, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -65,6 +65,11 @@ export class Product implements OnDestroy {
   quantity = signal<number>(1);
   customMessage = signal<string>('');
   selections = signal<Record<string, string>>({}); // { "Color": "Rojo" }
+
+  // Countdown and Favorites
+  countdownDisplay = signal<string | null>(null);
+  isFavorite = signal<boolean>(false);
+  private countdownInterval: any;
 
   // --- COMPUTED STATE ---
 
@@ -285,6 +290,37 @@ export class Product implements OnDestroy {
         selections: this.selections()
       });
     });
+
+    // Favorites Effect - Check favorite status when product loads
+    effect(() => {
+      const p = this.product();
+      if (p) {
+        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        this.isFavorite.set(favorites.includes(p._id));
+      }
+    }, { allowSignalWrites: true });
+
+    // Countdown Effect - Start countdown when product with promotion loads
+    effect(() => {
+      const p = this.product();
+      const endDate = p?.promocion_activa?.fecha_fin;
+      if (endDate) {
+        // Clear existing interval
+        if (this.countdownInterval) {
+          clearInterval(this.countdownInterval);
+        }
+        // Start countdown
+        this.updateCountdown(endDate);
+        this.countdownInterval = setInterval(() => {
+          this.updateCountdown(endDate);
+        }, 1000);
+      } else {
+        this.countdownDisplay.set(null);
+        if (this.countdownInterval) {
+          clearInterval(this.countdownInterval);
+        }
+      }
+    }, { allowSignalWrites: true });
   }
 
   // --- ACTIONS ---
@@ -379,9 +415,68 @@ export class Product implements OnDestroy {
     });
   }
 
+  // --- FAVORITES ---
+
+  toggleFavorite(): void {
+    // Check if user is logged in
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const p = this.product();
+    if (!p) return;
+
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const currentFav = this.isFavorite();
+
+    if (currentFav) {
+      const index = favorites.indexOf(p._id);
+      if (index > -1) favorites.splice(index, 1);
+    } else {
+      favorites.push(p._id);
+    }
+
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    this.isFavorite.set(!currentFav);
+    this.onNotify(currentFav ? 'Eliminado de favoritos' : 'Agregado a favoritos', 'success');
+  }
+
+  // --- COUNTDOWN ---
+
+  private updateCountdown(endDate: string | Date): void {
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+    const diff = end - now;
+
+    if (diff <= 0) {
+      this.countdownDisplay.set('¡Oferta terminada!');
+      if (this.countdownInterval) {
+        clearInterval(this.countdownInterval);
+      }
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+
+    if (days > 0) {
+      this.countdownDisplay.set(`${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
+    } else {
+      this.countdownDisplay.set(`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
+    }
+  }
+
   ngOnDestroy() {
     if (this.pollingSub) {
       this.pollingSub.unsubscribe();
+    }
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
     }
   }
 }

@@ -1,4 +1,4 @@
-<div class="container mx-auto px-8 md:px-16 lg:px-24 py-12 max-w-[1440px]">
+<div class="container mx-auto px-4 md:px-8 lg:px-16 py-6 max-w-[1400px]">
 
   <!-- ✅ GUARD: Solo renderiza si productData() existe (Computed con datos enriquecidos) -->
   <ng-container *ngIf="productData() as p">
@@ -10,7 +10,7 @@
     <!-- TOAST CONTAINER -->
     <app-toast-container></app-toast-container>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
 
       <!-- IMAGE GALLERY (Left 7 cols) -->
       <div class="lg:col-span-7 relative">
@@ -52,18 +52,22 @@
       </div>
 
       <!-- PRODUCT DETAILS (Right 5 cols) -->
-      <div class="lg:col-span-5 space-y-8">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 relative">
+      <div class="lg:col-span-5 space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 relative">
 
-          <!-- Badges (Restored Here) -->
-          <div class="absolute top-6 right-6 flex flex-col gap-2 items-end pointer-events-none">
-            <span *ngIf="p.isNew"
-              class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm uppercase tracking-wider">Nuevo</span>
-            <span *ngIf="p.isOffer"
-              class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm uppercase tracking-wider">Oferta</span>
-            <span *ngIf="p.discount"
-              class="bg-[#F2CB07] text-[#012E40] px-3 py-1 rounded-full text-xs font-bold shadow-sm">-{{ p.discount
-              }}%</span>
+          <!-- Favorite Button & Badges -->
+          <!-- Favorite Button & Badges -->
+          <div class="absolute top-4 right-4 flex items-center gap-2 z-10">
+            <!-- Favorite Heart -->
+            <button (click)="toggleFavorite()"
+              class="w-9 h-9 rounded-full bg-white shadow-md border border-gray-100 flex items-center justify-center transition-all hover:scale-110 hover:shadow-lg"
+              [class.text-red-500]="isFavorite()" [class.text-gray-400]="!isFavorite()">
+              <i [class]="isFavorite() ? 'ri-heart-fill' : 'ri-heart-line'" class="text-lg"></i>
+            </button>
+
+            <!-- Badges -->
+            <span *ngIf="productData()?.isNew"
+              class="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-sm uppercase">Nuevo</span>
           </div>
 
 
@@ -76,8 +80,19 @@
           </div>
 
           <!-- Product Name -->
-          <h1 class="text-3xl lg:text-4xl font-extrabold text-gray-900 mb-4 leading-tight tracking-tight">{{ p.name }}
-          </h1>
+          <h1 class="text-xl lg:text-2xl font-bold text-gray-900 mb-3 leading-snug">{{ p.name }}</h1>
+
+          <!-- Countdown Timer for Offers -->
+          <!-- Countdown Timer for Offers -->
+          <div *ngIf="countdownDisplay() && productData()?.promocion_activa"
+            class="mb-4 flex items-center gap-2 animate-pulse">
+            <div
+              class="bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2">
+              <i class="ri-timer-flash-line"></i>
+              <span class="text-sm font-bold">Termina:</span>
+              <span class="font-mono font-bold text-sm">{{ countdownDisplay() }}</span>
+            </div>
+          </div>
 
           <!-- Rating -->
           <div class="flex items-center gap-3 mb-6" *ngIf="p.rating">
@@ -110,10 +125,10 @@
           </div>
 
           <!-- DYNAMIC PRICING DISPLAY -->
-          <div class="mb-8">
+          <div class="mb-5">
             <!-- 1. MINORISTA VIEW: Simple Unit Price -->
             <div *ngIf="!shouldShowPricingTiers()"
-              class="border rounded-xl p-6 bg-white shadow-sm border-gray-100 flex items-center justify-between transition-all duration-300"
+              class="border rounded-lg p-4 bg-white shadow-sm border-gray-100 flex items-center justify-between transition-all duration-300"
               [class.border-[#f2cb07]]="isWholesaleQuantityApplied()"
               [class.bg-yellow-50]="isWholesaleQuantityApplied()">
               <div>
@@ -125,7 +140,7 @@
                     ${{ p.promocion_activa.precio_original | number:'1.2-2' }}
                   </span>
                   <div class="flex items-center gap-2">
-                    <span class="text-4xl font-extrabold text-[#104D73]">${{ basePrice() | number:'1.2-2' }}</span>
+                    <span class="text-2xl font-bold text-[#104D73]">${{ basePrice() | number:'1.2-2' }}</span>
                     <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full uppercase">
                       Oferta
                     </span>
@@ -133,7 +148,7 @@
                 </div>
 
                 <!-- Regular View -->
-                <div *ngIf="!p.promocion_activa" class="text-4xl font-extrabold text-[#104D73]">
+                <div *ngIf="!p.promocion_activa" class="text-2xl font-bold text-[#104D73]">
                   ${{ basePrice() | number:'1.2-2' }}
                 </div>
 
@@ -169,14 +184,13 @@
           </div>
 
           <!-- DYNAMIC PRICE SUMMARY -->
-          <div class="bg-gray-50 rounded-xl p-4 mb-6 flex justify-between items-center border border-gray-100">
+          <div class="bg-gray-50 rounded-lg p-3 mb-5 flex justify-between items-center border border-gray-100">
             <div>
               <span class="block text-xs text-gray-500 font-bold uppercase">Total a Pagar</span>
               <span class="text-sm text-gray-400">{{ quantity() }} x ${{ currentPrice() | number:'1.2-2' }}</span>
             </div>
             <div class="text-right">
-              <span class="block text-3xl font-black text-gray-900 tracking-tight">${{ totalPrice() | number:'1.2-2'
-                }}</span>
+              <span class="block text-xl font-bold text-gray-900">${{ totalPrice() | number:'1.2-2' }}</span>
               <span *ngIf="savings() > 0"
                 class="text-xs text-green-600 font-bold bg-green-100 px-2 py-0.5 rounded-full">
                 Estás ahorrando ${{ savings() | number:'1.2-2' }}
@@ -185,7 +199,7 @@
           </div>
 
           <!-- METADATA GRID (Weight, Dims, SKU) -->
-          <div class="grid grid-cols-2 gap-4 mb-6 text-sm">
+          <div class="grid grid-cols-2 gap-3 mb-5 text-sm">
             <div *ngIf="productData()?.weight_kg"
               class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-lg">
               <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500">
@@ -277,7 +291,7 @@
 
       <!-- RESEÑAS -->
       <div class="mt-12">
-        <app-product-reviews [reviews]="p.reviews">
+        <app-product-reviews [reviews]="p.reviews" [productId]="p._id">
         </app-product-reviews>
       </div>
 

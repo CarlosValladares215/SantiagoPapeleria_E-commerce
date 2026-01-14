@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Product } from '../../../../models/product.model';
 import { DisplayPricePipe } from '../../../../pipes/display-price.pipe';
 import { AuthService } from '../../../../services/auth/auth.service';
@@ -11,13 +12,91 @@ import { AuthService } from '../../../../services/auth/auth.service';
     templateUrl: './product-card.html',
     styleUrls: ['./product-card.scss']
 })
-export class ProductCard {
+export class ProductCard implements OnInit, OnDestroy {
     @Input() product!: Product;
 
     @Output() viewDetails = new EventEmitter<string>();
     @Output() addToCart = new EventEmitter<Product>();
 
     private authService = inject(AuthService);
+    private cdr = inject(ChangeDetectorRef);
+    private router = inject(Router);
+
+    isFavorite = false;
+    countdownDisplay: string | null = null;
+    private countdownInterval: any;
+
+    ngOnInit(): void {
+        this.loadFavoriteStatus();
+        this.startCountdown();
+    }
+
+    ngOnDestroy(): void {
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+        }
+    }
+
+    private loadFavoriteStatus(): void {
+        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        this.isFavorite = favorites.includes(this.product._id);
+    }
+
+    toggleFavorite(event: Event): void {
+        event.stopPropagation();
+
+        // Check if user is logged in
+        if (!this.authService.isAuthenticated()) {
+            this.router.navigate(['/login']);
+            return;
+        }
+
+        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+        if (this.isFavorite) {
+            const index = favorites.indexOf(this.product._id);
+            if (index > -1) favorites.splice(index, 1);
+        } else {
+            favorites.push(this.product._id);
+        }
+
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+        this.isFavorite = !this.isFavorite;
+    }
+
+    private startCountdown(): void {
+        if (!this.product.promocion_activa?.fecha_fin) return;
+
+        const updateCountdown = () => {
+            const endDate = new Date(this.product.promocion_activa!.fecha_fin!);
+            const now = new Date();
+            const diff = endDate.getTime() - now.getTime();
+
+            if (diff <= 0) {
+                this.countdownDisplay = null;
+                if (this.countdownInterval) {
+                    clearInterval(this.countdownInterval);
+                }
+                this.cdr.markForCheck();
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            if (days > 0) {
+                this.countdownDisplay = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                this.countdownDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            this.cdr.markForCheck();
+        };
+
+        updateCountdown();
+        this.countdownInterval = setInterval(updateCountdown, 1000);
+    }
 
     onViewDetails(): void {
         this.viewDetails.emit(this.product.slug || this.product._id);
@@ -25,7 +104,6 @@ export class ProductCard {
 
     onAddToCart(): void {
         if (this.product.stock > 0) {
-            // Apply promotion if available, otherwise role-based price
             let basePrice = this.product.price;
             const isMayorista = this.authService.isMayorista();
 
@@ -33,8 +111,6 @@ export class ProductCard {
                 basePrice = this.product.wholesalePrice;
             }
 
-            // If there's an active promotion, it overrides the base price (simplified)
-            // Note: In a real system, we'd check if the promo applies to wholesale too.
             const finalPrice = this.product.promocion_activa
                 ? this.product.promocion_activa.precio_descuento
                 : basePrice;
@@ -52,33 +128,13 @@ export class ProductCard {
         if (this.product.images && this.product.images.length > 0) {
             return this.product.images[0];
         }
-        return 'assets/images/product-placeholder.png'; // Fallback image
-    }
-
-    getStockStatusClass(): string {
-        if (this.product.stock === 0) return 'bg-red-100 text-red-700';
-        if (this.product.stock < 10) return 'bg-red-100 text-red-700';
-        if (this.product.stock < 20) return 'bg-yellow-100 text-yellow-700';
-        return 'bg-green-100 text-green-700';
-    }
-
-    getStockStatusText(): string {
-        if (this.product.stock === 0) return 'Agotado';
-        if (this.product.stock < 20) return `Solo ${this.product.stock} disponibles`;
-        return 'En Stock';
-    }
-
-    getStockIcon(): string {
-        if (this.product.stock === 0) return 'ri-close-circle-fill';
-        if (this.product.stock < 20) return 'ri-alert-fill';
-        return 'ri-checkbox-circle-fill';
+        return 'assets/images/product-placeholder.png';
     }
 
     getOriginalPrice(): number {
         if (this.product.promocion_activa) {
             return this.product.promocion_activa.precio_original;
         }
-        // Legacy discount calculation
         if (this.product.originalPrice) {
             return this.product.originalPrice;
         }
@@ -88,3 +144,4 @@ export class ProductCard {
         return 0;
     }
 }
+

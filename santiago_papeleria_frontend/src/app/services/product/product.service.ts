@@ -169,6 +169,12 @@ export class ProductService {
     return this.http.get<any>(`${this.apiURL}/admin/search`, { params });
   }
 
+  addReview(productId: string, review: { user_name: string; rating: number; comment: string }): Observable<Product> {
+    return this.http.post<ProductResponse>(`${this.apiURL}/${productId}/reviews`, review).pipe(
+      map(r => this.mapProduct(r))
+    );
+  }
+
   // ✅ MAPPER CORREGIDO: Backend DTO Response -> Frontend Product Model
   private mapProduct(raw: ProductResponse): Product {
     console.log('🔍 Mapping product:', raw.name, 'Stock:', raw.stock);

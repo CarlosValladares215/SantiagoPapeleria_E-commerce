@@ -160,6 +160,25 @@ export class PromocionActiva {
 
   @Prop()
   calculado_at: Date;
+
+  @Prop()
+  fecha_fin: Date; // Added for countdown timer
+}
+
+// 8. Review Schema
+@Schema()
+export class ProductReview {
+  @Prop({ required: true })
+  user_name: string;
+
+  @Prop({ required: true })
+  rating: number;
+
+  @Prop({ required: true })
+  comment: string;
+
+  @Prop({ default: Date.now })
+  date: Date;
 }
 
 // Definición principal del Schema
@@ -239,6 +258,9 @@ export class Producto {
 
   @Prop({ type: PromocionActiva })
   promocion_activa: PromocionActiva;
+
+  @Prop({ type: [ProductReview], default: [] })
+  reviews: ProductReview[];
 }
 
 export const ProductoSchema = SchemaFactory.createForClass(Producto);

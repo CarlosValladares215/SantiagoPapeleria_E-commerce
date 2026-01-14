@@ -253,7 +253,8 @@ export class PromocionesService {
         precio_descuento: Math.max(0.01, pvp - bestDiscountValue),
         tipo_descuento: bestPromo.tipo,
         valor_descuento: bestPromo.valor,
-        calculado_at: now
+        calculado_at: now,
+        fecha_fin: bestPromo.fecha_fin // Added for countdown timer
       };
     }
 
@@ -354,12 +355,25 @@ export class PromocionesService {
     // Single condition - return it directly
     return orConditions[0];
   }
+  /**
+   * Recalculates all active promotions for all affected products.
+   * This updates the promocion_activa snapshot with current data including fecha_fin.
+   */
+  async recalculateAllPromotions(): Promise<void> {
+    const now = new Date();
+    const activePromos = await this.promocionModel.find({
+      activa: true,
+      fecha_inicio: { $lte: now },
+      fecha_fin: { $gt: now },
+    }).exec();
 
-  private async syncProducts(promos: Promocion[]) {
-    for (const promo of promos) {
-      // @ts-ignore
+    this.logger.log(`Recalculating ${activePromos.length} active promotions...`);
+
+    for (const promo of activePromos) {
       await this.recalculateForPromo(promo, promo);
     }
+
+    this.logger.log('All promotions recalculated with fecha_fin');
   }
 
   private async logHistory(promoId: Types.ObjectId, accion: string, oldVal: any, changes: any, userId?: string) {

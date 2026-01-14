@@ -271,7 +271,9 @@ export class ErpSyncService {
                 codigo_interno: erpProduct.codigo,
             });
 
-            const imageUrl = erpProduct.imagen ? `http://localhost:4000/data/photos/${erpProduct.imagen}` : '';
+            const imageUrl = erpProduct.imagen?.startsWith('http')
+                ? erpProduct.imagen
+                : (erpProduct.imagen ? `http://localhost:4000/data/photos/${erpProduct.imagen}` : '');
 
             if (!existingProduct) {
                 // CREATE new enriched product

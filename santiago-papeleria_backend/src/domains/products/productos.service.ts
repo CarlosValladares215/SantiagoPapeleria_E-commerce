@@ -518,4 +518,44 @@ export class ProductosService {
       }
     }
   }
+  async addReview(productId: string, review: { user_name: string; rating: number; comment: string }): Promise<any> {
+    const { Types } = require('mongoose');
+    let filter: any;
+    let sku = productId;
+
+    if (Types.ObjectId.isValid(productId)) {
+      filter = { _id: productId };
+    } else {
+      filter = { codigo_interno: productId };
+    }
+
+    // Attempt to find existing enriched product
+    const existing = await this.productoModel.findOne(filter).exec();
+
+    const reviewWithDate = {
+      ...review,
+      date: new Date()
+    };
+
+    if (existing) {
+      existing.reviews.push(reviewWithDate as any);
+      await existing.save();
+      return this.findOne(existing.codigo_interno);
+    } else {
+      // If not enriched yet, verify in ERP
+      const erp = await this.productErpModel.findOne({ codigo: sku }).exec();
+      if (!erp) {
+        throw new NotFoundException('Producto no encontrado');
+      }
+
+      // Create new enriched doc with the review
+      const newDoc = new this.productoModel({
+        codigo_interno: erp.codigo,
+        nombre: erp.nombre,
+        reviews: [reviewWithDate]
+      });
+      await newDoc.save();
+      return this.findOne(erp.codigo);
+    }
+  }
 }

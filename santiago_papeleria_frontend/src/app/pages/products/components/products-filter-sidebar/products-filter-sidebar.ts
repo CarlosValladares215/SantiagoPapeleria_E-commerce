@@ -32,6 +32,11 @@ export class ProductsFilterSidebar {
         this.filterChange.emit({ key: 'priceRange', value: [min, max] });
     }
 
+    onSliderChange(value: string): void {
+        const max = parseInt(value, 10);
+        this.filterChange.emit({ key: 'priceRange', value: [0, max] });
+    }
+
     onStockToggle(checked: boolean): void {
         this.filterChange.emit({ key: 'inStock', value: checked });
     }

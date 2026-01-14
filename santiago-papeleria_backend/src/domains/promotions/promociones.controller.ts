@@ -36,4 +36,11 @@ export class PromocionesController {
     await this.promocionesService.remove(id, req.user.sub);
     return { message: 'Promoción eliminada' };
   }
+
+  @Post('recalculate-all')
+  @UseGuards(JwtAuthGuard)
+  async recalculateAll() {
+    await this.promocionesService.recalculateAllPromotions();
+    return { message: 'Promociones recalculadas exitosamente' };
+  }
 }

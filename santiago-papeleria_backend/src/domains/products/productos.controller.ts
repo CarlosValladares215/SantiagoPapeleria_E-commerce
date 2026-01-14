@@ -164,4 +164,11 @@ export class ProductosController {
       originalName: file.originalname
     };
   }
+  @Post(':id/reviews')
+  async addReview(
+    @Param('id') id: string,
+    @Body() reviewData: { user_name: string; rating: number; comment: string } // Using inline type for simplicity, ideally DTO
+  ) {
+    return this.productosService.addReview(id, reviewData);
+  }
 }

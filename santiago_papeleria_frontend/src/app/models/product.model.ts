@@ -56,6 +56,7 @@ export interface PromocionActiva {
   tipo_descuento: string;
   valor_descuento: number;
   calculado_at: Date | string;
+  fecha_fin?: Date | string; // Added for countdown timer
 }
 
 export interface Product {
