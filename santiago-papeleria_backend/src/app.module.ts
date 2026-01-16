@@ -36,6 +36,7 @@ import { PaymentsModule } from './domains/payments/payments.module';
     ChatbotModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     })
   ],
   controllers: [AppController],

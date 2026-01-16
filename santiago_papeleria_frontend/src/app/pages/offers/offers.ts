@@ -95,7 +95,7 @@ export class Offers implements OnInit {
   }
 
   loadCategoryCounts(): void {
-    this.productService.fetchCategoryCounts().subscribe({
+    this.productService.fetchCategoryCounts(true).subscribe({
       next: (data) => {
         this.categories.set(data);
       },
@@ -117,7 +117,8 @@ export class Offers implements OnInit {
       priceRange: [0, 100],
       inStock: false,
       sortBy: 'name',
-      searchTerm: ''
+      searchTerm: '',
+      isOffer: true
     });
   }
 

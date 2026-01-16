@@ -8,6 +8,19 @@ import { CartService } from '../../services/cart/cart.service';
 import { NotificationsService } from '../../services/notifications/notifications.service';
 import { ProductService } from '../../services/product/product.service';
 
+interface Category {
+  nombre: string;
+  slug: string;
+  hijos?: Category[];
+  icono?: string;
+  id_erp?: number;
+}
+
+interface SuperCategoryGroup {
+  name: string;
+  categories: Category[];
+}
+
 @Component({
   selector: 'app-header',
   standalone: true,
@@ -22,9 +35,17 @@ import { ProductService } from '../../services/product/product.service';
 export class Header {
 
   isProfileMenuOpen = signal(false);
-  isNotificationsOpen = signal(false); // New signal for notifications dropdown
+  isNotificationsOpen = signal(false);
   megaMenu = signal<string>('none');
-  categories = signal<any[]>([]);
+
+  // This signal will now hold the 5 Super Categories groups
+  // This signal will now hold the 5 Super Categories groups
+  // Struct: [{ name: 'Escolar', categories: [...] }, ...]
+  groupedCategories = signal<SuperCategoryGroup[]>([]);
+
+  // Constants for view
+  readonly VISIBLE_ITEMS_LIMIT = 6;
+
   private megaHideTimeout: any;
   searchQuery: string = '';
 
@@ -38,41 +59,19 @@ export class Header {
   ) { }
 
   ngOnInit() {
-    this.productService.fetchCategoriesStructure().subscribe(cats => {
-      // Add icons manually if not present
-      const enriched = cats.map(c => ({
-        ...c,
-        icono: this.getCategoryIcon(c.nombre)
-      }));
-      this.categories.set(enriched);
+    this.productService.fetchCategoriesStructure().subscribe(grouped => {
+      this.groupedCategories.set(grouped);
     });
-  }
-
-  getCategoryIcon(name: string): string {
-    const n = name.toUpperCase();
-    if (n.includes('ESCOLAR')) return 'fa-graduation-cap';
-    if (n.includes('OFICINA')) return 'fa-briefcase';
-    if (n.includes('ELECTRONICA') || n.includes('TECNOLOGIA')) return 'fa-laptop';
-    if (n.includes('HOGAR') || n.includes('DECORACION')) return 'fa-home';
-    if (n.includes('PERSONAL') || n.includes('ASEO')) return 'fa-hand-holding-heart';
-    if (n.includes('MODA') || n.includes('ACCESORIOS') || n.includes('CABELLO')) return 'fa-tshirt';
-    if (n.includes('BISUTERIA') || n.includes('BOLSOS')) return 'fa-shopping-bag';
-    if (n.includes('DEPORTE') || n.includes('GYM')) return 'fa-dumbbell';
-    if (n.includes('ARTE') || n.includes('CREATIVIDAD') || n.includes('PAPELERIA ARTISTICA')) return 'fa-palette';
-    if (n.includes('REGALO') || n.includes('FIESTA')) return 'fa-gift';
-    if (n.includes('COMIDA') || n.includes('SNACK') || n.includes('DULCE')) return 'fa-cookie-bite';
-    if (n.includes('JUGUETE')) return 'fa-gamepad';
-    return 'fa-th-large';
   }
 
   toggleCart() {
     this.uiService.toggleCart();
-    this.isNotificationsOpen.set(false); // Close notifications if cart opens
+    this.isNotificationsOpen.set(false);
   }
 
   toggleNotifications() {
     this.isNotificationsOpen.update(v => !v);
-    this.isProfileMenuOpen.set(false); // Close profile if notifications open
+    this.isProfileMenuOpen.set(false);
   }
 
   closeNotifications() {

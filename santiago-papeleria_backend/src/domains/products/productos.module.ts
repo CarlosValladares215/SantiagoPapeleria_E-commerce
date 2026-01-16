@@ -15,6 +15,8 @@ import { forwardRef } from '@nestjs/common';
 import { MovimientosService } from './movimientos.service';
 import { ErpSyncModule } from '../erp/sync/erp-sync.module';
 
+import { CategoryClassifierService } from './category-classifier.service';
+
 @Module({
   imports: [
     HttpModule,
@@ -27,7 +29,7 @@ import { ErpSyncModule } from '../erp/sync/erp-sync.module';
     forwardRef(() => ErpSyncModule),
   ],
   controllers: [ProductosController],
-  providers: [ProductosService, MovimientosService],
-  exports: [ProductosService, MovimientosService, MongooseModule]
+  providers: [ProductosService, MovimientosService, CategoryClassifierService],
+  exports: [ProductosService, MovimientosService, MongooseModule, CategoryClassifierService]
 })
 export class ProductosModule { }

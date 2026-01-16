@@ -94,11 +94,26 @@ export class ErpService implements OnModuleInit {
                     ROW: rowCounter++
                 };
 
+                // Match Categories if missing or not in set
+                const validG3 = this.isValidCategory(baseProduct.G3);
+                if (!baseProduct.G2 || !baseProduct.G3 || !validG3) {
+                    const match = this.autoCategorize(baseProduct.NOM);
+                    if (match) {
+                        baseProduct.G2 = match.G2;
+                        baseProduct.G3 = match.G3;
+                        if (!baseProduct.LIN || baseProduct.LIN === '000') {
+                            if (lineMapping[baseProduct.G2]) {
+                                baseProduct.LIN = lineMapping[baseProduct.G2];
+                            }
+                        }
+                    }
+                }
+
                 // Apply LIN Mapping (G2 -> Category Code)
                 if (baseProduct.G2 && lineMapping[baseProduct.G2]) {
                     baseProduct.LIN = lineMapping[baseProduct.G2];
                 } else {
-                    baseProduct.LIN = '000'; // Uncategorized
+                    if (!baseProduct.LIN) baseProduct.LIN = '000'; // Uncategorized
                 }
 
                 // --- ENRICHMENT LOGIC ---
@@ -290,5 +305,83 @@ export class ErpService implements OnModuleInit {
         const strVal = String(val).replace(',', '.');
         const parsed = parseInt(strVal, 10);
         return isNaN(parsed) ? 0 : parsed;
+    }
+
+    private autoCategorize(name: string): { G2: string, G3: string } | null {
+        if (!name) return null;
+        const upperName = name.toUpperCase();
+
+        const root = this.categoriesData.root;
+        if (!root || !root.DAT) return null;
+
+        for (const g2 of root.DAT) {
+            // 0. Specific keywords for common misalignments
+            if (upperName.includes(' COL ') || upperName.includes('LARG') || upperName.includes('X12COL') || upperName.includes('PINTURAS DE MADERA')) {
+                // If it looks like colors, check if COLORES is in this G2
+                if (g2.DAT) {
+                    const colCat = g2.DAT.find(sub => sub.NOM.toUpperCase() === 'COLORES');
+                    if (colCat) return { G2: g2.NOM, G3: colCat.NOM };
+                }
+            }
+
+            // 1. Strict
+            if (upperName.includes(g2.NOM.toUpperCase())) {
+                return { G2: g2.NOM, G3: g2.NOM };
+            }
+            if (g2.DAT) {
+                for (const g3 of g2.DAT) {
+                    if (upperName.includes(g3.NOM.toUpperCase())) {
+                        return { G2: g2.NOM, G3: g3.NOM };
+                    }
+                }
+            }
+        }
+
+        // 2. Token Matching
+        const tokens = upperName.split(' ').filter(t => t.length > 3);
+        if (tokens.length > 0) {
+            for (const g2 of root.DAT) {
+                if (!g2.NOM) continue;
+                const g2Tokens = g2.NOM.toUpperCase().split(' ');
+                if (tokens.some(t => g2Tokens.some(gt => gt.includes(t)))) {
+                    // Try G3
+                    if (g2.DAT) {
+                        for (const g3 of g2.DAT) {
+                            const g3Tokens = g3.NOM.toUpperCase().split(' ');
+                            if (tokens.some(t => g3Tokens.some(gt => gt.includes(t)))) {
+                                return { G2: g2.NOM, G3: g3.NOM };
+                            }
+                        }
+                    }
+                    return { G2: g2.NOM, G3: g2.NOM };
+                }
+            }
+        }
+
+        // 3. Fallback (Force First valid category)
+        if (root.DAT.length > 0) {
+            const fallback = root.DAT[0]; // Usually ACCESORIOS DE CABELLO
+            const fallbackG3 = (fallback.DAT && fallback.DAT.length > 0) ? fallback.DAT[0].NOM : fallback.NOM;
+            return { G2: fallback.NOM, G3: fallbackG3 };
+        }
+
+        return null;
+    }
+
+    private isValidCategory(catName: string): boolean {
+        if (!catName) return false;
+        const root = this.categoriesData.root;
+        if (!root || !root.DAT) return false;
+
+        const upper = catName.toUpperCase();
+        for (const g2 of root.DAT) {
+            if (g2.NOM.toUpperCase() === upper) return true;
+            if (g2.DAT) {
+                for (const g3 of g2.DAT) {
+                    if (g3.NOM.toUpperCase() === upper) return true;
+                }
+            }
+        }
+        return false;
     }
 }

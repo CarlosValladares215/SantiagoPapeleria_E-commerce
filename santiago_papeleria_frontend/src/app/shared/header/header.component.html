@@ -87,19 +87,7 @@
               </div>
             </div>
 
-            <!-- Carrito -->
-            <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
-              (click)="toggleCart()">
-              <div class="relative inline-block">
-                <i class="fas fa-shopping-cart text-lg"></i>
-                <span *ngIf="cartService.cartCount() > 0"
-                  class="absolute -top-2 -right-2 bg-[#ff0000] text-white text-[11px] font-bold h-[20px] min-w-[20px] flex items-center justify-center rounded-full border-[2px] border-white shadow-sm transform scale-100 transition-transform duration-200"
-                  style="color: #ffffff !important; background-color: #ff0000 !important;">
-                  {{ cartService.cartCount() }}
-                </span>
-              </div>
-              <span class="ml-1 font-medium text-sm">Carrito</span>
-            </button>
+
 
             <!-- Notificaciones -->
             <div class="header-dropdown-wrapper relative" (mouseleave)="closeNotifications()">
@@ -161,19 +149,7 @@
               <a routerLink="/register" class="btn-register-header">Registrarse</a>
             </div>
 
-            <!-- Carrito Guest -->
-            <button class="header-action-btn cart-btn-logged relative" aria-label="Carrito de compras"
-              (click)="toggleCart()">
-              <div class="relative inline-block">
-                <i class="fas fa-shopping-cart text-lg"></i>
-                <span *ngIf="cartService.cartCount() > 0"
-                  class="absolute -top-2 -right-2 bg-[#ff0000] text-white text-[11px] font-bold h-[20px] min-w-[20px] flex items-center justify-center rounded-full border-[2px] border-white shadow-sm transform scale-100 transition-transform duration-200"
-                  style="color: #ffffff !important; background-color: #ff0000 !important;">
-                  {{ cartService.cartCount() }}
-                </span>
-              </div>
-              <span class="ml-1 font-medium text-sm">Carrito</span>
-            </button>
+
           </div>
         </ng-template>
       </div>
@@ -191,40 +167,28 @@
           </a>
         </li>
 
-        <!-- Dynamic Categories from Backend -->
-        <ng-container *ngFor="let cat of categories().slice(0, 5)">
-          <li class="nav-item mega-parent" (mouseenter)="openMega(cat.slug)" (mouseleave)="scheduleCloseMega()"
+        <!-- Dynamic 5 Super Categories -->
+        <ng-container *ngFor="let group of groupedCategories()">
+          <li class="nav-item mega-parent" (mouseenter)="openMega(group.name)" (mouseleave)="scheduleCloseMega()"
             (mouseenter)="cancelCloseMega()">
-            <a [routerLink]="['/products']" [queryParams]="{category: cat.nombre}" class="nav-link"
-              [class.active]="megaMenu() === cat.slug">
-              <i class="fas" [class.fa-th-large]="!cat.icono" [class]="cat.icono"></i>
-              <span>{{ cat.nombre }}</span>
-              <i *ngIf="cat.hijos?.length" class="fas fa-chevron-down arrow ml-1"></i>
+            <!-- Link to first category or just a placeholder? Better to link to a filter if possible, otherwise just '#' -->
+            <!-- Ideally we'd have a route /category/super-category-name but we don't. 
+                  Let's just not link or link to the first one? Or just products? -->
+            <a [routerLink]="['/products']" class="nav-link" [class.active]="megaMenu() === group.name">
+              <!-- Icons based on name -->
+              <i class="fas" [class.fa-graduation-cap]="group.name.includes('Escolar')"
+                [class.fa-palette]="group.name.includes('Arte')" [class.fa-laptop]="group.name.includes('Tecnología')"
+                [class.fa-home]="group.name.includes('Hogar')" [class.fa-gift]="group.name.includes('Regalos')"></i>
+              <span>{{ group.name | uppercase }}</span>
+              <i class="fas fa-chevron-down arrow ml-1"></i>
             </a>
           </li>
         </ng-container>
 
-        <!-- More categories dropdown if needed -->
-        <li *ngIf="categories().length > 5" class="nav-item mega-parent" (mouseenter)="openMega('more-cats')"
-          (mouseleave)="scheduleCloseMega()" (mouseenter)="cancelCloseMega()">
-          <a class="nav-link" [class.active]="megaMenu() === 'more-cats'">
-            <i class="fas fa-plus"></i>
-            <span>MÁS</span>
-            <i class="fas fa-chevron-down arrow ml-1"></i>
-          </a>
-        </li>
-
         <li class="nav-item">
           <a [routerLink]="['/offers']" class="nav-link highlight">
             <i class="fas fa-tag"></i>
-            <span>OFERTAS ESPECIALES</span>
-          </a>
-        </li>
-
-        <li class="nav-item">
-          <a [routerLink]="['/products']" [queryParams]="{sort: 'newest'}" class="nav-link">
-            <i class="fas fa-star"></i>
-            <span>NUEVO</span>
+            <span>OFERTAS</span>
           </a>
         </li>
       </ul>
@@ -234,60 +198,43 @@
   <!-- MEGA MENÚS DESPLEGABLES DINÁMICOS -->
   <div class="mega-menu-container" (mouseenter)="cancelCloseMega()" (mouseleave)="scheduleCloseMega()">
 
-    <!-- One mega menu per category -->
-    <ng-container *ngFor="let cat of categories().slice(0, 5)">
-      <div class="mega-menu" [class.active]="megaMenu() === cat.slug">
+    <!-- Dynamic Mega Menus for Groups -->
+    <ng-container *ngFor="let group of groupedCategories()">
+      <div class="mega-menu" [class.active]="megaMenu() === group.name">
         <div class="mega-content">
+          <!-- Grid columns based on number of sub-categories -->
           <div class="mega-grid"
-            [style.grid-template-columns]="'repeat(' + (cat.hijos?.length > 4 ? 4 : cat.hijos?.length || 1) + ', 1fr)'">
-            <!-- For Level 2 categories, we show their children as sections or items -->
-            <!-- If they have children (Level 3 ERP), we show them as sections -->
-            <ng-container *ngIf="cat.hijos?.length">
-              <div *ngFor="let subcat of cat.hijos" class="mega-section">
-                <h3 class="mega-title">
-                  <a [routerLink]="['/products']" [queryParams]="{category: subcat.nombre}">
-                    {{ subcat.nombre }}
-                  </a>
-                </h3>
-                <ul class="mega-list" *ngIf="subcat.hijos?.length">
-                  <li *ngFor="let thirdLevel of subcat.hijos">
-                    <a [routerLink]="['/products']" [queryParams]="{category: thirdLevel.nombre}">
-                      {{ thirdLevel.nombre }}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </ng-container>
+            [style.grid-template-columns]="'repeat(' + (group.categories.length > 4 ? 4 : group.categories.length || 1) + ', 1fr)'">
 
-            <!-- If NO children, show something else or just the link -->
-            <div *ngIf="!cat.hijos?.length" class="mega-section">
-              <p class="text-sm text-gray-500">Ver todos los productos en {{ cat.nombre }}</p>
-              <a [routerLink]="['/products']" [queryParams]="{category: cat.nombre}"
-                class="btn-view-all mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded">Ver Todo</a>
+            <!-- Limit visible subcategories and show 'See All' -->
+            <div *ngFor="let cat of group.categories" class="mega-section">
+              <h3 class="mega-title">
+                <a [routerLink]="['/products']" [queryParams]="{category: cat.nombre}">
+                  {{ cat.nombre }}
+                </a>
+              </h3>
+              <!-- Subcategories (Level 3) -->
+              <ul class="mega-list" *ngIf="cat.hijos?.length">
+                <li *ngFor="let sub of cat.hijos | slice:0:VISIBLE_ITEMS_LIMIT">
+                  <a [routerLink]="['/products']" [queryParams]="{category: sub.nombre}">
+                    {{ sub.nombre }}
+                  </a>
+                </li>
+              </ul>
+              <!-- View All Link if more items exist -->
+              <a *ngIf="(cat.hijos?.length || 0) > VISIBLE_ITEMS_LIMIT" [routerLink]="['/products']"
+                [queryParams]="{category: cat.nombre}" class="view-all-link">
+                Ver todo ({{ cat.hijos?.length }}) <i class="fas fa-arrow-right"></i>
+              </a>
             </div>
+
+            <div *ngIf="!group.categories.length" class="mega-section">
+              <p class="text-sm text-gray-500">Pronto agregaremos productos aquí.</p>
+            </div>
+
           </div>
         </div>
       </div>
     </ng-container>
-
-    <!-- MEGA MENU for "MÁS" -->
-    <div class="mega-menu" [class.active]="megaMenu() === 'more-cats'">
-      <div class="mega-content">
-        <div class="mega-grid" style="grid-template-columns: repeat(4, 1fr);">
-          <div *ngFor="let cat of categories().slice(5)" class="mega-section">
-            <h3 class="mega-title">
-              <a [routerLink]="['/products']" [queryParams]="{category: cat.nombre}">
-                {{ cat.nombre }}
-              </a>
-            </h3>
-            <ul class="mega-list" *ngIf="cat.hijos?.length">
-              <li *ngFor="let sub of cat.hijos">
-                <a [routerLink]="['/products']" [queryParams]="{category: sub.nombre}">{{ sub.nombre }}</a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </header>

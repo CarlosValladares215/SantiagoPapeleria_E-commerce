@@ -23,6 +23,9 @@ export class Categoria {
     @Prop({ type: [{ type: Types.ObjectId, ref: 'Categoria' }], default: [] })
     hijos: Types.ObjectId[];
 
+    @Prop({ required: false })
+    super_categoria: string;
+
     @Prop({ default: true })
     activo: boolean;
 

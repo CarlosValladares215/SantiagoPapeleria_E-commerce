@@ -48,9 +48,9 @@ export class ProductosController {
    * Expone la estadística para CategoryCount
    */
   @Get('counts')
-  async getCategoryCounts(): Promise<CategoryCountResponse[]> {
+  async getCategoryCounts(@Query('isOffer') isOffer?: string): Promise<CategoryCountResponse[]> {
     // El servicio ya retorna el formato correcto {name, count}
-    return this.productosService.getCategoryCounts();
+    return this.productosService.getCategoryCounts(isOffer === 'true');
   }
 
   @Get('structure')
@@ -59,8 +59,8 @@ export class ProductosController {
   }
 
   @Get('brands')
-  async getBrands(): Promise<string[]> {
-    return this.productosService.getBrands();
+  async getBrands(@Query('isOffer') isOffer?: string): Promise<string[]> {
+    return this.productosService.getBrands(isOffer === 'true');
   }
 
   // --- Endpoints de Enriquecimiento (ADMIN) ---

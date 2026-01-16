@@ -1,6 +1,7 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CategoryClassifierService } from '../../products/category-classifier.service';
 import { HttpService } from '@nestjs/axios';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
@@ -27,7 +28,8 @@ export class ErpSyncService {
         private readonly httpService: HttpService,
         @Inject(forwardRef(() => EmailService))
         private emailService: EmailService,
-        private movimientosService: MovimientosService
+        private movimientosService: MovimientosService,
+        private readonly classifierService: CategoryClassifierService
     ) { }
 
     // ... existing code ...
@@ -196,12 +198,16 @@ export class ErpSyncService {
         // To do this efficiently, we might need to fetch existing stocks first.
         // Or we can iterate one by one if performance permits (for < 2000 products it's okay).
         // Let's iterate for better control over logging.
-
+        // Let's iterate for better control over logging.
         const operations: any[] = [];
 
         for (const product of erpProducts) {
             const productCode = product.COD;
             const newStock = Number(product.STK) || 0;
+
+            if (operations.length < 3) {
+                console.log('[ErpSync] Raw Product Sample:', JSON.stringify(product));
+            }
 
             // Fetch previous to compare stock
             const previous = await this.productERPModel.findOne({ codigo: productCode }).select('stock').lean();
@@ -251,8 +257,12 @@ export class ErpSyncService {
         }
 
         if (operations.length > 0) {
+            console.log(`[ErpSync] Executing bulkWrite with ${operations.length} operations...`);
             const result = await this.productERPModel.bulkWrite(operations as any[]);
+            console.log(`[ErpSync] BulkWrite Result: upserted=${result.upsertedCount}, modified=${result.modifiedCount}`);
             this.logger.log(`📦 ERP Collection: ${result.upsertedCount} nuevos, ${result.modifiedCount} actualizados`);
+        } else {
+            console.log(`[ErpSync] No operations to execute!`);
         }
     }
     /**
@@ -686,39 +696,65 @@ export class ErpSyncService {
 
     private async processCategoryBranch(erpCat: any, padreId: Types.ObjectId | null, nivel: number): Promise<Types.ObjectId> {
         const slug = this.generateSlug(erpCat.NOM);
+        let currentId: Types.ObjectId;
 
-        // Find or Create the category
-        let category = await this.categoriaModel.findOne({ id_erp: erpCat.ID });
+        if (nivel === 1) {
+            // Classify top level categories (which are Level 2 in ERP)
+            const classification = await this.classifierService.classify(erpCat.NOM);
+            console.log(`[ErpSyncService] Classified '${erpCat.NOM}' -> '${classification.name}' (Score: ${classification.score.toFixed(2)})`);
 
-        const updateData: any = {
-            id_erp: erpCat.ID,
-            codigo: erpCat.COD,
-            nombre: erpCat.NOM,
-            nivel,
-            padre: padreId,
-            slug,
-            activo: true
-        };
+            // Upsert Categoria
+            const updateDoc: any = {
+                id_erp: erpCat.ID,
+                codigo: erpCat.COD || `CAT-${erpCat.ID}`,
+                nombre: erpCat.NOM,
+                nivel: nivel,
+                padre: padreId,
+                activo: true,
+                slug: this.generateSlug(erpCat.NOM),
+                super_categoria: classification.name // Save the Super Category
+            };
 
-        if (category) {
-            await this.categoriaModel.updateOne({ _id: category._id }, { $set: updateData });
+            const doc = await this.categoriaModel.findOneAndUpdate(
+                { id_erp: erpCat.ID },
+                updateDoc,
+                { upsert: true, new: true }
+            );
+            currentId = doc._id as Types.ObjectId;
         } else {
-            category = await this.categoriaModel.create(updateData);
+            // Subcategories inherit super_categoria of parent? Or we ignore it as we group by top level.
+            // Usually we group by Top Level, so subcategories are just nested.
+            const updateDoc: any = {
+                id_erp: erpCat.ID,
+                codigo: erpCat.COD || `CAT-${erpCat.ID}`,
+                nombre: erpCat.NOM,
+                nivel: nivel,
+                padre: padreId,
+                activo: true,
+                slug: this.generateSlug(erpCat.NOM)
+            };
+
+            const doc = await this.categoriaModel.findOneAndUpdate(
+                { id_erp: erpCat.ID },
+                updateDoc,
+                { upsert: true, new: true }
+            );
+            currentId = doc._id as Types.ObjectId;
         }
 
         // Process children
         const hijosIds: Types.ObjectId[] = [];
         if (erpCat.DAT && Array.isArray(erpCat.DAT)) {
             for (const hijo of erpCat.DAT) {
-                const hijoId = await this.processCategoryBranch(hijo, category._id as any, nivel + 1);
+                const hijoId = await this.processCategoryBranch(hijo, currentId, nivel + 1);
                 hijosIds.push(hijoId);
             }
         }
 
         // Update hijos reference
-        await this.categoriaModel.updateOne({ _id: category._id }, { $set: { hijos: hijosIds } });
+        await this.categoriaModel.updateOne({ _id: currentId }, { $set: { hijos: hijosIds } });
 
-        return category._id as any;
+        return currentId;
     }
 
     async updateConfig(configData: any): Promise<any> {

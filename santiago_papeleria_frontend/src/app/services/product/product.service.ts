@@ -164,8 +164,10 @@ export class ProductService {
   }
 
   // Obtener conteo de categorías
-  fetchCategoryCounts(): Observable<CategoryCount[]> {
-    return this.http.get<CategoryCount[]>(`${this.apiURL}/counts`);
+  fetchCategoryCounts(isOffer?: boolean): Observable<CategoryCount[]> {
+    let params = new HttpParams();
+    if (isOffer) params = params.set('isOffer', 'true');
+    return this.http.get<CategoryCount[]>(`${this.apiURL}/counts`, { params });
   }
 
   // Obtener estructura de categorías (Lineas -> Grupos)
@@ -174,8 +176,10 @@ export class ProductService {
   }
 
   // Obtener lista de marcas
-  fetchBrands(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiURL}/brands`);
+  fetchBrands(isOffer?: boolean): Observable<string[]> {
+    let params = new HttpParams();
+    if (isOffer) params = params.set('isOffer', 'true');
+    return this.http.get<string[]>(`${this.apiURL}/brands`, { params });
   }
 
   // --- ADMIN METHODS ---

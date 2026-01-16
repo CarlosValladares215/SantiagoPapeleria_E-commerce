@@ -90,8 +90,16 @@ export class ProductosService {
 
     if (brand) erpQuery.marca = brand;
     if (category) {
-      // Si ya hay un $or (por searchTerm), lo envolvemos en un $and
-      const catFilter = { $or: [{ categoria_g2: category }, { categoria_g3: category }, { categoria_g1: category }] };
+      // Use regex for flexible matching (case insensitive)
+      const catRegex = { $regex: category, $options: 'i' };
+      const catFilter = {
+        $or: [
+          { categoria_g2: catRegex },
+          { categoria_g3: catRegex },
+          { categoria_g1: catRegex }
+        ]
+      };
+
       if (erpQuery.$or) {
         erpQuery.$and = [
           { $or: erpQuery.$or },
@@ -216,12 +224,12 @@ export class ProductosService {
     }
 
     // 2. Filter by Offers (PromocionActiva or PriceTiers)
-    if (isOffer === 'true') {
-      enrichedQuery.$or = [
-        { 'promocion_activa': { $exists: true, $ne: null } },
-        { 'priceTiers.0': { $exists: true } }
-      ];
+    const isOfferValue = String(filterDto.isOffer);
+
+    if (isOfferValue === 'true') {
+      enrichedQuery.promocion_activa = { $exists: true, $ne: null };
       preFilteredByEnriched = true;
+      console.log('Filtrando solo ofertas...'); // Agrega este log para debuggear
     }
 
     // If we need to filter by enriched data first (IDs or Offers)
@@ -262,13 +270,45 @@ export class ProductosService {
       erpQuery.codigo = { $ne: filterDto.excludeId };
     }
 
-    if (filterDto.category) erpQuery.categoria_g2 = filterDto.category;
+    if (filterDto.category) {
+      const catRegex = { $regex: filterDto.category, $options: 'i' };
+      const catFilter = {
+        $or: [
+          { categoria_g1: catRegex },
+          { categoria_g2: catRegex },
+          { categoria_g3: catRegex }
+        ]
+      };
+      if (erpQuery.$or) {
+        erpQuery.$and = erpQuery.$and || [];
+        erpQuery.$and.push({ $or: erpQuery.$or });
+        erpQuery.$and.push(catFilter);
+        delete erpQuery.$or;
+      } else {
+        erpQuery.$or = catFilter.$or;
+      }
+    }
+
     if (filterDto.brand) erpQuery.marca = filterDto.brand;
+
     if (filterDto.searchTerm) {
-      erpQuery.$or = [
-        { nombre: { $regex: filterDto.searchTerm, $options: 'i' } },
-        { codigo: { $regex: filterDto.searchTerm, $options: 'i' } } // Search by SKU too
-      ];
+      const searchFilter = {
+        $or: [
+          { nombre: { $regex: filterDto.searchTerm, $options: 'i' } },
+          { codigo: { $regex: filterDto.searchTerm, $options: 'i' } }
+        ]
+      };
+
+      if (erpQuery.$or || erpQuery.$and) {
+        erpQuery.$and = erpQuery.$and || [];
+        if (erpQuery.$or) {
+          erpQuery.$and.push({ $or: erpQuery.$or });
+          delete erpQuery.$or;
+        }
+        erpQuery.$and.push(searchFilter);
+      } else {
+        erpQuery.$or = searchFilter.$or;
+      }
     }
 
     // Price Filter (ERP Price)
@@ -543,12 +583,28 @@ export class ProductosService {
     return this.findOne(updatedDoc.codigo_interno);
   }
 
-  async getCategoryCounts(): Promise<{ name: string; count: number }[]> {
+  async getCategoryCounts(isOffer?: boolean): Promise<{ name: string; count: number }[]> {
+    const filter: any = { activo: true };
+
+    if (isOffer) {
+      const offerSkus = await this.getOfferSkus();
+      filter.codigo = { $in: offerSkus };
+    }
+
     return this.productErpModel.aggregate([
-      { $match: { activo: true } },
+      { $match: filter },
       { $group: { _id: "$categoria_g2", count: { $sum: 1 } } },
       { $project: { _id: 0, name: "$_id", count: 1 } }
     ]).exec();
+  }
+
+  private async getOfferSkus(): Promise<string[]> {
+    const offerDocs = await this.productoModel.find({
+      es_publico: true,
+      'promocion_activa': { $exists: true, $ne: null }
+    }).select('codigo_interno').lean().exec();
+
+    return offerDocs.map(d => d.codigo_interno);
   }
 
   async getCategoriesStructure(): Promise<any[]> {
@@ -583,7 +639,7 @@ export class ProductosService {
   }
 
   async getCategoriesTree(): Promise<any[]> {
-    return this.categoriaModel.find({ nivel: 1, activo: true })
+    const categories = await this.categoriaModel.find({ nivel: 1, activo: true })
       .populate({
         path: 'hijos',
         match: { activo: true },
@@ -594,10 +650,53 @@ export class ProductosService {
       })
       .lean()
       .exec();
+
+    // Group by super_categoria
+    const groups: { [key: string]: any[] } = {};
+    const superCatOrder = [
+      'Escolar & Oficina',
+      'Arte & Diseño',
+      'Tecnología',
+      'Hogar & Decoración',
+      'Regalos & Variedades'
+    ];
+
+    categories.forEach(cat => {
+      const superCat = cat.super_categoria || 'Regalos & Variedades'; // Fallback
+      if (!groups[superCat]) groups[superCat] = [];
+      groups[superCat].push(cat);
+    });
+
+    // Transform to array respecting order
+    const result = superCatOrder.map(name => ({
+      name: name,
+      categories: groups[name] || [] // Ensure all 5 defined groups exist even if empty
+    }));
+
+    // Add any others if we missed some (shouldn't happen with fixed enums but good for safety)
+    Object.keys(groups).forEach(key => {
+      if (!superCatOrder.includes(key)) {
+        // Maybe append to Regalos or create a new group? 
+        // Let's append to Regalos & Variedades as "Others" bucket
+        const giftGroup = result.find(g => g.name === 'Regalos & Variedades');
+        if (giftGroup) {
+          giftGroup.categories.push(...groups[key]);
+        }
+      }
+    });
+
+    return result;
   }
 
-  async getBrands(): Promise<string[]> {
-    return this.productErpModel.distinct('marca', { activo: true }).exec();
+  async getBrands(isOffer?: boolean): Promise<string[]> {
+    const filter: any = { activo: true };
+
+    if (isOffer) {
+      const offerSkus = await this.getOfferSkus();
+      filter.codigo = { $in: offerSkus };
+    }
+
+    return this.productErpModel.distinct('marca', filter).exec();
   }
 
   async getInventoryStats(): Promise<any> {

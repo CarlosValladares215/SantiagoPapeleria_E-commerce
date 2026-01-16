@@ -27,9 +27,30 @@
     --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Layout */
-    --header-height: 140px;
-    --header-height-mobile: 70px;
+    /* Layout Fluid Scaling */
     --container-max: 1400px;
+
+    /* Fluid Typography & Spacing using Clamp */
+    /* Clamp(min, ideal, max) - scales between 1024px and 1400px viewports */
+    --header-padding-x: clamp(10px, 2vw, 20px);
+
+    --logo-height: clamp(32px, 3.5vw, 45px);
+    --logo-title-size: clamp(1.15rem, 1.3vw, 1.5rem);
+    --logo-subtitle-size: clamp(0.7rem, 0.7vw, 0.875rem);
+
+    --search-height: clamp(40px, 3.5vw, 48px);
+    --search-font-size: clamp(0.85rem, 1vw, 0.9375rem);
+
+    --nav-link-padding-x: clamp(12px, 1.5vw, 24px);
+    --nav-link-padding-y: clamp(12px, 1.2vw, 16px);
+    --nav-font-size: clamp(0.8rem, 0.9vw, 0.9375rem);
+
+    --icon-size-large: clamp(1rem, 1.2vw, 1.25rem);
+    --icon-size-small: clamp(0.75rem, 0.9vw, 0.875rem);
+
+    --gap-main: clamp(16px, 2vw, 30px);
+    --gap-left: clamp(12px, 1.5vw, 20px);
+    --gap-guest: clamp(12px, 2vw, 24px);
 }
 
 /* HEADER PRINCIPAL */
@@ -46,7 +67,7 @@
 .header-container {
     max-width: var(--container-max);
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 var(--header-padding-x);
 }
 
 /* TOP BAR */
@@ -87,15 +108,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    gap: 30px;
+    padding: clamp(12px, 1.2vw, 16px) var(--header-padding-x);
+    gap: var(--gap-main);
 }
 
 /* Header Left */
 .header-left {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: var(--gap-left);
     flex-shrink: 0;
 }
 
@@ -134,9 +155,10 @@
 }
 
 .logo-image {
-    height: 45px;
+    height: var(--logo-height);
     width: auto;
     object-fit: contain;
+    transition: height 0.2s ease;
 }
 
 .logo-text {
@@ -146,15 +168,17 @@
 }
 
 .logo-title {
-    font-size: 1.5rem;
+    font-size: var(--logo-title-size);
     color: var(--primary-dark);
     letter-spacing: -0.5px;
+    white-space: nowrap;
 }
 
 .logo-subtitle {
-    font-size: 0.875rem;
+    font-size: var(--logo-subtitle-size);
     color: var(--primary-blue);
     letter-spacing: 1.5px;
+    white-space: nowrap;
 }
 
 /* Header Center - Búsqueda */
@@ -171,9 +195,9 @@
 
 .search-input {
     width: 100%;
-    height: 48px;
+    height: var(--search-height);
     padding: 0 52px 0 20px;
-    font-size: 0.9375rem;
+    font-size: var(--search-font-size);
     color: var(--gray-800);
     background: var(--gray-100);
     border: 2px solid transparent;
@@ -213,7 +237,7 @@
 .guest-actions {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: var(--gap-guest);
 }
 
 .session-buttons {
@@ -464,12 +488,14 @@
 }
 
 .header-action-btn.cart-btn-logged i {
-    font-size: 1.25rem;
+    font-size: var(--icon-size-large);
     color: var(--gray-800);
 }
 
+
+
 .header-action-btn.cart-btn-logged span {
-    font-size: 0.9375rem;
+    font-size: var(--nav-font-size);
     color: var(--gray-800);
 }
 
@@ -627,10 +653,10 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 16px 24px;
+    padding: var(--nav-link-padding-y) var(--nav-link-padding-x);
     color: var(--gray-700);
     text-decoration: none;
-    font-size: 0.9375rem;
+    font-size: var(--nav-font-size);
     transition: all var(--transition-fast);
     position: relative;
     white-space: nowrap;
@@ -667,13 +693,13 @@
 }
 
 /* MEGA MENUS */
+/* OPTIMIZED MEGA MENU STYLES */
 .mega-menu-container {
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
     z-index: 999;
-    pointer-events: none;
 }
 
 .mega-menu {
@@ -683,12 +709,16 @@
     right: 0;
     background: #fff;
     border-top: 1px solid var(--gray-200);
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-20px);
-    transition: all var(--transition-normal);
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
     pointer-events: none;
+    max-height: 80vh;
+    /* Prevent overflowing viewport height */
+    overflow-y: auto;
+    /* Allow scroll if content is massive */
 }
 
 .mega-menu.active {
@@ -701,52 +731,101 @@
 .mega-content {
     max-width: var(--container-max);
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 30px 40px;
+    /* Reduced vertical padding */
 }
 
 .mega-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 40px;
+    /* Flexible columns: min 220px, fit as many as possible */
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 24px;
+    /* Reduced gap */
+    align-items: start;
 }
 
 .mega-section {
-    padding: 0 20px;
+    padding: 0;
+    /* Removing internal padding to align with grid */
+    break-inside: avoid;
+    /* Prevent breaking across columns if we used masonry */
 }
 
 .mega-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 1rem;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    /* Slightly smaller but bolder */
+    font-weight: 700;
     color: var(--primary-dark);
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--accent-yellow);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--gray-200);
+    /* Thinner border */
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mega-title a {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.2s;
+}
+
+.mega-title a:hover {
+    color: var(--primary-blue);
 }
 
 .mega-list {
     list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .mega-list li {
-    margin-bottom: 12px;
+    margin-bottom: 6px;
+    /* High density */
 }
 
 .mega-list a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--gray-700);
+    display: block;
+    color: var(--gray-600);
     text-decoration: none;
-    font-size: 0.9375rem;
-    transition: all var(--transition-fast);
-    padding: 4px 0;
+    font-size: 0.875rem;
+    /* 14px */
+    line-height: 1.4;
+    transition: all 0.15s ease;
+    padding: 2px 0;
 }
 
 .mega-list a:hover {
     color: var(--primary-blue);
-    transform: translateX(5px);
+    padding-left: 4px;
+    /* Subtle movement */
+    font-weight: 500;
+}
+
+.view-all-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: gap 0.2s;
+}
+
+.view-all-link:hover {
+    gap: 10px;
+    text-decoration: underline;
+}
+
+.view-all-link i {
+    font-size: 0.75rem;
 }
 
 /* RESPONSIVE DESIGN */
