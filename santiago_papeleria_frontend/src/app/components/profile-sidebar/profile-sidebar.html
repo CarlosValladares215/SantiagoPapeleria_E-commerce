@@ -1,0 +1,32 @@
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+    <div class="p-6 bg-gradient-to-br from-[#104D73] to-[#0d3f5e]">
+        <div class="flex items-center gap-4 text-white">
+            <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl">
+                {{authService.user()?.nombres?.charAt(0) || 'U'}}
+            </div>
+            <div>
+                <h3 class="font-bold text-lg leading-tight">{{authService.user()?.nombres ||
+                    'Usuario'}}</h3>
+                <p class="text-xs text-blue-100">Miembro desde 2024</p>
+            </div>
+        </div>
+    </div>
+    <nav class="p-2 space-y-1">
+        <a routerLink="/profile" routerLinkActive="bg-blue-50 text-[#104D73] font-bold"
+            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
+            <i class="ri-user-line text-lg"></i> Mi Perfil
+        </a>
+        <a routerLink="/orders" routerLinkActive="bg-blue-50 text-[#104D73] font-bold"
+            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
+            <i class="ri-shopping-bag-3-line text-lg"></i> Mis Pedidos
+        </a>
+        <a routerLink="/favorites" routerLinkActive="bg-blue-50 text-[#104D73] font-bold"
+            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
+            <i class="ri-heart-line text-lg"></i> Favoritos
+        </a>
+        <button (click)="authService.logout()"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors mt-4">
+            <i class="ri-logout-box-r-line text-lg"></i> Cerrar Sesión
+        </button>
+    </nav>
+</div>

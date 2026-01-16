@@ -39,9 +39,9 @@ export class UsuariosController {
       throw new ForbiddenException('Account temporarily blocked. Try again later.');
     }
 
-    // if (!user.email_verified) {
-    //   throw new ForbiddenException('Please verify your email first');
-    // }
+    if (!user.email_verified) {
+      throw new ForbiddenException('Por favor verifica tu correo electrónico antes de iniciar sesión');
+    }
 
     const isMatch = await bcrypt.compare(dto.password, user.password_hash);
     if (!isMatch) {
@@ -124,11 +124,12 @@ export class UsuariosController {
       tipo_cliente: dto.client_type,
       cedula: dto.cedula,
       telefono: dto.telefono,
-      email_verified: true, // Bypass verification for now due to SMTP issues
+      email_verified: false, // Email verification required
       verification_token: token,
       verification_token_expiration: expiration,
       role: 'customer', // Default
-      datos_negocio: dto.datos_negocio // Include business data
+      datos_negocio: dto.datos_negocio, // Include business data
+      direcciones_entrega: dto.direcciones_entrega // Include delivery addresses
     };
 
     const user = await this.usuariosService.registerInternal(userData);
@@ -169,6 +170,14 @@ export class UsuariosController {
         datos_negocio: user.datos_negocio
       }
     };
+  }
+
+  // POST /usuarios/check-email (Verificar disponibilidad)
+  @Post('check-email')
+  async checkEmail(@Body('email') email: string) {
+    if (!email) throw new BadRequestException('Email required');
+    const user = await this.usuariosService.findByEmail(email);
+    return { exists: !!user };
   }
 
   // POST /usuarios/resend-verification

@@ -1,37 +1,20 @@
 <div class="bg-gray-50 min-h-screen pb-12">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-8" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <li><a routerLink="/" class="hover:text-[#104D73] transition-colors"><i
+                            class="ri-home-line text-lg"></i></a></li>
+                <li><i class="ri-arrow-right-s-line"></i></li>
+                <li class="font-medium text-gray-900">Mi Perfil</li>
+            </ol>
+        </nav>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
             <!-- Sidebar -->
             <div class="lg:col-span-1">
-                <div
-                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center">
-                    <div
-                        class="w-24 h-24 rounded-full bg-[#012e40] text-white flex items-center justify-center text-3xl font-bold mb-4">
-                        <span *ngIf="authService.user()?.nombres as name; else fallback">{{ name.charAt(0) | uppercase
-                            }}</span>
-                        <ng-template #fallback>L</ng-template>
-                    </div>
-                    <h2 class="text-xl font-bold text-[#012e40] mb-1">{{ authService.user()?.nombres }}</h2>
-                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-6">{{ authService.user()?.tipo_cliente ||
-                        'Minorista' }}</p>
-
-                    <nav class="w-full flex flex-col gap-2">
-                        <a routerLink="/profile" routerLinkActive="bg-[#0f4c75] text-white"
-                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-colors text-white bg-[#0f4c75]">
-                            <i class="ri-user-line text-lg"></i> Mi Perfil
-                        </a>
-                        <a routerLink="/orders" routerLinkActive="bg-[#0f4c75] text-white"
-                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
-                            <i class="ri-shopping-bag-3-line text-lg"></i> Mis Pedidos
-                        </a>
-                        <a routerLink="/favorites"
-                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
-                            <i class="ri-heart-line text-lg"></i> Favoritos
-                        </a>
-                    </nav>
-                </div>
+                <app-profile-sidebar></app-profile-sidebar>
             </div>
 
             <!-- Main Content -->
@@ -54,7 +37,8 @@
                 </div>
 
                 <!-- PERSONAL INFO TAB -->
-                <div *ngIf="activeTab === 'personal'">
+                @if (activeTab === 'personal') {
+                <div>
                     <div
                         class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                         <div>
@@ -68,15 +52,16 @@
                     </div>
 
                     <!-- Botón para cambiar contraseña -->
-                    <div class="mb-6" *ngIf="!isEditing">
+                    @if (!isEditing) {
+                    <div class="mb-6">
                         <button (click)="toggleChangePassword()"
                             class="text-[#0f4c75] font-medium underline hover:text-[#0b3a5a] text-sm">
                             <i class="ri-lock-password-line mr-1"></i> {{ isChangingPassword ? 'Cancelar cambio de
                             contraseña' : '¿Quieres cambiar tu contraseña?' }}
                         </button>
 
-                        <div *ngIf="isChangingPassword"
-                            class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-6 max-w-lg animate-fade-in">
+                        @if (isChangingPassword) {
+                        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-6 max-w-lg animate-fade-in">
                             <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" class="space-y-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 mb-1.5">Contraseña
@@ -94,10 +79,13 @@
                                         Contraseña</label>
                                     <input type="password" formControlName="confirmPassword"
                                         class="w-full bg-white border border-gray-300 rounded-md py-2 px-3 text-sm focus:border-[#0f4c75]">
-                                    <div *ngIf="passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched"
-                                        class="text-red-500 text-xs mt-1">
+                                    @if (passwordForm.hasError('mismatch') &&
+                                    passwordForm.get('confirmPassword')?.touched) {
+                                    <div class="text-red-500 text-xs mt-1">
                                         Las contraseñas no coinciden
                                     </div>
+                                    }
+
                                 </div>
                                 <div class="flex justify-end mt-4">
                                     <button type="submit" [disabled]="passwordForm.invalid || isLoading"
@@ -107,7 +95,10 @@
                                 </div>
                             </form>
                         </div>
+                        }
                     </div>
+                    }
+
 
                     <form [formGroup]="profileForm" (ngSubmit)="onSubmitPersonal()"
                         class="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
@@ -131,15 +122,18 @@
                                     class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
                             </div>
                             <!-- RUC/Cedula (Identificación Personal) -->
-                            <div *ngIf="!isMayorista">
+                            @if (!isMayorista) {
+                            <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">Cédula</label>
                                 <input type="text" formControlName="identificacion"
                                     class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
                             </div>
+                            }
                         </div>
 
                         <!-- SECCIÓN DATOS DEL NEGOCIO (SOLO MAYORISTAS) -->
-                        <div *ngIf="isMayorista" class="mt-8 border-t border-gray-100 pt-6">
+                        @if (isMayorista) {
+                        <div class="mt-8 border-t border-gray-100 pt-6">
                             <h3 class="text-lg font-bold text-[#0f4c75] mb-4 flex items-center gap-2">
                                 <i class="ri-store-2-line"></i> Información del Negocio
                             </h3>
@@ -180,21 +174,27 @@
                                 </div>
                             </div>
                         </div>
+                        }
 
-                        <div class="mt-8 flex justify-end" *ngIf="isEditing">
+                        @if (isEditing) {
+                        <div class="mt-8 flex justify-end">
                             <button type="submit" [disabled]="isLoading"
                                 class="bg-[#0f4c75] text-white font-bold py-3 px-8 rounded-md hover:bg-[#0b3a5a] transition-colors flex items-center gap-2">
                                 <i class="ri-save-line"></i> {{ isLoading ? 'Guardando...' : 'Guardar Cambios' }}
                             </button>
                         </div>
+                        }
                     </form>
                 </div>
+                }
 
                 <!-- ADDRESSES TAB -->
-                <div *ngIf="activeTab === 'addresses'">
+                @if (activeTab === 'addresses') {
+                <div>
 
                     <!-- Addresses List -->
-                    <div *ngIf="!showAddressForm">
+                    @if (!showAddressForm) {
+                    <div>
                         <div
                             class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                             <div>
@@ -208,7 +208,8 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div *ngFor="let addr of addresses; let i = index"
+                            @for (addr of addresses; track addr; let i = $index) {
+                            <div
                                 class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-[#f2cb07] transition-all relative group">
                                 <div
                                     class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -225,21 +226,28 @@
                                     addr.alias }}</span>
                                 <h4 class="font-bold text-[#012e40]">{{ addr.calle_principal }}</h4>
                                 <p class="text-sm text-gray-500">{{ addr.ciudad }}, {{ addr.provincia }}</p>
-                                <p *ngIf="addr.referencia" class="text-xs text-gray-400 mt-2 italic">"{{ addr.referencia
+                                @if (addr.referencia) {
+                                <p class="text-xs text-gray-400 mt-2 italic">"{{ addr.referencia
                                     }}"</p>
+                                }
                             </div>
+                            }
 
                             <!-- Empty State -->
-                            <div *ngIf="addresses.length === 0"
+                            @if (addresses.length === 0) {
+                            <div
                                 class="col-span-full py-12 text-center text-gray-400 bg-white rounded-lg border-2 border-dashed border-gray-200">
                                 <i class="ri-map-pin-add-line text-4xl mb-3 block"></i>
                                 <span class="block">No tienes direcciones guardadas</span>
                             </div>
+                            }
                         </div>
                     </div>
+                    }
 
                     <!-- Address Form -->
-                    <div *ngIf="showAddressForm" class="bg-white rounded-lg shadow-sm border border-gray-100">
+                    @if (showAddressForm) {
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100">
                         <div class="p-6 border-b border-gray-100 flex justify-between items-center">
                             <h3 class="font-bold text-[#0f4c75] text-lg">{{ editingAddressIndex !== null ? 'Editar
                                 Dirección' : 'Nueva Dirección' }}</h3>
@@ -259,7 +267,9 @@
                                     <label class="block text-xs font-bold text-gray-600 mb-1">Provincia</label>
                                     <select formControlName="provincia"
                                         class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
-                                        <option *ngFor="let p of provincias" [value]="p">{{ p }}</option>
+                                        @for (p of provincias; track p) {
+                                        <option [value]="p">{{ p }}</option>
+                                        }
                                     </select>
                                 </div>
                                 <div>
@@ -306,21 +316,26 @@
                                 </div>
                                 <p class="text-xs text-gray-400 mt-2 text-center"><i class="ri-information-line"></i>
                                     Haz click o arrastra el marcador para fijar tu ubicación exacta.</p>
-                                <div *ngIf="addressForm.get('lat')?.invalid && addressForm.get('lat')?.touched"
-                                    class="text-red-500 text-xs font-bold text-center mt-1">
+                                @if (addressForm.get('lat')?.invalid && addressForm.get('lat')?.touched) {
+                                <div class="text-red-500 text-xs font-bold text-center mt-1">
                                     Debes seleccionar una ubicación en el mapa.
                                 </div>
+                                }
                             </div>
                         </div>
                     </div>
+                    }
 
                 </div>
+                }
 
                 <!-- Shared Feedback -->
-                <p *ngIf="successMessage"
+                @if (successMessage) {
+                <p
                     class="fixed bottom-8 right-8 z-50 bg-green-600 text-white px-6 py-4 rounded shadow-lg animate-bounce">
                     <i class="ri-checkbox-circle-line mr-2"></i> {{ successMessage }}
                 </p>
+                }
 
             </div>
         </div>

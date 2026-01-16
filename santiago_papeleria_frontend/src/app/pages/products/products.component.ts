@@ -9,7 +9,7 @@ import { CartService } from '../../services/cart/cart.service';
 // Components
 import { ProductsFilterSidebar } from './components/products-filter-sidebar/products-filter-sidebar';
 import { ProductsHeader } from './components/products-header/products-header';
-import { ProductCard } from './components/product-card/product-card';
+import { ProductCard } from '../../shared/components/product-card/product-card';
 import { ProductsPagination } from './components/products-pagination/products-pagination';
 import { ToastContainerComponent } from '../../shared/components/toast/toast.component';
 
@@ -52,12 +52,11 @@ export class ProductsComponent implements OnInit {
 
     // Computed values
     totalPages = computed(() =>
-        Math.ceil(this.productService.products().length / this.itemsPerPage())
+        this.productService.paginationMeta().totalPages
     );
 
     currentProducts = computed(() => {
-        const start = (this.currentPage() - 1) * this.itemsPerPage();
-        return this.productService.products().slice(start, start + this.itemsPerPage());
+        return this.productService.products();
     });
 
     constructor(
@@ -91,7 +90,9 @@ export class ProductsComponent implements OnInit {
                 brand: brand,
                 sortBy: sort,
                 inStock: inStock,
-                priceRange: priceRange
+                priceRange: priceRange,
+                page: this.currentPage(),
+                limit: this.itemsPerPage()
             });
 
             // 3. Reset pagination
@@ -143,6 +144,7 @@ export class ProductsComponent implements OnInit {
 
     onPageChange(page: number): void {
         this.currentPage.set(page);
+        this.filters.update(f => ({ ...f, page: page }));
         // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }

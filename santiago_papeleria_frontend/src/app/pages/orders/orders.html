@@ -1,37 +1,20 @@
 <div class="bg-gray-50 min-h-screen pb-12">
     <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Breadcrumb -->
+        <nav class="flex mb-8" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <li><a routerLink="/" class="hover:text-[#104D73] transition-colors"><i
+                            class="ri-home-line text-lg"></i></a></li>
+                <li><i class="ri-arrow-right-s-line"></i></li>
+                <li class="font-medium text-gray-900">Mis Pedidos</li>
+            </ol>
+        </nav>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
             <!-- Sidebar (Reused from Profile) -->
             <div class="lg:col-span-1">
-                <div
-                    class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center">
-                    <div
-                        class="w-24 h-24 rounded-full bg-[#012e40] text-white flex items-center justify-center text-3xl font-bold mb-4">
-                        <span *ngIf="authService.user()?.nombres as name; else fallback">{{ name.charAt(0) | uppercase
-                            }}</span>
-                        <ng-template #fallback>L</ng-template>
-                    </div>
-                    <h2 class="text-xl font-bold text-[#012e40] mb-1">{{ authService.user()?.nombres }}</h2>
-                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-6">{{ authService.user()?.tipo_cliente ||
-                        'Minorista' }}</p>
-
-                    <nav class="w-full flex flex-col gap-2">
-                        <a routerLink="/profile" routerLinkActive="bg-[#0f4c75] text-white"
-                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                            <i class="ri-user-line text-lg"></i> Mi Perfil
-                        </a>
-                        <a routerLink="/orders" routerLinkActive="bg-[#0f4c75] text-white border-transparent"
-                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-white bg-[#0f4c75] border border-transparent transition-colors">
-                            <i class="ri-shopping-bag-3-line text-lg"></i> Mis Pedidos
-                        </a>
-                        <a routerLink="/favorites"
-                            class="flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors border border-transparent">
-                            <i class="ri-heart-line text-lg"></i> Favoritos
-                        </a>
-                    </nav>
-                </div>
+                <app-profile-sidebar></app-profile-sidebar>
             </div>
 
             <!-- Main Content -->

@@ -65,6 +65,7 @@ export class CartService {
 
     // Payment Config State
     paymentConfig = signal<PaymentConfig | null>(null);
+    private lastUserId: string | null = null;
 
     // Branch State
     public branches = [
@@ -150,32 +151,37 @@ export class CartService {
             this.calculateShipping();
         }, { allowSignalWrites: true });
 
+
         // 3. Effect: React to User Login/Logout (Sync FROM Backend)
         effect(() => {
             const user = this.authService.user();
-            if (user) {
-                // User Logged In: Load their cart
-                if (user.carrito && Array.isArray(user.carrito)) {
-                    const mappedCart = user.carrito
-                        .map((c: any) => ({
-                            ...c,
-                            id: c.id || c._id,
-                            weight_kg: Number(c.product?.peso_kg || c.weight_kg || c.peso_kg || 0)
-                        }))
-                        .filter((c: CartItem) => c && c.id && typeof c.id === 'string' && c.id.trim().length > 0 && c.id !== 'undefined');
+            const currentId = user?._id || null;
 
-                    console.log(`[CartService] Backend Sync: Valid items ${mappedCart.length}/${user.carrito.length}`);
-                    this.cartItemsSignal.set(mappedCart);
+            // ONLY sync from backend if the user identity actually CHANGED (login/logout)
+            // This prevents overwriting the local cart when updating profile (address, etc.)
+            if (currentId !== this.lastUserId) {
+                console.log(`[CartService] Identity changed: ${this.lastUserId} -> ${currentId}. Syncing FROM backend.`);
+                this.lastUserId = currentId;
+
+                if (user) {
+                    // User Logged In: Load their cart
+                    if (user.carrito && Array.isArray(user.carrito)) {
+                        const mappedCart = user.carrito
+                            .map((c: any) => ({
+                                ...c,
+                                id: c.id || c._id,
+                                weight_kg: Number(c.product?.peso_kg || c.weight_kg || c.peso_kg || 0)
+                            }))
+                            .filter((c: CartItem) => c && c.id && typeof c.id === 'string' && c.id.trim().length > 0 && c.id !== 'undefined');
+
+                        console.log(`[CartService] Backend Sync complete. Items: ${mappedCart.length}`);
+                        this.cartItemsSignal.set(mappedCart);
+                    }
+                } else {
+                    // User Logged Out: Clear Cart
+                    this.cartItemsSignal.set([]);
+                    this.selectedAddress.set(null);
                 }
-
-                // Auto-selection removed based on user feedback
-                // if (user.direcciones_entrega && user.direcciones_entrega.length > 0 && !this.selectedAddress()) {
-                //    this.setAddress(user.direcciones_entrega[0]);
-                // }
-            } else {
-                // User Logged Out: Clear Cart
-                this.cartItemsSignal.set([]);
-                this.selectedAddress.set(null);
             }
         }, { allowSignalWrites: true });
 

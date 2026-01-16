@@ -7,6 +7,7 @@ import { ProductosController } from './productos.controller';
 import { Producto, ProductoSchema } from './schemas/producto.schema';
 import { ProductERP, ProductERPSchema } from './schemas/product-erp.schema';
 import { MovimientoStock, MovimientoStockSchema } from './schemas/movimiento-stock.schema';
+import { Categoria, CategoriaSchema } from './schemas/categoria.schema';
 
 import { HttpModule } from '@nestjs/axios';
 
@@ -21,6 +22,7 @@ import { ErpSyncModule } from '../erp/sync/erp-sync.module';
       { name: Producto.name, schema: ProductoSchema },
       { name: ProductERP.name, schema: ProductERPSchema },
       { name: MovimientoStock.name, schema: MovimientoStockSchema },
+      { name: Categoria.name, schema: CategoriaSchema },
     ]),
     forwardRef(() => ErpSyncModule),
   ],

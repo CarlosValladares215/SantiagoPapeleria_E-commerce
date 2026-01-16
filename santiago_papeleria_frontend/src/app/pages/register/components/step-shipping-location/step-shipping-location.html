@@ -1,0 +1,102 @@
+<div class="flex-1 flex flex-col h-full" [formGroup]="parentForm">
+    <!-- Progress Header Removed -->
+
+    <!-- Content -->
+    <div class="p-12 pt-6 flex-1 flex flex-col">
+        <div class="flex items-center gap-2 mb-6 text-brand-blue border-b border-gray-100 pb-2">
+            <span class="material-symbols-outlined filled">location_on</span>
+            <h4 class="font-bold text-lg">Dirección de Entrega</h4>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-auto" formGroupName="direcciones_entrega">
+
+            <!-- Fields Column -->
+            <div class="space-y-5">
+                <!-- Alias -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-brand-blue">Alias (ej. Casa, Oficina)</label>
+                    <input type="text" formControlName="alias" autocomplete="off"
+                        class="rounded-lg border-gray-300 focus:border-brand-blue focus:ring-brand-blue h-12 px-4 border w-full text-base transition-colors"
+                        placeholder="Casa">
+                </div>
+
+                <!-- Provincia y Ciudad -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-brand-blue">Provincia</label>
+                        <select formControlName="provincia"
+                            class="rounded-lg border-gray-300 focus:border-brand-blue focus:ring-brand-blue h-12 px-4 border w-full text-base transition-colors bg-white appearance-none">
+                            <option value="">Selecciona...</option>
+                            <option *ngFor="let p of provincias" [value]="p">{{p}}</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-semibold text-brand-blue">Ciudad</label>
+                        <input type="text" formControlName="ciudad" autocomplete="off"
+                            class="rounded-lg border-gray-300 focus:border-brand-blue focus:ring-brand-blue h-12 px-4 border w-full text-base transition-colors"
+                            placeholder="Ej. Loja">
+                    </div>
+                </div>
+
+                <!-- Código Postal -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-brand-blue">Código Postal</label>
+                    <input type="text" formControlName="codigo_postal" autocomplete="off" maxlength="6"
+                        class="rounded-lg border-gray-300 focus:border-brand-blue focus:ring-brand-blue h-12 px-4 border w-full text-base transition-colors"
+                        placeholder="Ej. 110101">
+                </div>
+
+                <!-- Calle Principal -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-brand-blue">Calle Principal / Dirección</label>
+                    <input type="text" formControlName="calle_principal" autocomplete="off"
+                        class="rounded-lg border-gray-300 focus:border-brand-blue focus:ring-brand-blue h-12 px-4 border w-full text-base transition-colors"
+                        placeholder="Calle y número de casa">
+                </div>
+
+                <!-- Referencia -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-brand-blue">Referencia</label>
+                    <textarea formControlName="referencia" autocomplete="off"
+                        class="rounded-lg border-gray-300 focus:border-brand-blue focus:ring-brand-blue px-4 py-3 border w-full text-base transition-colors resize-none"
+                        placeholder="Ej. Frente al parque central, portón azul" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Map Column -->
+            <div class="flex flex-col gap-3 h-full">
+                <label class="text-sm font-semibold text-brand-blue">Ubicación en Mapa (Opcional)</label>
+                <!-- Map Component Integration -->
+                <div
+                    class="relative w-full flex-1 min-h-[350px] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-inner">
+                    <app-map (locationChange)="onLocationChange($event)"></app-map>
+                </div>
+                <p class="text-[11px] text-gray-500 italic">Haz click o arrastra el marcador para fijar tu ubicación
+                    exacta.</p>
+            </div>
+        </div>
+
+        <div
+            class="flex flex-col-reverse sm:flex-row items-center justify-between gap-6 pt-8 border-t border-gray-100 mt-8">
+            <button (click)="onBack()"
+                class="text-sm font-semibold text-gray-500 hover:text-brand-blue transition-colors flex items-center gap-2 px-4 py-2">
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+                Volver
+            </button>
+
+            <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <button (click)="onSubmit()" [disabled]="isSubmitting"
+                    class="text-sm font-bold text-gray-400 hover:text-brand-blue transition-colors px-4 py-2 hover:bg-gray-50 rounded-lg">
+                    Omitir este paso
+                </button>
+                <button (click)="onSubmit()" [disabled]="isSubmitting"
+                    class="w-full sm:w-auto px-10 py-4 bg-brand-yellow text-brand-blue-dark font-extrabold text-lg rounded-xl shadow-md hover:shadow-lg hover:brightness-95 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <span *ngIf="isSubmitting"
+                        class="animate-spin h-5 w-5 border-2 border-brand-blue-dark border-t-transparent rounded-full"></span>
+                    <span *ngIf="!isSubmitting">Finalizar Registro</span>
+                    <span *ngIf="!isSubmitting" class="material-symbols-outlined font-bold">check_circle</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

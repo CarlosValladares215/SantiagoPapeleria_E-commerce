@@ -2,15 +2,16 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
-import { RouterLink, RouterLinkActive, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { MapComponent } from '../../shared/components/map/map.component';
 import { HttpClient } from '@angular/common/http';
 import { DireccionEntrega } from '../../models/usuario.model';
+import { ProfileSidebarComponent } from '../../components/profile-sidebar/profile-sidebar';
 
 @Component({
     selector: 'app-profile',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterLink, RouterLinkActive, MapComponent],
+    imports: [CommonModule, ReactiveFormsModule, MapComponent, ProfileSidebarComponent],
     templateUrl: './profile.html',
     styleUrls: ['./profile.scss']
 })

@@ -9,7 +9,7 @@ import { CartService } from '../../services/cart/cart.service';
 // Components
 import { ProductsFilterSidebar } from '../products/components/products-filter-sidebar/products-filter-sidebar';
 import { ProductsHeader } from '../products/components/products-header/products-header';
-import { ProductCard } from '../products/components/product-card/product-card';
+import { ProductCard } from '../../shared/components/product-card/product-card';
 import { ProductsPagination } from '../products/components/products-pagination/products-pagination';
 import { ToastContainerComponent } from '../../shared/components/toast/toast.component';
 
@@ -40,7 +40,10 @@ export class Offers implements OnInit {
     priceRange: [0, 100],
     inStock: false,
     sortBy: 'name',
-    searchTerm: ''
+    searchTerm: '',
+    isOffer: true,
+    page: 1,
+    limit: 12
   });
 
   // UI State
@@ -54,17 +57,13 @@ export class Offers implements OnInit {
   // Computed values
 
   // Filtered by Offers
-  offerProducts = computed(() => {
-    return this.productService.products().filter(p => p.isOffer || !!p.promocion_activa);
-  });
-
+  // Computed values
   totalPages = computed(() =>
-    Math.ceil(this.offerProducts().length / this.itemsPerPage())
+    this.productService.paginationMeta().totalPages
   );
 
   currentProducts = computed(() => {
-    const start = (this.currentPage() - 1) * this.itemsPerPage();
-    return this.offerProducts().slice(start, start + this.itemsPerPage());
+    return this.productService.products();
   });
 
   constructor(
@@ -124,6 +123,7 @@ export class Offers implements OnInit {
 
   onPageChange(page: number): void {
     this.currentPage.set(page);
+    this.filters.update(f => ({ ...f, page: page }));
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }

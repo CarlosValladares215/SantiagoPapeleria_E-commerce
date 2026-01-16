@@ -1,6 +1,6 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { HttpService } from '@nestjs/axios';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
@@ -10,6 +10,7 @@ import { SyncLog } from './schemas/sync-log.schema';
 import { ErpConfig } from './schemas/erp-config.schema';
 import { EmailService } from '../../users/services/email.service';
 import { MovimientosService } from '../../products/movimientos.service';
+import { Categoria, CategoriaDocument } from '../../products/schemas/categoria.schema';
 
 @Injectable()
 export class ErpSyncService {
@@ -22,6 +23,7 @@ export class ErpSyncService {
         @InjectModel(Producto.name) private productoModel: Model<Producto>,
         @InjectModel(SyncLog.name) private syncLogModel: Model<SyncLog>,
         @InjectModel(ErpConfig.name) private erpConfigModel: Model<ErpConfig>,
+        @InjectModel(Categoria.name) private categoriaModel: Model<CategoriaDocument>,
         private readonly httpService: HttpService,
         @Inject(forwardRef(() => EmailService))
         private emailService: EmailService,
@@ -644,12 +646,79 @@ export class ErpSyncService {
             const response = await firstValueFrom(
                 this.httpService.get(`${this.erpUrl}?CMD=STO_MTX_CAT_LIN`)
             );
-            this.logger.log(`✅ Categorías recibidas: ${response.data.length || 'Estructura árbol'}`);
-            return response.data;
+            console.log('[ErpSyncService] Raw Response type:', typeof response.data);
+            console.log('[ErpSyncService] Raw Response keys:', Object.keys(response.data));
+
+            // The simulator returns { root: { ... } } or just the root object
+            const root = response.data.root || response.data;
+
+            if (!root || !root.DAT) {
+                throw new Error('Formato de categorías no válido');
+            }
+
+            // We skip Level 1 (MERCADERIA) and start with Level 2 (DAT of root)
+            const level2Categories = root.DAT;
+            console.log(`[ErpSyncService] Processing ${level2Categories.length} Level 2 categories`);
+
+            // Clear current categories or do a smart sync? 
+            // For categories, a clean sync is often easier if the structure is small.
+            // But let's do an upsert for safety.
+
+            let processed = 0;
+            for (const cat2 of level2Categories) {
+                try {
+                    console.log(`[ErpSyncService] Processing category: ${cat2.NOM} (ID: ${cat2.ID})`);
+                    await this.processCategoryBranch(cat2, null, 1);
+                    processed++;
+                } catch (catErr) {
+                    console.error(`[ErpSyncService] Error processing category ${cat2.NOM}:`, catErr);
+                    throw catErr; // Re-throw to see in final response
+                }
+            }
+
+            this.logger.log(`✅ Sincronización de categorías completada: ${processed} grupos procesados`);
+            return { status: 'success', processed };
         } catch (error) {
             this.logger.error('❌ Error sincronizando categorías:', error.message);
             throw error;
         }
+    }
+
+    private async processCategoryBranch(erpCat: any, padreId: Types.ObjectId | null, nivel: number): Promise<Types.ObjectId> {
+        const slug = this.generateSlug(erpCat.NOM);
+
+        // Find or Create the category
+        let category = await this.categoriaModel.findOne({ id_erp: erpCat.ID });
+
+        const updateData: any = {
+            id_erp: erpCat.ID,
+            codigo: erpCat.COD,
+            nombre: erpCat.NOM,
+            nivel,
+            padre: padreId,
+            slug,
+            activo: true
+        };
+
+        if (category) {
+            await this.categoriaModel.updateOne({ _id: category._id }, { $set: updateData });
+        } else {
+            category = await this.categoriaModel.create(updateData);
+        }
+
+        // Process children
+        const hijosIds: Types.ObjectId[] = [];
+        if (erpCat.DAT && Array.isArray(erpCat.DAT)) {
+            for (const hijo of erpCat.DAT) {
+                const hijoId = await this.processCategoryBranch(hijo, category._id as any, nivel + 1);
+                hijosIds.push(hijoId);
+            }
+        }
+
+        // Update hijos reference
+        await this.categoriaModel.updateOne({ _id: category._id }, { $set: { hijos: hijosIds } });
+
+        return category._id as any;
     }
 
     async updateConfig(configData: any): Promise<any> {

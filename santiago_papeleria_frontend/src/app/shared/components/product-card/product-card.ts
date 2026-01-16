@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Product } from '../../../../models/product.model';
-import { DisplayPricePipe } from '../../../../pipes/display-price.pipe';
-import { AuthService } from '../../../../services/auth/auth.service';
+import { Product } from '../../../models/product.model';
+import { DisplayPricePipe } from '../../../pipes/display-price.pipe';
+import { AuthService } from '../../../services/auth/auth.service';
 
 @Component({
     selector: 'app-product-card',
@@ -17,6 +17,7 @@ export class ProductCard implements OnInit, OnDestroy {
 
     @Output() viewDetails = new EventEmitter<string>();
     @Output() addToCart = new EventEmitter<Product>();
+    @Output() favoriteToggled = new EventEmitter<boolean>();
 
     private authService = inject(AuthService);
     private cdr = inject(ChangeDetectorRef);
@@ -62,6 +63,7 @@ export class ProductCard implements OnInit, OnDestroy {
 
         localStorage.setItem('favorites', JSON.stringify(favorites));
         this.isFavorite = !this.isFavorite;
+        this.favoriteToggled.emit(this.isFavorite);
     }
 
     private startCountdown(): void {
@@ -144,4 +146,3 @@ export class ProductCard implements OnInit, OnDestroy {
         return 0;
     }
 }
-

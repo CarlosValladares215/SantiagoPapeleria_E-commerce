@@ -1,140 +1,87 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed, signal, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
-import { DisplayPricePipe } from '../../pipes/display-price.pipe';
-
-interface FavoriteProduct {
-    id: string;
-    name: string;
-    category: string;
-    price: number;
-    wholesalePrice?: number;
-    image: string;
-    inStock: boolean;
-    filterCategory: string; // To match the tabs
-}
+import { ProductService } from '../../services/product/product.service';
+import { ProductCard } from '../../shared/components/product-card/product-card';
+import { ProfileSidebarComponent } from '../../components/profile-sidebar/profile-sidebar';
+import { Product } from '../../models/product.model';
 
 @Component({
     selector: 'app-favorites',
     standalone: true,
-    imports: [CommonModule, RouterLink, RouterLinkActive, DisplayPricePipe],
+    imports: [CommonModule, RouterLink, ProductCard, ProfileSidebarComponent],
     templateUrl: './favorites.html',
     styleUrl: './favorites.scss'
 })
-export class Favorites {
+export class Favorites implements OnInit {
     authService = inject(AuthService);
+    productService = inject(ProductService);
+
+    // Filter state
     activeFilter: string = 'Todos';
 
-    // Mock Categories from Screenshot
-    // Todos (8), Útiles Escolares (2), Arte y Manualidades (3), Tecnología (1), Suministros de Oficina (2)
-    filters = [
-        { label: 'Todos', count: 8, value: 'Todos' },
-        { label: 'Útiles Escolares', count: 2, value: 'Útiles Escolares' },
-        { label: 'Arte y Manualidades', count: 3, value: 'Arte y Manualidades' },
-        { label: 'Tecnología', count: 1, value: 'Tecnología' },
-        { label: 'Suministros de Oficina', count: 2, value: 'Suministros de Oficina' }
-    ];
+    // Computed filters based on loaded products
+    get filters() {
+        const allProducts = this.productService.products();
+        const categories = new Set(allProducts.map(p => p.category));
 
-    products: FavoriteProduct[] = [
-        {
-            id: '1',
-            name: 'JUEGO DE GEOMETRÍA 5 PIEZAS',
-            category: 'GEOMETRÍA Y DIBUJO',
-            price: 3.99,
-            wholesalePrice: 2.99,
-            image: 'assets/products/geometry.png', // Placeholder
-            inStock: true,
-            filterCategory: 'Útiles Escolares'
-        },
-        {
-            id: '2',
-            name: 'CUADERNO UNIVERSITARIO',
-            category: 'GEOMETRÍA Y DIBUJO',
-            price: 2.50,
-            wholesalePrice: 1.80,
-            image: 'assets/products/notebook.png',
-            inStock: true,
-            filterCategory: 'Útiles Escolares'
-        },
-        {
-            id: '3',
-            name: 'SET DE PINCELES PROFESIONALES',
-            category: 'ARTE Y PINTURA',
-            price: 12.99,
-            wholesalePrice: 10.00,
-            image: 'assets/products/brushes.png',
-            inStock: true,
-            filterCategory: 'Arte y Manualidades'
-        },
-        {
-            id: '4',
-            name: 'ACUARELAS 12 COLORES',
-            category: 'ARTE Y PINTURA',
-            price: 8.50,
-            wholesalePrice: 6.50,
-            image: 'assets/products/watercolors.png',
-            inStock: true,
-            filterCategory: 'Arte y Manualidades'
-        },
-        {
-            id: '5',
-            name: 'LIENZO 30x40cm',
-            category: 'ARTE Y PINTURA',
-            price: 5.75,
-            wholesalePrice: 4.25,
-            image: 'assets/products/canvas.png',
-            inStock: false, // Testing out of stock?
-            filterCategory: 'Arte y Manualidades'
-        },
-        {
-            id: '6',
-            name: 'CALCULADORA CIENTÍFICA',
-            category: 'TECNOLOGÍA',
-            price: 25.00,
-            wholesalePrice: 21.50,
-            image: 'assets/products/calculator.png',
-            inStock: true,
-            filterCategory: 'Tecnología'
-        },
-        {
-            id: '7',
-            name: 'RESMA PAPEL BOND A4',
-            category: 'OFICINA',
-            price: 4.50,
-            wholesalePrice: 3.75,
-            image: 'assets/products/paper.png',
-            inStock: true,
-            filterCategory: 'Suministros de Oficina'
-        },
-        {
-            id: '8',
-            name: 'ARCHIVADOR PALANCA',
-            category: 'OFICINA',
-            price: 3.25,
-            wholesalePrice: 2.50,
-            image: 'assets/products/folder.png',
-            inStock: true,
-            filterCategory: 'Suministros de Oficina'
+        const dynamicFilters = [
+            { label: 'Todos', value: 'Todos', count: allProducts.length }
+        ];
+
+        categories.forEach(cat => {
+            if (cat) {
+                const count = allProducts.filter(p => p.category === cat).length;
+                dynamicFilters.push({ label: cat, value: cat, count });
+            }
+        });
+
+        return dynamicFilters;
+    }
+
+    constructor() {
+        effect(() => {
+            const currentFilters = this.filters.map(f => f.value);
+            if (!currentFilters.includes(this.activeFilter)) {
+                this.activeFilter = 'Todos';
+            }
+        });
+    }
+
+    ngOnInit() {
+        this.loadFavorites();
+    }
+
+    loadFavorites() {
+        const favoritesIds = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+        if (favoritesIds.length > 0) {
+            this.productService.fetchProducts({
+                searchTerm: '',
+                category: '',
+                brand: '',
+                priceRange: [0, 10000], // Wide range
+                inStock: false,
+                sortBy: 'name',
+                ids: favoritesIds
+            });
+        } else {
+            // Clear current products if no favorites
+            this.productService.products.set([]);
         }
-    ];
-
-    get filteredProducts() {
-        if (this.activeFilter === 'Todos') return this.products;
-        return this.products.filter(p => p.filterCategory === this.activeFilter);
     }
 
     setFilter(filter: string) {
         this.activeFilter = filter;
     }
 
-    // Placeholder for remove favorite logic
-    toggleFavorite(id: string) {
-        console.log('Remove favorite', id);
-        // In real app, call service to remove
-    }
-
-    addToCart(id: string) {
-        console.log('Add to cart', id);
+    // Filtered products logic
+    get products(): Product[] {
+        const all = this.productService.products();
+        if (this.activeFilter === 'Todos') {
+            return all;
+        }
+        return all.filter(p => p.category === this.activeFilter);
     }
 }

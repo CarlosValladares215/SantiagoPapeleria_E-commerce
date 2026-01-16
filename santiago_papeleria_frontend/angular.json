@@ -33,7 +33,8 @@
               "node_modules/leaflet/dist/leaflet.css"
             ],
             "allowedCommonJsDependencies": [
-              "sweetalert2"
+              "sweetalert2",
+              "leaflet"
             ]
           },
           "configurations": {

@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Producto, ProductoDocument } from './schemas/producto.schema';
 import { ProductERP, ProductERPDocument } from './schemas/product-erp.schema';
+import { Categoria, CategoriaDocument } from './schemas/categoria.schema';
 import { ProductFilterDto } from './dto/product-filter.dto';
 import { ErpSyncService } from '../erp/sync/erp-sync.service';
 import { MovimientosService } from './movimientos.service';
@@ -34,6 +35,7 @@ export class ProductosService {
   constructor(
     @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,
     @InjectModel(ProductERP.name) private productErpModel: Model<ProductERPDocument>,
+    @InjectModel(Categoria.name) private categoriaModel: Model<CategoriaDocument>,
     @Inject(forwardRef(() => ErpSyncService)) private readonly erpSyncService: ErpSyncService,
     private movimientosService: MovimientosService
   ) { }
@@ -87,7 +89,19 @@ export class ProductosService {
     }
 
     if (brand) erpQuery.marca = brand;
-    if (category) erpQuery.categoria_g2 = category;
+    if (category) {
+      // Si ya hay un $or (por searchTerm), lo envolvemos en un $and
+      const catFilter = { $or: [{ categoria_g2: category }, { categoria_g3: category }, { categoria_g1: category }] };
+      if (erpQuery.$or) {
+        erpQuery.$and = [
+          { $or: erpQuery.$or },
+          catFilter
+        ];
+        delete erpQuery.$or;
+      } else {
+        erpQuery.$or = catFilter.$or;
+      }
+    }
 
     if (minPrice || maxPrice) {
       erpQuery.precio_pvp = {};
@@ -184,13 +198,61 @@ export class ProductosService {
     };
   }
 
-  // --- 2. Public Catalog Access ---
-  async findAll(filterDto: ProductFilterDto): Promise<any[]> {
-    const visibleEnrichedDocs = await this.productoModel.find({ es_publico: true }).select('codigo_interno').lean().exec();
-    const visibleSkus = visibleEnrichedDocs.map(d => d.codigo_interno);
+  // --- 2. Public Catalog Access (PAGINATED) ---
+  async findAll(filterDto: ProductFilterDto): Promise<any> {
+    const { page = 1, limit = 12, isOffer } = filterDto;
+    let visibleSkus: string[] = [];
 
-    if (visibleSkus.length === 0) return [];
+    // --- A. FILTERING BY IDs or IS_OFFER (Enriched Data) ---
+    const enrichedQuery: any = { es_publico: true };
+    let preFilteredByEnriched = false;
 
+    // 1. Filter by specific IDs (Favorites)
+    if (filterDto.ids && filterDto.ids.length > 0) {
+      const { Types } = require('mongoose');
+      const objectIds = filterDto.ids.filter(id => Types.ObjectId.isValid(id));
+      enrichedQuery._id = { $in: objectIds };
+      preFilteredByEnriched = true;
+    }
+
+    // 2. Filter by Offers (PromocionActiva or PriceTiers)
+    if (isOffer === 'true') {
+      enrichedQuery.$or = [
+        { 'promocion_activa': { $exists: true, $ne: null } },
+        { 'priceTiers.0': { $exists: true } }
+      ];
+      preFilteredByEnriched = true;
+    }
+
+    // If we need to filter by enriched data first (IDs or Offers)
+    if (preFilteredByEnriched) {
+      const matchingDocs = await this.productoModel.find(enrichedQuery)
+        .select('codigo_interno')
+        .lean()
+        .exec();
+      visibleSkus = matchingDocs.map(d => d.codigo_interno);
+
+      // If filtering by offers/ids yielded 0 results, return empty immediately
+      if (visibleSkus.length === 0) {
+        return {
+          data: [],
+          meta: { total: 0, page: Number(page), limit: Number(limit), totalPages: 0 }
+        };
+      }
+    } else {
+      // If no enriched-specific filter, we don't restrict SKUs yet (except finding all public ones potentially?)
+      // Optimization: Instead of fetching ALL public SKUs, we rely on ERP Active flag and merge on demand.
+      // BUT we need to ensure we only show 'es_publico: true'.
+      // Strategy: Fetch paginated ERP products, then check 'es_publico'. However, this breaks pagination accuracy.
+      // Better Strategy: Fetch ALL public SKUs from enriched DB (lightweight index scan) to restrict ERP query.
+      const visibleEnrichedDocs = await this.productoModel.find({ es_publico: true })
+        .select('codigo_interno')
+        .lean()
+        .exec();
+      visibleSkus = visibleEnrichedDocs.map(d => d.codigo_interno);
+    }
+
+    // --- B. PREPARE ERP QUERY ---
     const erpQuery: any = {
       codigo: { $in: visibleSkus },
       activo: true,
@@ -200,13 +262,106 @@ export class ProductosService {
       erpQuery.codigo = { $ne: filterDto.excludeId };
     }
 
-    // Aplicar filtros de categoria/marca al ERP
     if (filterDto.category) erpQuery.categoria_g2 = filterDto.category;
     if (filterDto.brand) erpQuery.marca = filterDto.brand;
+    if (filterDto.searchTerm) {
+      erpQuery.$or = [
+        { nombre: { $regex: filterDto.searchTerm, $options: 'i' } },
+        { codigo: { $regex: filterDto.searchTerm, $options: 'i' } } // Search by SKU too
+      ];
+    }
 
-    const limit = filterDto.limit ? Number(filterDto.limit) : 1000;
-    const erpProducts = await this.productErpModel.find(erpQuery).limit(limit).lean().exec();
+    // Price Filter (ERP Price)
+    if (filterDto.minPrice || filterDto.maxPrice) {
+      erpQuery.precio_pvp = {};
+      if (filterDto.minPrice) erpQuery.precio_pvp.$gte = Number(filterDto.minPrice);
+      if (filterDto.maxPrice) erpQuery.precio_pvp.$lte = Number(filterDto.maxPrice);
+    }
 
+    if (filterDto.inStock === 'true') {
+      erpQuery.stock = { $gt: 0 };
+    }
+
+    // --- C. PAGINATION & SORTING ---
+    const skip = (Number(page) - 1) * Number(limit);
+
+    let sortOptions: any = {};
+    const sortBy = filterDto.sortBy || 'name';
+    if (sortBy === 'price') sortOptions.precio_pvp = 1;
+    else if (sortBy === '-price') sortOptions.precio_pvp = -1;
+    else if (sortBy === 'stock') sortOptions.stock = -1;
+    else if (sortBy === '-stock') sortOptions.stock = 1;
+    else if (sortBy === 'name') {
+      // Prioritize items with images (non-empty 'imagen')
+      // We use imagen: -1 because strings > empty/null in desc sort usually (depending on collation, but typically 'path' > '')
+      sortOptions.imagen = -1;
+      sortOptions.nombre = 1;
+    }
+    else if (sortBy === '-name') sortOptions.nombre = -1;
+
+    // --- D. EXECUTE QUERY ---
+    // Featured SKUs from enrichment.json
+    const featuredSkus = [
+      "003734", "001281", "012166", "006171", "010552",
+      "002918", "012139", "025620", "010416", "026996"
+    ];
+
+    let erpProducts: any[] = [];
+    const total = await this.productErpModel.countDocuments(erpQuery);
+
+    if (sortBy === 'name' || sortBy === 'name') { // Default sort
+      const productsToReturn: any[] = [];
+
+      // 1. Fetch Featured (if inside range)
+      // Adjust logic: We treat "Featured" as a prefix list.
+      let featuredSlice: string[] = [];
+      if (skip < featuredSkus.length) {
+        featuredSlice = featuredSkus.slice(skip, skip + Number(limit));
+      }
+
+      if (featuredSlice.length > 0) {
+        const featuredDocs = await this.productErpModel.find({
+          ...erpQuery,
+          codigo: { $in: featuredSlice }
+        }).lean().exec();
+
+        // Maintain order
+        featuredSlice.forEach(sku => {
+          const doc = featuredDocs.find(d => d.codigo === sku);
+          if (doc) productsToReturn.push(doc);
+        });
+      }
+
+      // 2. Fetch Rest
+      if (productsToReturn.length < Number(limit)) {
+        const remaining = Number(limit) - productsToReturn.length;
+        const restSkip = Math.max(0, skip - featuredSkus.length);
+
+        const restDocs = await this.productErpModel.find({
+          ...erpQuery,
+          codigo: { $nin: featuredSkus } // Exclude featured
+        })
+          .sort(sortOptions)
+          .skip(restSkip)
+          .limit(remaining)
+          .lean()
+          .exec();
+
+        productsToReturn.push(...restDocs);
+      }
+
+      erpProducts = productsToReturn;
+    } else {
+      // Standard Sort
+      erpProducts = await this.productErpModel.find(erpQuery)
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(Number(limit))
+        .lean()
+        .exec();
+    }
+
+    // --- E. MERGE DATA ---
     const finalSkus = erpProducts.map(p => p.codigo);
     const enrichedFullDocs = await this.productoModel.find({ codigo_interno: { $in: finalSkus } }).lean().exec();
     const enrichmentMap = new Map(enrichedFullDocs.map(doc => [doc.codigo_interno, doc]));
@@ -216,34 +371,21 @@ export class ProductosService {
       return this.mergeProducts(erpItem, enrichedItem);
     });
 
-    // --- FEATURED PRODUCTS SORTING ---
-    const featuredSkus = [
-      "003734", "001281", "012166", "006171", "010552",
-      "002918", "012139", "025620", "010416", "026996"
-    ];
+    // Note: Featured sorting cannot be strictly applied with server-side pagination unless it's the primary sort key.
+    // We will omit manual featured sorting here as basic pagination overrides it.
 
-    mergedList.sort((a, b) => {
-      const indexA = featuredSkus.indexOf(a.sku);
-      const indexB = featuredSkus.indexOf(b.sku);
-
-      // Both featured: sort by order in list
-      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-      // Only A featured: comes first
-      if (indexA !== -1) return -1;
-      // Only B featured: comes first
-      if (indexB !== -1) return 1;
-      // Neither featured: keep original order (or sort by name/etc)
-      return 0;
-    });
-    // ---------------------------------
-
-    return mergedList.map(p => ({
+    // --- F. MAP TO RESPONSE ---
+    const mappedData = mergedList.map(p => ({
       _id: p._enrichedData?._id || null,
+      internal_id: p.sku, // Consistent with DTO
       codigo_interno: p.sku,
+      name: p.webName || p.erpName, // Consistent with DTO
       nombre: p.webName || p.erpName,
       slug: p._enrichedData?.slug || p.sku,
       activo: true,
-      clasificacion: {
+      category: p.category, // Flattened
+      brand: p.brand, // Flattened
+      clasificacion: { // Keep for backward compatibility if needed
         marca: p.brand,
         grupo: p.category,
         linea: ''
@@ -253,19 +395,40 @@ export class ProductosService {
         pvm: p.wholesalePrice,
         incluye_iva: true
       },
-      stock: {
-        total_disponible: p.stock
-      },
+      price: p.price, // Flattened
+      wholesalePrice: p.wholesalePrice, // Flattened
+      vat_included: true, // Flattened
+      stock: p.stock, // Flattened (number) OR object if needed? Service returns number in 'stock'.
+      // DTO expects number or object.
+
       multimedia: {
         principal: p.images[0] || '',
         galeria: p.images.slice(1)
       },
+      images: p.images, // Flattened
+
       es_publico: true,
       enriquecido: true,
+      isOffer: !!(p._enrichedData?.promocion_activa || (p._enrichedData?.priceTiers?.length > 0)),
+      isNew: true, // Default
+
       peso_kg: p.weight_kg || 0,
       dimensiones: p.dimensions || {},
-      promocion_activa: p._enrichedData?.promocion_activa
+      promocion_activa: p._enrichedData?.promocion_activa,
+      priceTiers: p._enrichedData?.priceTiers || [],
+      specs: p._enrichedData?.specs || [],
+      reviews: p._enrichedData?.reviews || []
     }));
+
+    return {
+      data: mappedData,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit))
+      }
+    };
   }
 
   // --- 3. Find One (Detail Page & Admin Edit) ---
@@ -417,6 +580,20 @@ export class ProductosService {
         }
       }
     ]).exec();
+  }
+
+  async getCategoriesTree(): Promise<any[]> {
+    return this.categoriaModel.find({ nivel: 1, activo: true })
+      .populate({
+        path: 'hijos',
+        match: { activo: true },
+        populate: {
+          path: 'hijos',
+          match: { activo: true }
+        }
+      })
+      .lean()
+      .exec();
   }
 
   async getBrands(): Promise<string[]> {

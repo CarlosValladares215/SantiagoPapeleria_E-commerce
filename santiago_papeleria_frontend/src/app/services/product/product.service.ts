@@ -51,12 +51,26 @@ interface ProductResponse {
   variants?: any[];
 }
 
+// Pagination Interface
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
 
   products = signal<Product[]>([]);
+  paginationMeta = signal<PaginationMeta>({ total: 0, page: 1, limit: 12, totalPages: 0 });
   selectedProduct = signal<Product | null>(null);
   error = signal<string | null>(null);
 
@@ -65,39 +79,49 @@ export class ProductService {
   constructor(private http: HttpClient) { }
 
   // Traer todos los productos con filtros
+  // Traer todos los productos con filtros (Paginado)
   fetchProducts(filters: FilterState): void {
     this.error.set(null);
     let params = new HttpParams();
 
-    if (filters.searchTerm) {
-      params = params.set('searchTerm', filters.searchTerm);
-    }
-    if (filters.category) {
-      params = params.set('category', filters.category);
-    }
-    if (filters.brand) {
-      params = params.set('brand', filters.brand);
-    }
+    // Standard Filters
+    if (filters.searchTerm) params = params.set('searchTerm', filters.searchTerm);
+    if (filters.category) params = params.set('category', filters.category);
+    if (filters.brand) params = params.set('brand', filters.brand);
     if (filters.priceRange) {
       params = params.set('minPrice', filters.priceRange[0].toString());
       params = params.set('maxPrice', filters.priceRange[1].toString());
     }
-    if (filters.inStock) {
-      params = params.set('inStock', filters.inStock.toString());
-    }
-    if (filters.sortBy) {
-      params = params.set('sortBy', filters.sortBy);
+    if (filters.inStock) params = params.set('inStock', filters.inStock.toString());
+    if (filters.sortBy) params = params.set('sortBy', filters.sortBy);
+
+    // Server-Side Pagination & Offer Filter
+    if (filters.page) params = params.set('page', filters.page.toString());
+    if (filters.limit) params = params.set('limit', filters.limit.toString());
+    if (filters.isOffer) params = params.set('isOffer', 'true');
+
+    if (filters.ids && filters.ids.length > 0) {
+      filters.ids.forEach(id => {
+        params = params.append('ids', id);
+      });
     }
 
-    this.http.get<ProductResponse[]>(this.apiURL, { params }).pipe(
-      map(responses => responses.map(r => this.mapProduct(r)))
+    // Expecting Paginated Response now
+    this.http.get<PaginatedResponse<ProductResponse>>(this.apiURL, { params }).pipe(
+      map(response => ({
+        data: response.data.map(r => this.mapProduct(r)),
+        meta: response.meta
+      }))
     ).subscribe({
-      next: (data) => {
-        this.products.set(data);
+      next: (res) => {
+        this.products.set(res.data);
+        this.paginationMeta.set(res.meta);
+        console.log('ProductService: Fetched products', res.meta);
       },
       error: (error) => {
         console.error('Error fetching products:', error);
         this.error.set('Error al cargar los productos. Por favor intente nuevamente.');
+        this.products.set([]); // Clear on error
       }
     });
   }

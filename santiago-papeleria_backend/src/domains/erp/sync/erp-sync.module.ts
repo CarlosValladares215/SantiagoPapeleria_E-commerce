@@ -8,6 +8,7 @@ import { ProductERP, ProductERPSchema } from '../../products/schemas/product-erp
 import { Producto, ProductoSchema } from '../../products/schemas/producto.schema';
 import { SyncLog, SyncLogSchema } from './schemas/sync-log.schema';
 import { ErpConfig, ErpConfigSchema } from './schemas/erp-config.schema';
+import { Categoria, CategoriaSchema } from '../../products/schemas/categoria.schema';
 import { ProductosModule } from '../../products/productos.module';
 import { UsuariosModule } from '../../users/usuarios.module';
 
@@ -22,6 +23,7 @@ import { UsuariosModule } from '../../users/usuarios.module';
       { name: Producto.name, schema: ProductoSchema },
       { name: SyncLog.name, schema: SyncLogSchema },
       { name: ErpConfig.name, schema: ErpConfigSchema },
+      { name: Categoria.name, schema: CategoriaSchema },
     ]),
   ],
   controllers: [ErpSyncController],

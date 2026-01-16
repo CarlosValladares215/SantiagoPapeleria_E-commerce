@@ -1,9 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
 import { OrderService, Order as BackendOrder } from '../../services/order/order.service';
+import { ProfileSidebarComponent } from '../../components/profile-sidebar/profile-sidebar';
 
 interface ProductItem {
     name: string;
@@ -42,7 +43,7 @@ interface Order {
 @Component({
     selector: 'app-orders',
     standalone: true,
-    imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
+    imports: [CommonModule, RouterLink, FormsModule, ProfileSidebarComponent],
     templateUrl: './orders.html',
     styleUrl: './orders.scss'
 })

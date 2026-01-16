@@ -16,14 +16,15 @@ export class UsuariosService {
     @InjectModel(Usuario.name) private usuarioModel: Model<UsuarioDocument>,
   ) { }
 
-  // Crear un nuevo usuario (Registro Legacy - Mantener temporalmente)
+  // Crear un nuevo usuario (Registro Legacy - Ahora seguro)
   async create(createUsuarioDto: CreateUsuarioDto): Promise<UsuarioDocument> {
-    // Legacy implementation - use registerInternal for new flow
-    const passwordHashPlaceholder = `HASH_DE_${createUsuarioDto.password}`;
+    // Hash password properly even for legacy endpoint
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(createUsuarioDto.password, salt);
 
     const createdUsuario = new this.usuarioModel({
       ...createUsuarioDto,
-      password_hash: passwordHashPlaceholder,
+      password_hash: hash,
       estado: 'ACTIVO',
       fecha_creacion: new Date(),
     });
@@ -65,20 +66,6 @@ export class UsuariosService {
     return this.usuarioModel.findOne({ reset_password_token: token }).exec();
   }
 
-  // Validar credenciales (Login)
-  async validateUser(email: string, password: string): Promise<UsuarioDocument | null> {
-    const user = await this.usuarioModel.findOne({ email }).exec();
-    if (!user) return null;
-
-    // Verificar password (Lógica simple temporal coincidiendo con el create)
-    const expectedHash = `HASH_DE_${password}`;
-    if (user.password_hash === expectedHash) {
-      return user;
-    }
-
-    return null;
-  }
-
   // Buscar todos los usuarios
   async findAll(): Promise<UsuarioDocument[]> {
     return this.usuarioModel.find().exec();
@@ -86,7 +73,7 @@ export class UsuariosService {
 
   // Actualizar usuario
   async update(id: string, updateData: any): Promise<UsuarioDocument | null> {
-    return this.usuarioModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
+    return this.usuarioModel.findByIdAndUpdate(id, updateData, { new: true }).populate('carrito.product').exec();
   }
 
   // Buscar por ID

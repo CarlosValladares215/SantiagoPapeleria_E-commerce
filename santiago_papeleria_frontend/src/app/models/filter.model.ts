@@ -5,6 +5,10 @@ export interface FilterState {
     inStock: boolean;
     sortBy: string;
     searchTerm: string;
+    ids?: string[];
+    isOffer?: boolean;
+    page?: number;
+    limit?: number;
 }
 
 export interface SortOption {

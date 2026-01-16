@@ -40,13 +40,16 @@ class DireccionEntrega {
   ciudad: string;
 
   @Prop()
+  provincia: string;
+
+  @Prop()
   codigo_postal: string;
 
   @Prop()
   referencia: string;
 
   @Prop({ type: Geo })
-  geo: Geo;
+  location: Geo;
 }
 
 class Preferencias {

@@ -1,0 +1,156 @@
+<div class="flex-1 flex flex-col h-full" [formGroup]="parentForm">
+    <!-- Progress Header Removed -->
+
+    <!-- Content -->
+    <div class="p-12 pt-6 flex-1 flex flex-col">
+        <div class="space-y-8 mb-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Name -->
+                <div class="flex flex-col gap-3">
+                    <label class="text-sm font-bold text-brand-blue-dark" for="nombres">Nombre Completo</label>
+                    <input id="nombres" type="text" formControlName="nombres" autocomplete="off"
+                        (input)="validateNameInput($event)" maxlength="60"
+                        class="flex h-14 w-full rounded-lg border bg-white px-5 text-base focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue transition-colors"
+                        [class.border-red-500]="parentForm.get('nombres')?.invalid && (parentForm.get('nombres')?.dirty || parentForm.get('nombres')?.touched)"
+                        [class.border-gray-200]="!(parentForm.get('nombres')?.invalid && (parentForm.get('nombres')?.dirty || parentForm.get('nombres')?.touched))"
+                        placeholder="Ej. Juan Pérez García">
+                    <div *ngIf="parentForm.get('nombres')?.invalid && (parentForm.get('nombres')?.dirty || parentForm.get('nombres')?.touched)"
+                        class="text-[11px] text-red-500 font-medium flex flex-col">
+                        <span *ngIf="parentForm.get('nombres')?.hasError('required')">Nombre es requerido</span>
+                        <span *ngIf="parentForm.get('nombres')?.hasError('minlength')">El nombre debe tener al menos 3
+                            caracteres</span>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="flex flex-col gap-3">
+                    <label class="text-sm font-bold text-brand-blue-dark" for="email">Correo Electrónico</label>
+                    <input id="email" type="email" formControlName="email" autocomplete="off"
+                        class="flex h-14 w-full rounded-lg border bg-white px-5 text-base focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue transition-colors"
+                        [class.border-red-500]="parentForm.get('email')?.invalid && (parentForm.get('email')?.dirty || parentForm.get('email')?.touched)"
+                        [class.border-gray-200]="!(parentForm.get('email')?.invalid && (parentForm.get('email')?.dirty || parentForm.get('email')?.touched))"
+                        placeholder="tu@email.com">
+                    <div *ngIf="parentForm.get('email')?.invalid && (parentForm.get('email')?.dirty || parentForm.get('email')?.touched)"
+                        class="text-[11px] text-red-500 font-medium flex flex-col">
+                        <span *ngIf="parentForm.get('email')?.hasError('required')">Correo requerido</span>
+                        <span *ngIf="parentForm.get('email')?.hasError('email')">Correo inválido</span>
+                        <span *ngIf="parentForm.get('email')?.hasError('notUnique')">Este correo ya está
+                            registrado</span>
+                    </div>
+                </div>
+
+                <!-- Cedula -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-sm font-bold text-brand-blue-dark" for="cedula">Cédula de Identidad</label>
+                    <input id="cedula" type="text" formControlName="cedula" autocomplete="off" maxlength="10"
+                        class="flex h-12 w-full rounded-lg border bg-white px-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue transition-colors"
+                        [class.border-red-500]="parentForm.get('cedula')?.invalid && (parentForm.get('cedula')?.dirty || parentForm.get('cedula')?.touched)"
+                        [class.border-gray-200]="!(parentForm.get('cedula')?.invalid && (parentForm.get('cedula')?.dirty || parentForm.get('cedula')?.touched))"
+                        placeholder="110XXXXXXX">
+                    <div *ngIf="parentForm.get('cedula')?.invalid && (parentForm.get('cedula')?.dirty || parentForm.get('cedula')?.touched)"
+                        class="text-[11px] text-red-500 font-medium flex flex-col">
+                        <span *ngIf="parentForm.get('cedula')?.hasError('required')">Cédula es requerida</span>
+                        <span *ngIf="parentForm.get('cedula')?.hasError('pattern')">Debe tener 10 dígitos</span>
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-sm font-bold text-brand-blue-dark" for="telefono">Teléfono / Celular</label>
+                    <input id="telefono" type="text" formControlName="telefono" autocomplete="off"
+                        (input)="formatPhoneNumber($event)" maxlength="12"
+                        class="flex h-12 w-full rounded-lg border bg-white px-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue transition-colors"
+                        [class.border-red-500]="parentForm.get('telefono')?.invalid && (parentForm.get('telefono')?.dirty || parentForm.get('telefono')?.touched)"
+                        [class.border-gray-200]="!(parentForm.get('telefono')?.invalid && (parentForm.get('telefono')?.dirty || parentForm.get('telefono')?.touched))"
+                        placeholder="099-999-9999">
+                    <div *ngIf="parentForm.get('telefono')?.invalid && (parentForm.get('telefono')?.dirty || parentForm.get('telefono')?.touched)"
+                        class="text-[11px] text-red-500 font-medium">
+                        Teléfono requerido (10 dígitos)
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-sm font-bold text-brand-blue-dark" for="password">Contraseña</label>
+                    <div class="relative">
+                        <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                            autocomplete="new-password"
+                            class="flex h-12 w-full rounded-lg border bg-white px-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue transition-colors pr-10"
+                            [class.border-red-500]="parentForm.get('password')?.invalid && (parentForm.get('password')?.dirty || parentForm.get('password')?.touched)"
+                            [class.border-gray-200]="!(parentForm.get('password')?.invalid && (parentForm.get('password')?.dirty || parentForm.get('password')?.touched))"
+                            placeholder="Mínimo 8 caracteres">
+                        <button type="button" (click)="showPassword = !showPassword"
+                            class="absolute right-3 top-0 bottom-0 flex items-center justify-center text-gray-400 hover:text-brand-blue">
+                            <span class="material-symbols-outlined text-xl">{{ showPassword ? 'visibility_off' :
+                                'visibility' }}</span>
+                        </button>
+                    </div>
+                    <span
+                        *ngIf="parentForm.get('password')?.invalid && (parentForm.get('password')?.dirty || parentForm.get('password')?.touched)"
+                        class="text-[11px] text-red-500 font-medium">Mínimo 8 caracteres</span>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-sm font-bold text-brand-blue-dark" for="confirm_password">Confirmar
+                        Contraseña</label>
+                    <div class="relative">
+                        <input id="confirm_password" [type]="showConfirmPassword ? 'text' : 'password'"
+                            formControlName="confirm_password" autocomplete="new-password"
+                            class="flex h-12 w-full rounded-lg border bg-white px-4 text-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue transition-colors pr-10"
+                            [class.border-red-500]="(parentForm.get('confirm_password')?.invalid || parentForm.hasError('mismatch')) && (parentForm.get('confirm_password')?.dirty || parentForm.get('confirm_password')?.touched)"
+                            [class.border-gray-200]="!((parentForm.get('confirm_password')?.invalid || parentForm.hasError('mismatch')) && (parentForm.get('confirm_password')?.dirty || parentForm.get('confirm_password')?.touched))"
+                            placeholder="Repite tu contraseña">
+                        <button type="button" (click)="showConfirmPassword = !showConfirmPassword"
+                            class="absolute right-3 top-0 bottom-0 flex items-center justify-center text-gray-400 hover:text-brand-blue">
+                            <span class="material-symbols-outlined text-xl">{{ showConfirmPassword ? 'visibility_off' :
+                                'visibility' }}</span>
+                        </button>
+                    </div>
+                    <span
+                        *ngIf="parentForm.hasError('mismatch') && (parentForm.get('confirm_password')?.touched || parentForm.get('confirm_password')?.dirty)"
+                        class="text-[11px] text-red-500 font-medium">Las contraseñas no coinciden</span>
+                </div>
+            </div>
+
+            <!-- Terms -->
+            <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+                <div class="relative flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="terms" type="checkbox" formControlName="terminos"
+                            class="h-4 w-4 text-brand-yellow focus:ring-brand-yellow border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="terms" class="font-medium text-gray-700">Acepto los <a
+                                class="text-brand-blue font-bold hover:underline" href="#" target="_blank"
+                                rel="noopener noreferrer">Términos y Condiciones</a> y
+                            la <a class="text-brand-blue font-bold hover:underline" href="#" target="_blank"
+                                rel="noopener noreferrer">Política de
+                                Privacidad</a></label>
+                        <p *ngIf="parentForm.get('terminos')?.invalid && (parentForm.get('terminos')?.dirty || parentForm.get('terminos')?.touched)"
+                            class="text-red-500 text-xs mt-1">Debes aceptar los términos para continuar</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-gray-100">
+                <button (click)="onBack()"
+                    class="text-sm font-semibold text-gray-500 hover:text-brand-blue transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Volver al paso anterior
+                </button>
+                <button (click)="onNext()" [disabled]="isSubmitting"
+                    class="w-full sm:w-auto px-10 py-4 bg-brand-yellow text-brand-blue-dark font-extrabold text-lg rounded-lg shadow-md hover:brightness-95 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span *ngIf="!isSubmitting">Continuar</span>
+                    <span *ngIf="isSubmitting" class="flex items-center gap-2">
+                        <span
+                            class="animate-spin h-5 w-5 border-2 border-brand-blue-dark border-r-transparent rounded-full"></span>
+                        Verificando...
+                    </span>
+                    <span *ngIf="!isSubmitting" class="material-symbols-outlined font-bold">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

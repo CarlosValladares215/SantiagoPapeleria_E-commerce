@@ -1,0 +1,95 @@
+<div class="flex-1 flex flex-col h-full" [formGroup]="parentForm">
+    <!-- Progress Header Removed -->
+
+    <!-- Content -->
+    <div class="p-12 pt-6 flex-1 flex flex-col">
+        <div class="flex items-center gap-2 mb-8 text-brand-blue border-b border-gray-100 pb-2">
+            <span class="material-symbols-outlined filled">store</span>
+            <h4 class="font-bold text-lg">Datos Fiscales de la Empresa</h4>
+        </div>
+
+        <div class="space-y-8 mb-auto" formGroupName="datos_fiscales">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Business Name -->
+                <div class="flex flex-col gap-3">
+                    <label class="text-sm font-semibold text-gray-700">Razón Social / Nombre del Negocio</label>
+                    <input type="text" formControlName="razon_social" autocomplete="off"
+                        (input)="sanitizeNombreNegocio($event)" maxlength="100"
+                        class="w-full h-14 px-5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-blue focus:border-transparent outline-none transition-all text-base"
+                        [class.border-red-500]="parentForm.get('datos_fiscales')?.get('razon_social')?.invalid && (parentForm.get('datos_fiscales')?.get('razon_social')?.dirty || parentForm.get('datos_fiscales')?.get('razon_social')?.touched)"
+                        placeholder="Papelería El Estudiante S.A.">
+                    <span
+                        *ngIf="parentForm.get('datos_fiscales')?.get('razon_social')?.invalid && (parentForm.get('datos_fiscales')?.get('razon_social')?.dirty || parentForm.get('datos_fiscales')?.get('razon_social')?.touched)"
+                        class="text-[11px] text-red-500 font-medium">Razón social requerida</span>
+                </div>
+
+                <!-- RUC -->
+                <div class="flex flex-col gap-3">
+                    <label class="text-sm font-semibold text-gray-700">RUC</label>
+                    <input type="text" formControlName="identificacion" autocomplete="off" (input)="sanitizeRUC($event)"
+                        maxlength="13"
+                        class="w-full h-14 px-5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-blue focus:border-transparent outline-none transition-all text-base"
+                        [class.border-red-500]="parentForm.get('datos_fiscales')?.get('identificacion')?.invalid && (parentForm.get('datos_fiscales')?.get('identificacion')?.dirty || parentForm.get('datos_fiscales')?.get('identificacion')?.touched)"
+                        placeholder="1234567890001">
+                    <div *ngIf="parentForm.get('datos_fiscales')?.get('identificacion')?.invalid && (parentForm.get('datos_fiscales')?.get('identificacion')?.dirty || parentForm.get('datos_fiscales')?.get('identificacion')?.touched)"
+                        class="text-[11px] text-red-500 font-medium flex flex-col">
+                        <span *ngIf="parentForm.get('datos_fiscales')?.get('identificacion')?.hasError('required')">RUC
+                            requerido</span>
+                        <span *ngIf="parentForm.get('datos_fiscales')?.get('identificacion')?.hasError('pattern')">El
+                            RUC debe tener exactamente 13 dígitos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fiscal Address (Dirección Matriz) -->
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-gray-700">Dirección Fiscal (Matriz)</label>
+                <input type="text" formControlName="direccion_matriz" autocomplete="off"
+                    class="w-full h-12 px-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-blue focus:border-transparent outline-none transition-all"
+                    [class.border-red-500]="parentForm.get('datos_fiscales')?.get('direccion_matriz')?.invalid && (parentForm.get('datos_fiscales')?.get('direccion_matriz')?.dirty || parentForm.get('datos_fiscales')?.get('direccion_matriz')?.touched)"
+                    placeholder="Av. Principal 123 y Calle Secundaria">
+                <span class="text-[10px] text-gray-400 italic">Esta es la dirección registrada en el SRI para
+                    facturación</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Fiscal City -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-700">Ciudad (Fiscal)</label>
+                    <input type="text" formControlName="ciudad_fiscal" autocomplete="off"
+                        (input)="sanitizeCiudad($event)" maxlength="50"
+                        class="w-full h-12 px-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-blue focus:border-transparent outline-none transition-all"
+                        placeholder="Loja">
+                </div>
+
+                <!-- Business Phone (Landline format) -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-sm font-semibold text-gray-700">Teléfono del Negocio</label>
+                    <input type="text" formControlName="telefono_negocio" autocomplete="off"
+                        (input)="formatTelefonoNegocio($event)" maxlength="10"
+                        class="w-full h-12 px-4 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-blue focus:border-transparent outline-none transition-all"
+                        placeholder="07-XXX-XXXX">
+                    <span class="text-[10px] text-gray-400 italic">Formato: 07-XXX-XXXX (teléfono fijo)</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-gray-100">
+                <button (click)="onBack()"
+                    class="text-sm font-semibold text-gray-500 hover:text-brand-blue transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Volver a datos personales
+                </button>
+                <button (click)="onNext()" [disabled]="isSubmitting"
+                    class="w-full sm:w-auto px-10 py-4 bg-brand-yellow text-brand-blue-dark font-extrabold text-lg rounded-lg shadow-md hover:brightness-95 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span *ngIf="!isSubmitting">Continuar</span>
+                    <span *ngIf="isSubmitting" class="flex items-center gap-2">
+                        <span
+                            class="animate-spin h-5 w-5 border-2 border-brand-blue-dark border-r-transparent rounded-full"></span>
+                        Cargando...
+                    </span>
+                    <span *ngIf="!isSubmitting" class="material-symbols-outlined font-bold">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -49,10 +49,6 @@ export class AuthService {
     return null;
   }
 
-  register(userData: Usuario): Observable<Usuario> {
-    return this.http.post<Usuario>(this.apiUrl, userData);
-  }
-
   registerNew(userData: {
     name: string;
     email: string;
@@ -72,6 +68,10 @@ export class AuthService {
     return this.http.get<{ verified: boolean; message: string; access_token?: string; user?: any }>(
       `${this.verifyApiUrl}/verify-email?token=${token}`
     );
+  }
+
+  checkEmailAvailability(email: string): Observable<{ exists: boolean }> {
+    return this.http.post<{ exists: boolean }>(`${this.apiUrl}/check-email`, { email });
   }
 
   forgotPassword(email: string): Observable<{ message: string }> {

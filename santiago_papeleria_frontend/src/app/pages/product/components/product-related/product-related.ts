@@ -2,7 +2,7 @@ import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Product } from '../../../../models/product.model';
-import { ProductCard } from '../../../products/components/product-card/product-card';
+import { ProductCard } from '../../../../shared/components/product-card/product-card';
 import { CartService } from '../../../../services/cart/cart.service';
 
 @Component({

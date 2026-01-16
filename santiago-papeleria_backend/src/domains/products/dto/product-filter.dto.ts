@@ -61,11 +61,11 @@ export class ProductFilterDto {
   @IsString()
   // Validamos que el valor de ordenación sea uno de los permitidos
   @IsIn(['name', '-name', 'price', '-price', 'stock', '-stock'])
-  @IsOptional()
-  @IsString()
-  // Validamos que el valor de ordenación sea uno de los permitidos
-  @IsIn(['name', '-name', 'price', '-price', 'stock', '-stock'])
   sortBy?: string; // Mapea a 'sortBy'
+
+  @IsOptional()
+  @IsBooleanString()
+  isOffer?: string; // Filtro para ofertas (promociones o price tiers)
 
   @IsOptional()
   @IsString()

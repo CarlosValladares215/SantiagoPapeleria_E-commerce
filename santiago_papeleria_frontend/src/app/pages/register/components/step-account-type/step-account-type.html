@@ -1,0 +1,100 @@
+<div class="flex-1 flex flex-col h-full" [formGroup]="parentForm">
+    <!-- Progress Header Removed -->
+
+
+    <!-- Main Content -->
+    <div class="p-8 pt-6">
+        <div class="mb-10 text-center">
+            <div
+                class="bg-brand-blue text-brand-yellow w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-2xl">person_add</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-brand-blue-dark mb-2">Crear Cuenta</h1>
+            <p class="text-gray-600 max-w-md mx-auto">Únete a Santiago Papelería y disfruta de todos los beneficios
+                diseñados para ti.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <!-- Retail Card -->
+            <label class="relative block cursor-pointer group">
+                <input type="radio" formControlName="tipo_cliente" value="MINORISTA" class="peer sr-only">
+                <div
+                    class="h-full p-8 rounded-xl border-2 border-gray-100 bg-white transition-all duration-300 peer-checked:border-brand-yellow peer-checked:bg-yellow-50 group-hover:border-brand-yellow/50 flex flex-col items-center text-center">
+                    <div
+                        class="w-14 h-14 bg-brand-blue-dark text-white rounded-lg flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-3xl">person</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-brand-blue mb-2">Cliente Minorista</h4>
+                    <p class="text-sm text-gray-500 mb-6">Compras al por menor con precios PVP</p>
+                    <ul class="text-left space-y-2 mb-8 w-full max-w-[200px]">
+                        <li class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="material-symbols-outlined text-green-500 text-sm">check</span> Precios al
+                            público
+                        </li>
+                        <li class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="material-symbols-outlined text-green-500 text-sm">check</span> Compras desde 1
+                            unidad
+                        </li>
+                        <li class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="material-symbols-outlined text-green-500 text-sm">check</span> Envíos a todo el
+                            país
+                        </li>
+                    </ul>
+                    <div
+                        class="mt-auto w-full py-2 px-4 rounded-lg bg-gray-50 text-gray-400 text-sm font-semibold transition-colors peer-checked:bg-brand-yellow peer-checked:text-brand-blue-dark">
+                        Seleccionar Individual
+                    </div>
+                </div>
+            </label>
+
+            <!-- Wholesale Card -->
+            <label class="relative block cursor-pointer group">
+                <input type="radio" formControlName="tipo_cliente" value="MAYORISTA" class="peer sr-only">
+                <div
+                    class="h-full p-8 rounded-xl border-2 border-gray-100 bg-white transition-all duration-300 peer-checked:border-brand-yellow peer-checked:bg-yellow-50 group-hover:border-brand-yellow/50 flex flex-col items-center text-center">
+                    <div
+                        class="w-14 h-14 bg-brand-blue-dark text-white rounded-lg flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-3xl">corporate_fare</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-brand-blue mb-2">Cliente Mayorista</h4>
+                    <p class="text-sm text-gray-500 mb-6">Compras al por mayor con precios especiales</p>
+                    <ul class="text-left space-y-2 mb-8 w-full max-w-[200px]">
+                        <li class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="material-symbols-outlined text-green-500 text-sm">check</span> Precios
+                            mayoristas
+                        </li>
+                        <li class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="material-symbols-outlined text-green-500 text-sm">check</span> Descuentos por
+                            volumen
+                        </li>
+                        <li class="flex items-center gap-2 text-xs text-gray-600">
+                            <span class="material-symbols-outlined text-green-500 text-sm">check</span> Atención
+                            personalizada
+                        </li>
+                    </ul>
+                    <div
+                        class="mt-auto w-full py-2 px-4 rounded-lg bg-gray-50 text-gray-400 text-sm font-semibold transition-colors peer-checked:bg-brand-yellow peer-checked:text-brand-blue-dark">
+                        Seleccionar Negocio
+                    </div>
+                </div>
+            </label>
+        </div>
+
+        <div class="flex flex-col items-center gap-6 border-t border-gray-100 pt-8">
+            <button (click)="onNext()" [disabled]="isSubmitting"
+                class="w-full max-w-md py-4 bg-brand-yellow text-brand-blue-dark font-extrabold text-lg rounded-xl shadow-md hover:shadow-lg hover:brightness-95 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span *ngIf="!isSubmitting">Continuar</span>
+                <span *ngIf="isSubmitting" class="flex items-center gap-2">
+                    <span
+                        class="animate-spin h-5 w-5 border-2 border-brand-blue-dark border-r-transparent rounded-full"></span>
+                    Cargando...
+                </span>
+                <span *ngIf="!isSubmitting" class="material-symbols-outlined">arrow_forward</span>
+            </button>
+            <p class="text-sm text-gray-500">
+                ¿Ya tienes una cuenta? <a class="font-bold text-brand-blue hover:underline" routerLink="/login">Inicia
+                    sesión aquí</a>
+            </p>
+        </div>
+    </div>
+</div>

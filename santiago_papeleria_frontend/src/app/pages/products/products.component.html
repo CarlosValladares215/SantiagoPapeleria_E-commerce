@@ -21,9 +21,9 @@
             <!-- Main Content -->
             <div class="flex-1">
                 <!-- Header Controls -->
-                <app-products-header [productCount]="productService.products().length" [currentSort]="filters().sortBy"
-                    [showMobileFilters]="showFilters()" (sortChange)="handleFilterChange('sortBy', $event)"
-                    (toggleFilters)="toggleFilters()">
+                <app-products-header [productCount]="productService.paginationMeta().total"
+                    [currentSort]="filters().sortBy" [showMobileFilters]="showFilters()"
+                    (sortChange)="handleFilterChange('sortBy', $event)" (toggleFilters)="toggleFilters()">
                 </app-products-header>
 
                 <!-- Products Grid -->

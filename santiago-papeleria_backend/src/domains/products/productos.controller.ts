@@ -39,14 +39,8 @@ export class ProductosController {
   @Get()
   async findAll(
     @Query() filterDto: ProductFilterDto,
-  ): Promise<ProductResponseDto[]> {
-    const productos = await this.productosService.findAll(filterDto);
-
-    // Transforma los datos filtrados y ordenados al formato DTO para Angular
-    // Usamos excludeExtraneousValues: false para asegurar que class-transformer tenga acceso a todo el objeto fuente
-    return plainToInstance(ProductResponseDto, productos, {
-      excludeExtraneousValues: false,
-    });
+  ): Promise<any> {
+    return this.productosService.findAll(filterDto);
   }
 
   /**
@@ -61,7 +55,7 @@ export class ProductosController {
 
   @Get('structure')
   async getCategoriesStructure(): Promise<any[]> {
-    return this.productosService.getCategoriesStructure();
+    return this.productosService.getCategoriesTree();
   }
 
   @Get('brands')
