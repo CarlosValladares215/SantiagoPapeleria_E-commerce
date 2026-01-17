@@ -1,18 +1,7 @@
 <!-- Header Principal -->
 <header class="header" id="mainHeader">
-  <!-- Top Bar (Coreano Style) -->
-  <div class="header-top-bar">
-    <div class="header-container">
-      <div class="top-bar-content">
-        <span class="top-bar-text"></span>
-        <div class="top-bar-links">
-          <a routerLink="/sucursales"><i class="fas fa-store"></i> Sucursales</a>
-          <a routerLink="/contact"><i class="fas fa-headset"></i> Ayuda</a>
-          <a routerLink="/tracking"><i class="fas fa-map-marker-alt"></i> Seguimiento</a>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Top Bar -->
+  <app-top-bar></app-top-bar>
 
   <!-- Main Header -->
   <div class="bg-white">
@@ -20,6 +9,13 @@
       <div class="header-main">
         <!-- Logo -->
         <div class="header-left">
+          <!-- Hamburger Button (Visible only on mobile) -->
+          <button class="menu-hamburger" (click)="uiService.showMobileMenu()" aria-label="Abrir menú">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </button>
+
           <a routerLink="/" class="logo" aria-label="Santiago Papelería">
             <div class="logo-container">
               <img src="favicon.ico" alt="Santiago Papelería" class="logo-image" loading="eager">
@@ -31,210 +27,24 @@
           </a>
         </div>
 
-        <!-- Búsqueda (Estilo Coreano) -->
-        <div class="header-center">
-          <form class="search-container" (submit)="performSearch()" role="search" autocomplete="off">
-            <div class="search-input-wrapper">
-              <button type="submit" class="search-submit" aria-label="Buscar">
-                <i class="fas fa-search"></i>
-              </button>
-              <input type="search" class="search-input" [(ngModel)]="searchQuery" name="search" placeholder="Buscar..."
-                aria-label="Buscar productos">
-            </div>
-          </form>
-        </div>
+        <!-- Búsqueda -->
+        <app-search-bar></app-search-bar>
 
         <!-- Acciones de Usuario -->
-        <ng-container *ngIf="auth.user(); else guestActions">
-          <div class="logged-user-actions">
-            <!-- Usuario Dropdown Trigger (Avatar + Info) -->
-            <div class="user-dropdown" (mouseleave)="closeProfileMenu()">
-              <button class="user-info-trigger" aria-label="Menú de usuario" (click)="toggleProfileMenu()">
-                <div class="avatar-circle">
-                  {{ getInitials(auth.user()?.nombres || '') }}
-                </div>
-                <div class="user-text-info">
-                  <span class="u-name">
-                    {{ auth.user()?.nombres?.split(' ')?.[0] }} {{ auth.user()?.nombres?.split(' ')?.[1] || '' }}
-                    <i class="fas fa-chevron-down"></i>
-                  </span>
-                  <span class="u-role">{{ auth.user()?.tipo_cliente || 'Minorista' | titlecase }}</span>
-                </div>
-              </button>
-
-              <!-- Card Menu -->
-              <div class="user-card-dropdown" [class.show]="isProfileMenuOpen()">
-                <div class="card-header">
-                  <div class="card-avatar">
-                    {{ getInitials(auth.user()?.nombres || '') }}
-                  </div>
-                  <div class="card-info">
-                    <span class="user-name">{{ auth.user()?.nombres }}</span>
-                    <span class="user-email">{{ auth.user()?.email }}</span>
-                    <span class="user-role-badge">
-                      {{ auth.user()?.tipo_cliente || 'Cliente' }}
-                    </span>
-                  </div>
-                </div>
-                <ul class="card-menu">
-                  <li><a (click)="goToProfile()"><i class="far fa-user"></i> Mi Perfil</a></li>
-                  <li><a routerLink="/orders"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a></li>
-                  <li><a routerLink="/favorites"><i class="far fa-heart"></i> Favoritos</a></li>
-                </ul>
-                <div class="card-footer">
-                  <a (click)="logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
-                </div>
-              </div>
-            </div>
-
-
-
-            <!-- Notificaciones -->
-            <div class="header-dropdown-wrapper relative" (mouseleave)="closeNotifications()">
-              <button class="header-action-btn notification-btn relative" aria-label="Notificaciones"
-                (click)="toggleNotifications()">
-                <div class="relative inline-block">
-                  <i class="far fa-bell text-xl"></i>
-                  <!-- Badge -->
-                  <span *ngIf="notificationsService.unreadCount() > 0"
-                    class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-[16px] h-4 flex items-center justify-center rounded-full border border-white">
-                    {{ notificationsService.unreadCount() }}
-                  </span>
-                </div>
-              </button>
-
-              <!-- Notifications Dropdown -->
-              <div class="notifications-dropdown" [class.show]="isNotificationsOpen()">
-                <div class="noti-header">
-                  <h3 class="text-sm font-bold text-gray-800">Notificaciones</h3>
-                  <button *ngIf="notificationsService.unreadCount() > 0"
-                    class="text-xs text-blue-600 hover:text-blue-800"
-                    (click)="notificationsService.markAllAsRead(auth.user()?._id || '')">
-                    Marcar todo como leído
-                  </button>
-                </div>
-
-                <div class="noti-list max-h-80 overflow-y-auto">
-                  @if (notificationsService.notifications().length === 0) {
-                  <div class="p-4 text-center text-gray-500 text-xs">
-                    No tienes notificaciones
-                  </div>
-                  } @else {
-                  @for (notification of notificationsService.notifications(); track notification._id) {
-                  <div class="noti-item" [class.unread]="!notification.leido"
-                    (click)="notificationsService.markAsRead(notification._id)">
-                    <div class="noti-icon">
-                      <i class="fas fa-box-open text-blue-500"></i>
-                    </div>
-                    <div class="noti-content">
-                      <p class="text-xs text-gray-800 leading-snug">{{ notification.mensaje }}</p>
-                      <span class="text-[10px] text-gray-400 mt-1 block">{{ notification.createdAt | date:'short'
-                        }}</span>
-                    </div>
-                    <div *ngIf="!notification.leido" class="w-2 h-2 bg-blue-500 rounded-full ml-2"></div>
-                  </div>
-                  }
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
-        </ng-container>
-
-        <ng-template #guestActions>
-          <div class="guest-actions">
-            <!-- Botones de Sesión -->
-            <div class="session-buttons">
-              <a routerLink="/login" class="btn-login-header">Iniciar Sesión</a>
-              <a routerLink="/register" class="btn-register-header">Registrarse</a>
-            </div>
-
-
-          </div>
-        </ng-template>
+        <app-user-actions></app-user-actions>
       </div>
     </div>
   </div>
 
-  <!-- Navegación Principal (3 MEGAS) -->
-  <nav class="header-navigation" aria-label="Navegación principal">
-    <div class="header-container">
-      <ul class="nav-list">
-        <li class="nav-item">
-          <a routerLink="/" class="nav-link active">
-            <i class="fas fa-home"></i>
-            <span>INICIO</span>
-          </a>
-        </li>
+  <!-- Navegación -->
+  <app-navigation [groupedCategories]="groupedCategories()" [activeMenu]="megaMenu()" (openMega)="openMega($event)"
+    (closeMega)="scheduleCloseMega()"></app-navigation>
 
-        <!-- Dynamic 5 Super Categories -->
-        <ng-container *ngFor="let group of groupedCategories()">
-          <li class="nav-item mega-parent" (mouseenter)="openMega(group.name)" (mouseleave)="scheduleCloseMega()"
-            (mouseenter)="cancelCloseMega()">
-            <!-- Link to first category or just a placeholder? Better to link to a filter if possible, otherwise just '#' -->
-            <!-- Ideally we'd have a route /category/super-category-name but we don't. 
-                  Let's just not link or link to the first one? Or just products? -->
-            <a [routerLink]="['/products']" class="nav-link" [class.active]="megaMenu() === group.name">
-              <!-- Icons based on name -->
-              <i class="fas" [class.fa-graduation-cap]="group.name.includes('Escolar')"
-                [class.fa-palette]="group.name.includes('Arte')" [class.fa-laptop]="group.name.includes('Tecnología')"
-                [class.fa-home]="group.name.includes('Hogar')" [class.fa-gift]="group.name.includes('Regalos')"></i>
-              <span>{{ group.name | uppercase }}</span>
-              <i class="fas fa-chevron-down arrow ml-1"></i>
-            </a>
-          </li>
-        </ng-container>
+  <!-- Mega Menú -->
+  <app-mega-menu [groupedCategories]="groupedCategories()" [activeMenu]="megaMenu()" (cancelClose)="cancelCloseMega()"
+    (close)="scheduleCloseMega()"></app-mega-menu>
 
-        <li class="nav-item">
-          <a [routerLink]="['/offers']" class="nav-link highlight">
-            <i class="fas fa-tag"></i>
-            <span>OFERTAS</span>
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
+  <!-- Mobile Menu -->
+  <app-mobile-menu [groupedCategories]="groupedCategories()"></app-mobile-menu>
 
-  <!-- MEGA MENÚS DESPLEGABLES DINÁMICOS -->
-  <div class="mega-menu-container" (mouseenter)="cancelCloseMega()" (mouseleave)="scheduleCloseMega()">
-
-    <!-- Dynamic Mega Menus for Groups -->
-    <ng-container *ngFor="let group of groupedCategories()">
-      <div class="mega-menu" [class.active]="megaMenu() === group.name">
-        <div class="mega-content">
-          <!-- Grid columns based on number of sub-categories -->
-          <div class="mega-grid"
-            [style.grid-template-columns]="'repeat(' + (group.categories.length > 4 ? 4 : group.categories.length || 1) + ', 1fr)'">
-
-            <!-- Limit visible subcategories and show 'See All' -->
-            <div *ngFor="let cat of group.categories" class="mega-section">
-              <h3 class="mega-title">
-                <a [routerLink]="['/products']" [queryParams]="{category: cat.nombre}">
-                  {{ cat.nombre }}
-                </a>
-              </h3>
-              <!-- Subcategories (Level 3) -->
-              <ul class="mega-list" *ngIf="cat.hijos?.length">
-                <li *ngFor="let sub of cat.hijos | slice:0:VISIBLE_ITEMS_LIMIT">
-                  <a [routerLink]="['/products']" [queryParams]="{category: sub.nombre}">
-                    {{ sub.nombre }}
-                  </a>
-                </li>
-              </ul>
-              <!-- View All Link if more items exist -->
-              <a *ngIf="(cat.hijos?.length || 0) > VISIBLE_ITEMS_LIMIT" [routerLink]="['/products']"
-                [queryParams]="{category: cat.nombre}" class="view-all-link">
-                Ver todo ({{ cat.hijos?.length }}) <i class="fas fa-arrow-right"></i>
-              </a>
-            </div>
-
-            <div *ngIf="!group.categories.length" class="mega-section">
-              <p class="text-sm text-gray-500">Pronto agregaremos productos aquí.</p>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </ng-container>
-  </div>
 </header>

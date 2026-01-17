@@ -158,8 +158,9 @@ export class ProductService {
       .set('excludeId', currentId) // Backend exclusion
       .set('limit', '3');
 
-    return this.http.get<ProductResponse[]>(this.apiURL, { params }).pipe(
-      map(responses => responses.map(r => this.mapProduct(r)))
+    // Backend returns PaginatedResponse
+    return this.http.get<PaginatedResponse<ProductResponse>>(this.apiURL, { params }).pipe(
+      map(response => response.data.map(r => this.mapProduct(r)))
     );
   }
 
@@ -259,8 +260,8 @@ export class ProductService {
       })),
 
       // Enrichment
-      weight: raw.weight,
-      weight_kg: raw.weight, // Same field
+      weight: (raw as any).weight_kg || (raw as any).peso_kg || raw.weight || 0,
+      weight_kg: (raw as any).weight_kg || (raw as any).peso_kg || raw.weight || 0, // Same field
       dimensions: raw.dimensions,
       allowCustomMessage: raw.allowCustomMessage,
       allows_custom_message: raw.allowCustomMessage, // Alias

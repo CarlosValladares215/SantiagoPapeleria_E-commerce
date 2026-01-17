@@ -1,0 +1,35 @@
+<nav class="header-navigation" aria-label="Navegación principal">
+    <div class="header-container">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a routerLink="/" class="nav-link active">
+                    <i class="fas fa-home"></i>
+                    <span>INICIO</span>
+                </a>
+            </li>
+
+            <!-- Dynamic 5 Super Categories -->
+            <ng-container *ngFor="let group of groupedCategories">
+                <li class="nav-item mega-parent" (mouseenter)="onMouseEnter(group.name)" (mouseleave)="onMouseLeave()">
+                    <a [routerLink]="['/products']" class="nav-link" [class.active]="activeMenu === group.name">
+                        <!-- Icons based on name -->
+                        <i class="fas" [class.fa-graduation-cap]="group.name.includes('Escolar')"
+                            [class.fa-palette]="group.name.includes('Arte')"
+                            [class.fa-laptop]="group.name.includes('Tecnología')"
+                            [class.fa-home]="group.name.includes('Hogar')"
+                            [class.fa-gift]="group.name.includes('Regalos')"></i>
+                        <span>{{ group.name | uppercase }}</span>
+                        <i class="fas fa-chevron-down arrow ml-1"></i>
+                    </a>
+                </li>
+            </ng-container>
+
+            <li class="nav-item">
+                <a [routerLink]="['/offers']" class="nav-link highlight">
+                    <i class="fas fa-tag"></i>
+                    <span>OFERTAS</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>

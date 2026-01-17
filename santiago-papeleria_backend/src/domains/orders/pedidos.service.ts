@@ -9,7 +9,7 @@ import { ContadoresService } from '../../core/counters/contadores.service';
 import { UsuariosService } from '../users/usuarios.service';
 import { EmailService } from '../users/services/email.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { ProductosService } from '../products/productos.service';
+import { StockService } from '../products/inventory/stock.service';
 import { ErpSyncService } from '../erp/sync/erp-sync.service';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class PedidosService {
     private notificationsService: NotificationsService,
     @Inject(forwardRef(() => ErpSyncService))
     private erpSyncService: ErpSyncService,
-    private productosService: ProductosService
+    private stockService: StockService
   ) { }
 
   // Crea un nuevo pedido (usado en el POST)
@@ -56,7 +56,7 @@ export class PedidosService {
     // Esto asegura que el stock baje inmediatamente antes de la sync con ERP
     for (const item of savedPedido.items) {
       if (item.codigo_dobranet) {
-        await this.productosService.updateStock(
+        await this.stockService.updateStock(
           item.codigo_dobranet,
           -item.cantidad,
           `PEDIDO-${savedPedido.numero_pedido_web}`,

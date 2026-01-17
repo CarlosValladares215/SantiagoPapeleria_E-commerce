@@ -120,25 +120,25 @@ export class ErpService implements OnModuleInit {
                 const enriched = this.enrichmentData.products[cod];
 
                 // Description (NOT)
-                baseProduct.NOT = enriched?.NOT || defaults.NOT || '';
+                baseProduct.NOT = enriched?.NOT || '';
 
                 // Photo (FOT)
-                baseProduct.FOT = enriched?.FOT || defaults.FOT || 'placeholder.png';
+                baseProduct.FOT = enriched?.FOT || 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768418936/product-placeholder_hdeydz.png';
 
-                // Brand (MRK) - Try enrichment, then deduce from name, then default
+                // Brand (MRK) - Try enrichment, then deduce from name, then Generic
                 if (enriched?.MRK) {
                     baseProduct.MRK = enriched.MRK;
                 } else {
                     // Simple heuristic: try to find known brands in NOM
                     const foundBrand = Object.keys(this.brandsData.brands).find(b => baseProduct.NOM.includes(b));
-                    baseProduct.MRK = foundBrand || defaults.MRK || 'GENERICO';
+                    baseProduct.MRK = foundBrand || 'GENERICO';
                 }
 
                 // Extras (Internal use if needed)
-                baseProduct.GAL = enriched?.GAL || defaults.GAL || [];
-                baseProduct.PES = enriched?.PES || defaults.PES || 0;
-                baseProduct.DIM = enriched?.DIM || defaults.DIM || {};
-                baseProduct.SPC = enriched?.SPC || defaults.SPC || [];
+                baseProduct.GAL = enriched?.GAL || [];
+                baseProduct.PES = enriched?.PES || 0;
+                baseProduct.DIM = enriched?.DIM || {};
+                baseProduct.SPC = enriched?.SPC || [];
 
                 return baseProduct;
 

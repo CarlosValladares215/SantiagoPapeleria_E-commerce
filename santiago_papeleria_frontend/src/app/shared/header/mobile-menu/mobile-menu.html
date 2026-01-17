@@ -1,0 +1,90 @@
+<div class="mobile-menu-overlay" *ngIf="isOpen()" (click)="close()">
+    <div class="mobile-menu-drawer" (click)="$event.stopPropagation()">
+
+        <!-- Header: User Info / Login -->
+        <div class="menu-header">
+            <ng-container *ngIf="auth.user(); else guestHeader">
+                <div class="user-profile">
+                    <div class="avatar-circle">
+                        {{ getInitials(auth.user()?.nombres || '') }}
+                    </div>
+                    <div class="user-details">
+                        <span class="u-name">{{ auth.user()?.nombres }}</span>
+                        <span class="u-email">{{ auth.user()?.email }}</span>
+                    </div>
+                </div>
+            </ng-container>
+            <ng-template #guestHeader>
+                <div class="guest-header">
+                    <p>Bienvenido a Santiago Papelería</p>
+                    <div class="auth-buttons">
+                        <a routerLink="/login" (click)="close()" class="btn-login">Iniciar Sesión</a>
+                        <a routerLink="/register" (click)="close()" class="btn-register">Registrarse</a>
+                    </div>
+                </div>
+            </ng-template>
+            <button class="close-btn" (click)="close()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="menu-content">
+
+            <!-- Static Links -->
+            <ul class="static-links">
+                <li><a routerLink="/" (click)="close()"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a routerLink="/offers" (click)="close()" class="highlight"><i class="fas fa-tag"></i> Ofertas</a>
+                </li>
+
+                <ng-container *ngIf="auth.user()">
+                    <li><a routerLink="/profile" (click)="close()"><i class="far fa-user"></i> Mi Perfil</a></li>
+                    <li><a routerLink="/orders" (click)="close()"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a>
+                    </li>
+                    <li><a routerLink="/favorites" (click)="close()"><i class="far fa-heart"></i> Favoritos</a></li>
+                </ng-container>
+            </ul>
+
+            <hr class="divider">
+
+            <!-- Categories Accordion -->
+            <div class="categories-accordion">
+                <h3 class="section-title">CATEGORÍAS</h3>
+
+                <div *ngFor="let group of groupedCategories" class="accordion-item">
+                    <button class="accordion-header" (click)="toggleGroup(group.name)"
+                        [class.active]="expandedGroup() === group.name">
+                        <span>{{ group.name | uppercase }}</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </button>
+
+                    <div class="accordion-body" [class.expanded]="expandedGroup() === group.name">
+                        <ul class="sub-categories">
+                            <li *ngFor="let cat of group.categories">
+                                <a [routerLink]="['/products']" [queryParams]="{category: cat.slug || cat.nombre}"
+                                    (click)="close()">
+                                    {{ cat.nombre }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer: Logout / Links -->
+        <div class="menu-footer" *ngIf="auth.user()">
+            <button (click)="logout()" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+
+        <div class="menu-footer-links">
+            <a routerLink="/sucursales" (click)="close()">Sucursales</a>
+            <a routerLink="/contact" (click)="close()">Ayuda</a>
+            <a routerLink="/tracking" (click)="close()">Seguimiento</a>
+        </div>
+
+    </div>
+</div>

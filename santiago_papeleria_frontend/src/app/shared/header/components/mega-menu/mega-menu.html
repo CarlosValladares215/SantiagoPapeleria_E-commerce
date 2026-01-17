@@ -1,0 +1,52 @@
+<div class="mega-menu-container" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
+
+    <!-- Dynamic Mega Menus for Groups -->
+    <ng-container *ngFor="let group of groupedCategories">
+        <div class="mega-menu" [class.active]="activeMenu === group.name">
+            <div class="mega-content">
+                <!-- Grid columns based on number of sub-categories -->
+                <div class="mega-grid"
+                    [style.grid-template-columns]="'repeat(' + (group.categories.length > 4 ? 4 : group.categories.length || 1) + ', 1fr)'">
+
+                    <!-- Limit visible subcategories and show 'See All' -->
+                    <div *ngFor="let cat of group.categories" class="mega-section">
+                        <h3 class="mega-title">
+                            <!-- SLUG BASED NAVIGATION -->
+                            <a [routerLink]="['/products']" [queryParams]="{category: cat.slug || cat.nombre}">
+                                {{ cat.nombre }}
+                            </a>
+                        </h3>
+                        <!-- Subcategories (Level 3) -->
+                        <ul class="mega-list" *ngIf="cat.hijos?.length">
+                            <li *ngFor="let sub of cat.hijos | slice:0:VISIBLE_ITEMS_LIMIT" class="mega-item-wrapper">
+                                <a [routerLink]="['/products']" [queryParams]="{category: sub.slug || sub.nombre}"
+                                    class="mega-item-link">
+                                    {{ sub.nombre }}
+                                </a>
+                                <!-- Level 3 (Sub-subcategories) -->
+                                <ul class="mega-sub-list" *ngIf="sub.hijos?.length">
+                                    <li *ngFor="let child of sub.hijos | slice:0:10">
+                                        <a [routerLink]="['/products']"
+                                            [queryParams]="{category: child.slug || child.nombre}" class="l3-link">
+                                            {{ child.nombre }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <!-- View All Link if more items exist -->
+                        <a *ngIf="(cat.hijos?.length || 0) > VISIBLE_ITEMS_LIMIT" [routerLink]="['/products']"
+                            [queryParams]="{category: cat.slug || cat.nombre}" class="view-all-link">
+                            Ver todo ({{ cat.hijos?.length }}) <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+
+                    <div *ngIf="!group.categories.length" class="mega-section">
+                        <p class="text-sm text-gray-500">Pronto agregaremos productos aquí.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </ng-container>
+</div>

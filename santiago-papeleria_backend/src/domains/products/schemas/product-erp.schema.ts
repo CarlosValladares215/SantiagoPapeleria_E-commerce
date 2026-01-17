@@ -26,6 +26,9 @@ export class ProductERP extends Document {
     @Prop()
     categoria_g3: string;
 
+    @Prop()
+    categoria_linea_cod: string;  // LIN from ERP (e.g., "018" for ESCOLAR)
+
     @Prop({ type: Number, default: 0 })
     precio_pvp: number;
 

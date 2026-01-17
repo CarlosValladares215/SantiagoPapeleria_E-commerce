@@ -1,0 +1,255 @@
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+    display: flex;
+    justify-content: flex-start;
+}
+
+.mobile-menu-drawer {
+    width: 85%;
+    max-width: 320px;
+    height: 100%;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Header */
+.menu-header {
+    padding: 20px;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-circle {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-dark);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.u-name {
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.u-email {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 4px;
+}
+
+.guest-header p {
+    font-size: 0.9rem;
+    color: var(--gray-700);
+    margin-bottom: 12px;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-login,
+.btn-register {
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.btn-login {
+    border: 1px solid var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.btn-register {
+    background: var(--accent-yellow);
+    color: var(--primary-dark);
+}
+
+/* Content */
+.menu-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.static-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.static-links li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    color: var(--gray-700);
+    text-decoration: none;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--gray-50);
+}
+
+.static-links li a i {
+    width: 24px;
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.static-links li a.highlight {
+    color: #d32f2f;
+}
+
+.divider {
+    border: none;
+    border-top: 1px solid var(--gray-200);
+    margin: 20px 0;
+}
+
+/* Accordion */
+.section-title {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+}
+
+.accordion-item {
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.accordion-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    background: transparent;
+    border: none;
+    font-size: 0.9375rem;
+    color: var(--primary-dark);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.accordion-header .arrow {
+    transition: transform 0.3s ease;
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
+.accordion-header.active .arrow {
+    transform: rotate(180deg);
+}
+
+.accordion-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.accordion-body.expanded {
+    max-height: 500px;
+    /* Arbitrary large height */
+}
+
+.sub-categories {
+    list-style: none;
+    padding: 0 0 12px 12px;
+    margin: 0;
+    border-left: 2px solid var(--gray-200);
+    margin-left: 8px;
+}
+
+.sub-categories li a {
+    display: block;
+    padding: 8px 12px;
+    color: var(--gray-600);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+/* Footer */
+.menu-footer {
+    padding: 16px;
+    background: var(--gray-50);
+    border-top: 1px solid var(--gray-200);
+}
+
+.btn-logout {
+    width: 100%;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #ffcdd2;
+    color: #d32f2f;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.menu-footer-links {
+    padding: 16px;
+    display: flex;
+    justify-content: space-around;
+    background: var(--primary-dark);
+}
+
+.menu-footer-links a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.75rem;
+}

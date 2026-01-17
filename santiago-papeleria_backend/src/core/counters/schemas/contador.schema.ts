@@ -9,7 +9,7 @@ export type ContadorDocument = Contadores & Document;
 @Schema()
 export class Contadores {
   // El _id es el nombre del contador, ej: "pedido_web"
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   _id: string;
 
   // El valor actual de la secuencia

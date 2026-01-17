@@ -1,0 +1,132 @@
+/* OPTIMIZED MEGA MENU STYLES */
+.mega-menu-container {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 999;
+}
+
+.mega-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    /* Softer border */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    /* Softer, deeper shadow */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5px);
+    transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+    pointer-events: none;
+    max-height: 75vh;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+.mega-menu.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Layout */
+.mega-content {
+    max-width: 1400px;
+    /* Wider container for modern look */
+    margin: 0 auto;
+    padding: 30px 40px;
+}
+
+.mega-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    /* slightly narrower columns for density */
+    gap: 32px 24px;
+    /* More vertical gap, distinct columns */
+    align-items: start;
+}
+
+/* Level 1 (Top Section Title - largely hidden or used as group header if designed) */
+.mega-section {
+    break-inside: avoid;
+}
+
+/* L2: Column Headers (Parent Categories) */
+.mega-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    /* Bold */
+    color: var(--primary-color, #0f172a);
+    /* Dark Slate/Blue */
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary-blue, #3b82f6);
+    /* Color indicator */
+    display: inline-block;
+}
+
+/* List Container */
+.mega-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mega-item-wrapper {
+    margin-bottom: 6px;
+}
+
+/* L3: List Items (Sub Categories) */
+/* Designed to be distinct from L2 Header */
+.mega-item-link {
+    display: block;
+    color: #475569;
+    /* Slate 600 - softer than black */
+    font-weight: 500;
+    /* Medium weight, readable but not bold */
+    font-size: 0.9rem;
+    text-transform: none;
+    /* Normal case */
+    text-decoration: none;
+    transition: all 0.2s ease;
+    padding: 2px 0;
+}
+
+.mega-item-link:hover {
+    color: var(--primary-blue, #2563eb);
+    transform: translateX(4px);
+    /* Interactive movement */
+}
+
+/* L4: Nested Sub-items (if any) */
+.mega-sub-list {
+    list-style: none;
+    padding-left: 12px;
+    margin-top: 4px;
+    border-left: 2px solid #e2e8f0;
+}
+
+.mega-sub-list li {
+    margin-bottom: 4px;
+}
+
+.l3-link {
+    display: block;
+    color: #64748b;
+    /* Slate 500 */
+    font-size: 0.85rem;
+    text-decoration: none;
+    padding: 2px 0;
+    transition: color 0.15s;
+}
+
+.l3-link:hover {
+    color: var(--primary-dark);
+}

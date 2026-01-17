@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ProductosService } from '../products/productos.service';
+import { EnrichmentService } from '../products/admin/enrichment.service';
 import { PedidosService } from '../orders/pedidos.service';
 import { EmailService } from '../users/services/email.service';
 import { ProductFilterDto } from '../products/dto/product-filter.dto';
@@ -15,7 +15,7 @@ export class ChatbotService {
     private readonly logger = new Logger(ChatbotService.name);
 
     constructor(
-        private productosService: ProductosService,
+        private enrichmentService: EnrichmentService,
         private pedidosService: PedidosService,
         private emailService: EmailService,
     ) { }
@@ -85,7 +85,7 @@ export class ChatbotService {
             if (query.length > 2) {
                 console.log('Chatbot Search Query:', query); // DEBUG
                 const filter: ProductFilterDto = { searchTerm: query, limit: '4' };
-                const results = await this.productosService.getMergedProducts(filter);
+                const results = await this.enrichmentService.getAdminProductList(filter);
                 console.log('Chatbot Search Results:', results?.data?.length); // DEBUG
 
                 if (results && results.data && results.data.length > 0) {

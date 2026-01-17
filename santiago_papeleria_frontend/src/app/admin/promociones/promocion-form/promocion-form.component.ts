@@ -133,11 +133,30 @@ export class PromocionFormComponent implements OnInit {
 
     // === Multi-Select: Products ===
     addProduct(product: any) {
-        if (!this.selectedProducts.find(p => p.codigo_interno === product.codigo_interno)) {
-            this.selectedProducts.push(product);
-            this.syncFiltro();
+        console.log('Attempting to add product:', product);
+
+        // Ensure consistent ID property
+        const code = product.codigo_interno || product.sku || product._id;
+        if (!code) {
+            console.error('Product has no identifier (codigo_interno/sku/_id):', product);
+            return;
         }
-        this.searchControl.setValue('');
+
+        const exists = this.selectedProducts.find(p => {
+            const pCode = p.codigo_interno || p.sku || p._id;
+            return pCode === code;
+        });
+
+        if (!exists) {
+            console.log('Product added.');
+            // Save with consistent code property
+            this.selectedProducts.push({ ...product, codigo_interno: code });
+            this.syncFiltro();
+        } else {
+            console.warn('Product already in list:', code);
+        }
+
+        this.searchControl.setValue('', { emitEvent: false }); // Prevent triggering search again
         this.searchResults = [];
     }
 
@@ -192,15 +211,25 @@ export class PromocionFormComponent implements OnInit {
                 this.categoryStructure = data;
                 // Extract flat list of all group names for selection
                 this.allGroups = [];
-                data.forEach((line: any) => {
-                    if (line.grupos) {
-                        line.grupos.forEach((g: any) => {
-                            if (g.nombre && !this.allGroups.includes(g.nombre)) {
-                                this.allGroups.push(g.nombre);
-                            }
-                        });
-                    }
-                });
+                // API returns { name: 'SuperCat', categories: [ { nombre: 'Cat' } ] }
+                if (Array.isArray(data)) {
+                    data.forEach((line: any) => {
+                        if (line.categories) {
+                            line.categories.forEach((cat: any) => {
+                                if (cat.nombre && !this.allGroups.includes(cat.nombre)) {
+                                    this.allGroups.push(cat.nombre);
+                                }
+                            });
+                        } else if (line.grupos) {
+                            // Legacy fallback
+                            line.grupos.forEach((g: any) => {
+                                if (g.nombre && !this.allGroups.includes(g.nombre)) {
+                                    this.allGroups.push(g.nombre);
+                                }
+                            });
+                        }
+                    });
+                }
                 this.allGroups.sort();
             },
             error: (err: any) => console.error('Error loading categories:', err)

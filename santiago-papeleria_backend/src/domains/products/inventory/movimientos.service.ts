@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { MovimientoStock, MovimientoStockDocument } from './schemas/movimiento-stock.schema';
+import { MovimientoStock, MovimientoStockDocument } from '../schemas/movimiento-stock.schema';
 
+/**
+ * MovimientosService
+ * 
+ * Handles stock movement logging and history.
+ * Extracted to inventory subdomain for proper organization.
+ */
 @Injectable()
 export class MovimientosService {
     constructor(
-        @InjectModel(MovimientoStock.name) private movimientoModel: Model<MovimientoStockDocument>
+        @InjectModel(MovimientoStock.name)
+        private movimientoModel: Model<MovimientoStockDocument>,
     ) { }
 
     async registrarMovimiento(data: {
@@ -19,7 +26,7 @@ export class MovimientosService {
         referencia: string;
         usuario_id?: string;
     }) {
-        // If no change, do not log (except maybe for sales of 0? unlikely)
+        // Skip logging if no actual change
         if (data.stock_anterior === data.stock_nuevo) return;
 
         const movimiento = new this.movimientoModel(data);
@@ -27,7 +34,8 @@ export class MovimientosService {
     }
 
     async getHistorial(sku: string, limit = 20) {
-        return this.movimientoModel.find({ sku })
+        return this.movimientoModel
+            .find({ sku })
             .sort({ fecha: -1 })
             .limit(limit)
             .lean()
@@ -35,10 +43,11 @@ export class MovimientosService {
     }
 
     async getUltimosMovimientos(limit = 20) {
-        return this.movimientoModel.find()
+        return this.movimientoModel
+            .find()
             .sort({ fecha: -1 })
             .limit(limit)
-            .populate('producto_id', 'nombre imagen') // Enrich with product details
+            .populate('producto_id', 'nombre imagen')
             .lean()
             .exec();
     }

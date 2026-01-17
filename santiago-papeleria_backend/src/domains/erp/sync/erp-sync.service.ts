@@ -1,7 +1,7 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CategoryClassifierService } from '../../products/category-classifier.service';
+import { CategoryClassifierService } from '../classification/category-classifier.service';
 import { HttpService } from '@nestjs/axios';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { firstValueFrom } from 'rxjs';
@@ -10,7 +10,7 @@ import { Producto } from '../../products/schemas/producto.schema';
 import { SyncLog } from './schemas/sync-log.schema';
 import { ErpConfig } from './schemas/erp-config.schema';
 import { EmailService } from '../../users/services/email.service';
-import { MovimientosService } from '../../products/movimientos.service';
+import { MovimientosService } from '../../products/inventory/movimientos.service';
 import { Categoria, CategoriaDocument } from '../../products/schemas/categoria.schema';
 
 @Injectable()
@@ -239,6 +239,7 @@ export class ErpSyncService {
                             categoria_g1: product.G1 || '',
                             categoria_g2: product.G2 || '',
                             categoria_g3: product.G3 || '',
+                            categoria_linea_cod: product.LIN || '000',
                             precio_pvp: product.PVP || 0,
                             precio_pvm: product.PVM || 0,
                             stock: newStock,
@@ -290,6 +291,9 @@ export class ErpSyncService {
             if (!existingProduct) {
                 // CREATE new enriched product
                 try {
+                    // Resolve category ObjectIds for robust references
+                    const categoryIds = await this.resolveCategoryIds(erpProduct);
+
                     await this.productoModel.create({
                         codigo_interno: erpProduct.codigo,
                         sku_barras: erpProduct.codigo_barras || 'S/N',
@@ -304,6 +308,11 @@ export class ErpSyncService {
                             grupo: erpProduct.categoria_g2 || 'SIN_GRUPO',
                             marca: erpProduct.marca || 'GENERICO',
                         },
+
+                        // Category ObjectId references (robust)
+                        categoria_linea_id: categoryIds.linea_id,
+                        categoria_grupo_id: categoryIds.grupo_id,
+                        categoria_sub_id: categoryIds.sub_id,
 
                         precios: {
                             pvp: erpProduct.precio_pvp,
@@ -363,10 +372,19 @@ export class ErpSyncService {
                 }
 
                 // UPDATE
+                // Resolve category ObjectIds for robust references during update
+                const categoryIds = await this.resolveCategoryIds(erpProduct);
+
                 const updateDoc = {
                     'nombre': erpProduct.nombre,
                     'descripcion_extendida': erpProduct.descripcion || '',
                     'multimedia.principal': imageUrl,
+
+                    // Category ObjectId references (robust)
+                    'categoria_linea_id': categoryIds.linea_id,
+                    'categoria_grupo_id': categoryIds.grupo_id,
+                    'categoria_sub_id': categoryIds.sub_id,
+
                     'precios.pvp': erpProduct.precio_pvp,
                     'precios.pvm': erpProduct.precio_pvm,
                     'precios.incluye_iva': erpProduct.iva,
@@ -409,6 +427,56 @@ export class ErpSyncService {
         if (cantidad <= 0) return 'agotado';
         if (cantidad <= umbral) return 'bajo';
         return 'normal';
+    }
+
+    /**
+     * Resolves category ObjectIds by matching names from ERP data against categorias collection.
+     * This creates robust references that won't break if category names change slightly.
+     */
+    private async resolveCategoryIds(erpProduct: any): Promise<{
+        linea_id?: Types.ObjectId;
+        grupo_id?: Types.ObjectId;
+        sub_id?: Types.ObjectId;
+    }> {
+        const result: any = {};
+
+        try {
+            // Resolve nivel 1 (linea) - top level category
+            if (erpProduct.categoria_g1) {
+                const cat = await this.categoriaModel.findOne({
+                    nombre: { $regex: `^${this.escapeRegex(erpProduct.categoria_g1)}$`, $options: 'i' },
+                    nivel: 1
+                }).select('_id').lean();
+                if (cat) result.linea_id = cat._id;
+            }
+
+            // Resolve nivel 2 (grupo) - subcategory
+            if (erpProduct.categoria_g2) {
+                const cat = await this.categoriaModel.findOne({
+                    nombre: { $regex: `^${this.escapeRegex(erpProduct.categoria_g2)}$`, $options: 'i' }
+                }).select('_id').lean();
+                if (cat) result.grupo_id = cat._id;
+            }
+
+            // Resolve nivel 3 (sub) if different from grupo
+            if (erpProduct.categoria_g3 && erpProduct.categoria_g3 !== erpProduct.categoria_g2) {
+                const cat = await this.categoriaModel.findOne({
+                    nombre: { $regex: `^${this.escapeRegex(erpProduct.categoria_g3)}$`, $options: 'i' }
+                }).select('_id').lean();
+                if (cat) result.sub_id = cat._id;
+            }
+        } catch (err) {
+            this.logger.warn(`Error resolving category IDs for ${erpProduct.codigo}: ${err.message}`);
+        }
+
+        return result;
+    }
+
+    /**
+     * Escapes special regex characters in a string
+     */
+    private escapeRegex(str: string): string {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
 

@@ -28,6 +28,12 @@ export class UiService {
         }
     }
 
+    // Mobile Menu Actions
+    showMobileMenu() {
+        this.isMobileMenuOpenSubject.next(true);
+        document.body.style.overflow = 'hidden';
+    }
+
     closeMobileMenu() {
         this.isMobileMenuOpenSubject.next(false);
         document.body.style.overflow = '';

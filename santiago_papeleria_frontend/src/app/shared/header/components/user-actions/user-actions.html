@@ -1,0 +1,108 @@
+<div class="user-actions-container">
+    <!-- Acciones de Usuario -->
+    <ng-container *ngIf="auth.user(); else guestActions">
+        <div class="logged-user-actions">
+            <!-- Usuario Dropdown Trigger (Avatar + Info) -->
+            <div class="user-dropdown" (mouseleave)="closeProfileMenu()">
+                <button class="user-info-trigger" aria-label="Menú de usuario" (click)="toggleProfileMenu()">
+                    <div class="avatar-circle">
+                        {{ getInitials(auth.user()?.nombres || '') }}
+                    </div>
+                    <div class="user-text-info">
+                        <span class="u-name">
+                            {{ auth.user()?.nombres?.split(' ')?.[0] }} {{ auth.user()?.nombres?.split(' ')?.[1] || ''
+                            }}
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                        <span class="u-role">{{ auth.user()?.tipo_cliente || 'Minorista' | titlecase }}</span>
+                    </div>
+                </button>
+
+                <!-- Card Menu -->
+                <div class="user-card-dropdown" [class.show]="isProfileMenuOpen()">
+                    <div class="card-header">
+                        <div class="card-avatar">
+                            {{ getInitials(auth.user()?.nombres || '') }}
+                        </div>
+                        <div class="card-info">
+                            <span class="user-name">{{ auth.user()?.nombres }}</span>
+                            <span class="user-email">{{ auth.user()?.email }}</span>
+                            <span class="user-role-badge">
+                                {{ auth.user()?.tipo_cliente || 'Cliente' }}
+                            </span>
+                        </div>
+                    </div>
+                    <ul class="card-menu">
+                        <li><a (click)="goToProfile()"><i class="far fa-user"></i> Mi Perfil</a></li>
+                        <li><a routerLink="/orders"><i class="fas fa-shopping-bag"></i> Mis Pedidos</a></li>
+                        <li><a routerLink="/favorites"><i class="far fa-heart"></i> Favoritos</a></li>
+                    </ul>
+                    <div class="card-footer">
+                        <a (click)="logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notificaciones -->
+            <div class="header-dropdown-wrapper relative" (mouseleave)="closeNotifications()">
+                <button class="header-action-btn notification-btn relative" aria-label="Notificaciones"
+                    (click)="toggleNotifications()">
+                    <div class="relative inline-block">
+                        <i class="far fa-bell text-xl"></i>
+                        <!-- Badge -->
+                        <span *ngIf="notificationsService.unreadCount() > 0"
+                            class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] min-w-[16px] h-4 flex items-center justify-center rounded-full border border-white">
+                            {{ notificationsService.unreadCount() }}
+                        </span>
+                    </div>
+                </button>
+
+                <!-- Notifications Dropdown -->
+                <div class="notifications-dropdown" [class.show]="isNotificationsOpen()">
+                    <div class="noti-header">
+                        <h3 class="text-sm font-bold text-gray-800">Notificaciones</h3>
+                        <button *ngIf="notificationsService.unreadCount() > 0"
+                            class="text-xs text-blue-600 hover:text-blue-800"
+                            (click)="notificationsService.markAllAsRead(auth.user()?._id || '')">
+                            Marcar todo como leído
+                        </button>
+                    </div>
+
+                    <div class="noti-list max-h-80 overflow-y-auto">
+                        @if (notificationsService.notifications().length === 0) {
+                        <div class="p-4 text-center text-gray-500 text-xs">
+                            No tienes notificaciones
+                        </div>
+                        } @else {
+                        @for (notification of notificationsService.notifications(); track notification._id) {
+                        <div class="noti-item" [class.unread]="!notification.leido"
+                            (click)="notificationsService.markAsRead(notification._id)">
+                            <div class="noti-icon">
+                                <i class="fas fa-box-open text-blue-500"></i>
+                            </div>
+                            <div class="noti-content">
+                                <p class="text-xs text-gray-800 leading-snug">{{ notification.mensaje }}</p>
+                                <span class="text-[10px] text-gray-400 mt-1 block">{{ notification.createdAt |
+                                    date:'short'
+                                    }}</span>
+                            </div>
+                            <div *ngIf="!notification.leido" class="w-2 h-2 bg-blue-500 rounded-full ml-2"></div>
+                        </div>
+                        }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+
+    <ng-template #guestActions>
+        <div class="guest-actions">
+            <!-- Botones de Sesión -->
+            <div class="session-buttons">
+                <a routerLink="/login" class="btn-login-header">Iniciar Sesión</a>
+                <a routerLink="/register" class="btn-register-header">Registrarse</a>
+            </div>
+        </div>
+    </ng-template>
+</div>

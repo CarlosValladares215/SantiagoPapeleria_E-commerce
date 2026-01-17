@@ -11,13 +11,15 @@ import { ErpConfig, ErpConfigSchema } from './schemas/erp-config.schema';
 import { Categoria, CategoriaSchema } from '../../products/schemas/categoria.schema';
 import { ProductosModule } from '../../products/productos.module';
 import { UsuariosModule } from '../../users/usuarios.module';
+import { ClassificationModule } from '../classification';
 
 @Module({
   imports: [
     HttpModule,
     ScheduleModule.forRoot(),
     forwardRef(() => ProductosModule),
-    forwardRef(() => UsuariosModule), // Para EmailService en notificaciones de sincronización
+    forwardRef(() => UsuariosModule),
+    ClassificationModule,
     MongooseModule.forFeature([
       { name: ProductERP.name, schema: ProductERPSchema },
       { name: Producto.name, schema: ProductoSchema },

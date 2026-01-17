@@ -1,4 +1,4 @@
-// src/productos/schemas/producto.schema.ts (CORREGIDO)
+// src/productos/schemas/producto.schema.ts
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
@@ -64,10 +64,10 @@ export class Stock {
   bodegas: Bodega[];
 
   @Prop({ enum: ['normal', 'bajo', 'agotado'], default: 'normal' })
-  estado_stock: string; // HU78: Estado calculado automáticamente en sincronización
+  estado_stock: string;
 
   @Prop({ default: 5 })
-  umbral_stock_alerta: number; // HU78: Umbral para marcar como "bajo"
+  umbral_stock_alerta: number;
 }
 
 // 5. Multimedia
@@ -80,7 +80,7 @@ export class Multimedia {
   galeria: string[];
 }
 
-// 6. Auditoria (Historial de Cambios)
+// 6. Auditoria
 @Schema()
 export class AuditoriaItem {
   @Prop({ default: Date.now })
@@ -124,7 +124,7 @@ export class PriceTier {
   badge: string;
 }
 
-// 8. Nuevos Schemas para Enriquecimiento
+// 8. Dimensiones
 @Schema()
 export class Dimensiones {
   @Prop({ default: 0 })
@@ -137,14 +137,11 @@ export class Dimensiones {
   alto: number;
 }
 
-// NOTA: Las clases GrupoVariante y Variante fueron eliminadas porque no se usaban
-// y causaban errores de índice duplicado en MongoDB (variantes.sku_1)
-
-// 7. Promocion Activa (Denormalized)
+// 9. Promocion Activa (Denormalized for Fast Query Access)
 @Schema()
 export class PromocionActiva {
   @Prop({ type: Types.ObjectId, ref: 'Promocion' })
-  promocion_id: Types.ObjectId;
+  promocion_id?: Types.ObjectId;
 
   @Prop()
   precio_original: number;
@@ -152,7 +149,7 @@ export class PromocionActiva {
   @Prop()
   precio_descuento: number;
 
-  @Prop()
+  @Prop({ enum: ['porcentaje', 'precio_fijo', 'featured', '2x1', 'regalo'], default: 'porcentaje' })
   tipo_descuento: string;
 
   @Prop()
@@ -161,11 +158,20 @@ export class PromocionActiva {
   @Prop()
   calculado_at: Date;
 
-  @Prop()
-  fecha_fin: Date; // Added for countdown timer
+  // Fecha de inicio de la promoción (para promociones programadas)
+  @Prop({ type: Date })
+  fecha_inicio: Date;
+
+  // Fecha de fin de la promoción
+  @Prop({ type: Date })
+  fecha_fin: Date;
+
+  // Flag para desactivar promoción manualmente sin eliminarla
+  @Prop({ default: true })
+  activa: boolean;
 }
 
-// 8. Review Schema
+// 10. Review Schema
 @Schema()
 export class ProductReview {
   @Prop({ required: true })
@@ -202,7 +208,7 @@ export class Producto {
   @Prop({ type: [String] })
   palabras_clave: string[];
 
-  @Prop({ type: Clasificacion }) // Mongoose ahora sabe que Clasificacion es un sub-esquema
+  @Prop({ type: Clasificacion })
   clasificacion: Clasificacion;
 
   @Prop({ type: Precios })
@@ -220,7 +226,7 @@ export class Producto {
   @Prop({ type: [PriceTier] })
   priceTiers: PriceTier[];
 
-  // --- NUEVOS CAMPOS DE ENRIQUECIMIENTO ---
+  // --- CAMPOS DE ENRIQUECIMIENTO ---
 
   @Prop({ type: [{ key: String, value: String }], default: [] })
   attributes: { key: string; value: string }[];
@@ -233,10 +239,6 @@ export class Producto {
 
   @Prop({ default: false })
   permite_mensaje_personalizado: boolean;
-
-
-  // NOTA: tiene_variantes, grupos_variantes y variantes fueron eliminados
-
 
   @Prop()
   descripcion_extendida: string;
@@ -254,13 +256,23 @@ export class Producto {
   es_publico: boolean;
 
   @Prop()
-  nombre_web: string; // Título H1 optimizado
+  nombre_web: string;
 
   @Prop({ type: PromocionActiva })
   promocion_activa: PromocionActiva;
 
   @Prop({ type: [ProductReview], default: [] })
   reviews: ProductReview[];
+
+  // --- CATEGORY REFERENCES (Resolved during sync) ---
+  @Prop({ type: Types.ObjectId, ref: 'Categoria' })
+  categoria_linea_id: Types.ObjectId;  // Reference to nivel 1 category (linea)
+
+  @Prop({ type: Types.ObjectId, ref: 'Categoria' })
+  categoria_grupo_id: Types.ObjectId;  // Reference to nivel 2 category (grupo)
+
+  @Prop({ type: Types.ObjectId, ref: 'Categoria' })
+  categoria_sub_id: Types.ObjectId;    // Reference to nivel 3 category (optional)
 }
 
 export const ProductoSchema = SchemaFactory.createForClass(Producto);
