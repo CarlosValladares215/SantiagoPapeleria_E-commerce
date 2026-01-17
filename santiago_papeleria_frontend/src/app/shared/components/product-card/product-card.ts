@@ -1,4 +1,6 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, computed, ChangeDetectionStrategy, signal } from '@angular/core';
+import { TimeService } from '../../../services/time/time.service';
+import { FavoritesService } from '../../../services/favorites/favorites.service';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Product } from '../../../models/product.model';
@@ -10,94 +12,78 @@ import { AuthService } from '../../../services/auth/auth.service';
     standalone: true,
     imports: [CommonModule, DisplayPricePipe],
     templateUrl: './product-card.html',
-    styleUrls: ['./product-card.scss']
+    styleUrls: ['./product-card.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductCard implements OnInit, OnDestroy {
-    @Input() product!: Product;
+export class ProductCard {
+    // Private signal to track product changes reactively
+    private _product = signal<Product | undefined>(undefined);
+
+    @Input({ required: true })
+    set product(val: Product) {
+        this._product.set(val);
+    }
+    get product(): Product {
+        return this._product() as Product;
+    }
 
     @Output() viewDetails = new EventEmitter<string>();
     @Output() addToCart = new EventEmitter<Product>();
     @Output() favoriteToggled = new EventEmitter<boolean>();
 
     private authService = inject(AuthService);
-    private cdr = inject(ChangeDetectorRef);
     private router = inject(Router);
 
-    isFavorite = false;
-    countdownDisplay: string | null = null;
-    private countdownInterval: any;
+    // Injected Services
+    private timeService = inject(TimeService);
+    private favoritesService = inject(FavoritesService);
 
-    ngOnInit(): void {
-        this.loadFavoriteStatus();
-        this.startCountdown();
-    }
+    // Computed: Is this product a favorite?
+    // Dependencies: favorites signal AND _product signal
+    isFavorite = computed(() => {
+        const p = this._product();
+        if (!p) return false;
+        return this.favoritesService.favorites().has(p._id);
+    });
 
-    ngOnDestroy(): void {
-        if (this.countdownInterval) {
-            clearInterval(this.countdownInterval);
+    // Computed: Countdown string
+    // Dependencies: now() signal AND _product signal
+    countdownDisplay = computed(() => {
+        const p = this._product();
+        if (!p) return null;
+
+        const endDateIso = p.promocion_activa?.fecha_fin;
+        if (!endDateIso) return null;
+
+        const now = this.timeService.now();
+        const end = new Date(endDateIso).getTime();
+        const diff = end - now;
+
+        if (diff <= 0) return null;
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        const pad = (n: number) => n.toString().padStart(2, '0');
+
+        if (days > 0) {
+            return `${days}d ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
         }
-    }
-
-    private loadFavoriteStatus(): void {
-        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-        this.isFavorite = favorites.includes(this.product._id);
-    }
+        return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    });
 
     toggleFavorite(event: Event): void {
         event.stopPropagation();
 
-        // Check if user is logged in
         if (!this.authService.isAuthenticated()) {
             this.router.navigate(['/login']);
             return;
         }
 
-        const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-
-        if (this.isFavorite) {
-            const index = favorites.indexOf(this.product._id);
-            if (index > -1) favorites.splice(index, 1);
-        } else {
-            favorites.push(this.product._id);
-        }
-
-        localStorage.setItem('favorites', JSON.stringify(favorites));
-        this.isFavorite = !this.isFavorite;
-        this.favoriteToggled.emit(this.isFavorite);
-    }
-
-    private startCountdown(): void {
-        if (!this.product.promocion_activa?.fecha_fin) return;
-
-        const updateCountdown = () => {
-            const endDate = new Date(this.product.promocion_activa!.fecha_fin!);
-            const now = new Date();
-            const diff = endDate.getTime() - now.getTime();
-
-            if (diff <= 0) {
-                this.countdownDisplay = null;
-                if (this.countdownInterval) {
-                    clearInterval(this.countdownInterval);
-                }
-                this.cdr.markForCheck();
-                return;
-            }
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            if (days > 0) {
-                this.countdownDisplay = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            } else {
-                this.countdownDisplay = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-            this.cdr.markForCheck();
-        };
-
-        updateCountdown();
-        this.countdownInterval = setInterval(updateCountdown, 1000);
+        const isNowFavorite = this.favoritesService.toggleFavorite(this.product._id);
+        this.favoriteToggled.emit(isNowFavorite); // Still emitting if parent needs to know
     }
 
     onViewDetails(): void {

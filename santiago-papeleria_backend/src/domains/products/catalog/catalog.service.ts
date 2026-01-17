@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Producto, ProductoDocument } from '../schemas/producto.schema';
 import { ProductERP, ProductERPDocument } from '../schemas/product-erp.schema';
+import { Categoria, CategoriaDocument } from '../schemas/categoria.schema';
 import { ProductMergerService } from '../shared/product-merger.service';
 import { ResolvedProduct, PaginatedResponse } from '../shared/interfaces';
 import { ProductFilterDto } from './dto/product-filter.dto';
@@ -18,7 +19,7 @@ import { ProductFilterDto } from './dto/product-filter.dto';
  */
 @Injectable()
 export class CatalogService {
-    private readonly logger = new Logger(CatalogService.name);
+
 
     // Featured SKUs for homepage priority (business requirement)
     private readonly featuredSkus = [
@@ -29,6 +30,7 @@ export class CatalogService {
     constructor(
         @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,
         @InjectModel(ProductERP.name) private productErpModel: Model<ProductERPDocument>,
+        @InjectModel(Categoria.name) private categoriaModel: Model<CategoriaDocument>,
         private readonly mergerService: ProductMergerService,
     ) { }
 
@@ -38,92 +40,162 @@ export class CatalogService {
      */
     async findProducts(filterDto: ProductFilterDto): Promise<PaginatedResponse<any>> {
         const { page = 1, limit = 12 } = filterDto;
-        let visibleSkus: string[] = [];
+        const skip = (Number(page) - 1) * Number(limit);
 
-        // --- A. Pre-filter by enriched data (IDs, offers) ---
-        const enrichedQuery: any = { es_publico: true };
-        let preFilteredByEnriched = false;
+        // 1. Build Query for 'Producto' Collection
+        const query: any = { es_publico: true };
 
-        // Filter by specific IDs (favorites feature)
-        if (filterDto.ids && filterDto.ids.length > 0) {
-            const objectIds = filterDto.ids.filter(id => Types.ObjectId.isValid(id));
-            enrichedQuery._id = { $in: objectIds };
-            preFilteredByEnriched = true;
+        // Search Term (Name, SKU, Slug)
+        if (filterDto.searchTerm) {
+            const regex = { $regex: filterDto.searchTerm, $options: 'i' };
+            query.$or = [
+                { nombre: regex },
+                { 'clasificacion.marca': regex },
+                { 'clasificacion.grupo': regex },
+                { codigo_interno: regex },
+                { slug: regex }
+            ];
         }
 
-        // Filter by offers (active promotions with date validation)
+        // Specific IDs (Favorites)
+        if (filterDto.ids && filterDto.ids.length > 0) {
+            const validIds = filterDto.ids.filter(id => Types.ObjectId.isValid(id));
+            if (validIds.length > 0) {
+                query._id = { $in: validIds };
+            }
+        }
+
+        // Category (Regex on embedded fields or ID)
+        if (filterDto.category) {
+            const isId = Types.ObjectId.isValid(filterDto.category);
+
+            if (isId) {
+                // Exact Match via Reference IDs (Level 1, 2, or 3)
+                query.$or = [
+                    { categoria_linea_id: new Types.ObjectId(filterDto.category) },
+                    { categoria_grupo_id: new Types.ObjectId(filterDto.category) },
+                    { categoria_sub_id: new Types.ObjectId(filterDto.category) }
+                ];
+            } else {
+                // Try to Resolve Slug/Name to ID first
+                const categoryDoc = await this.categoriaModel
+                    .findOne({
+                        $or: [
+                            { slug: filterDto.category },
+                            { nombre: { $regex: new RegExp(`^${filterDto.category}$`, 'i') } }
+                        ]
+                    })
+                    .select('_id')
+                    .lean()
+                    .exec();
+
+                if (categoryDoc) {
+                    // It is a valid Category, use its ID for strict filtering
+                    query.$or = [
+                        { categoria_linea_id: categoryDoc._id },
+                        { categoria_grupo_id: categoryDoc._id },
+                        { categoria_sub_id: categoryDoc._id }
+                    ];
+                } else {
+                    // Fallback to fuzzy Match via Names for pure text search (legacy)
+                    const catRegex = { $regex: filterDto.category, $options: 'i' };
+                    query.$or = [
+                        { 'clasificacion.grupo': catRegex },
+                        { 'clasificacion.linea': catRegex },
+                        { 'clasificacion.marca': catRegex }
+                    ];
+                }
+            }
+        }
+
+        // Brand
+        if (filterDto.brand) {
+            query['clasificacion.marca'] = { $regex: filterDto.brand, $options: 'i' };
+        }
+
+        // Price Range
+        if (filterDto.minPrice || filterDto.maxPrice) {
+            query['precios.pvp'] = {};
+            if (filterDto.minPrice) query['precios.pvp'].$gte = Number(filterDto.minPrice);
+            if (filterDto.maxPrice) query['precios.pvp'].$lte = Number(filterDto.maxPrice);
+        }
+
+        // Stock Status
+        if (filterDto.inStock === 'true') {
+            query['stock.total_disponible'] = { $gt: 0 };
+        }
+
+        // Offers Only
         if (String(filterDto.isOffer) === 'true') {
             const now = new Date();
-            // Build offer-specific query with date validation
-            enrichedQuery.$and = [
-                { es_publico: true },
-                { promocion_activa: { $exists: true, $ne: null } },
-                // Promotion must be active (or field not set = default true)
-                { 'promocion_activa.activa': { $ne: false } },
-                // fecha_inicio must be <= now (or not set)
-                {
-                    $or: [
-                        { 'promocion_activa.fecha_inicio': { $exists: false } },
-                        { 'promocion_activa.fecha_inicio': null },
-                        { 'promocion_activa.fecha_inicio': { $lte: now } },
-                    ],
-                },
-                // fecha_fin must be > now (or not set)
-                {
-                    $or: [
-                        { 'promocion_activa.fecha_fin': { $exists: false } },
-                        { 'promocion_activa.fecha_fin': null },
-                        { 'promocion_activa.fecha_fin': { $gt: now } },
-                    ],
-                },
-            ];
-            delete enrichedQuery.es_publico; // Already in $and clause
-            preFilteredByEnriched = true;
+            query.promocion_activa = { $exists: true, $ne: null };
+            query['promocion_activa.activa'] = { $ne: false };
+            query['promocion_activa.fecha_fin'] = { $gt: now }; // Simple active check
         }
 
-        if (preFilteredByEnriched) {
-            const matchingDocs = await this.productoModel
-                .find(enrichedQuery)
-                .select('codigo_interno')
-                .lean()
-                .exec();
-            visibleSkus = matchingDocs.map(d => d.codigo_interno);
-
-            if (visibleSkus.length === 0) {
-                return this.emptyPaginatedResponse(Number(page), Number(limit));
-            }
-        } else {
-            // Fetch all public SKUs for visibility filtering
-            const visibleEnrichedDocs = await this.productoModel
-                .find({ es_publico: true })
-                .select('codigo_interno')
-                .lean()
-                .exec();
-            visibleSkus = visibleEnrichedDocs.map(d => d.codigo_interno);
+        // Exclude ID (Related products)
+        if (filterDto.excludeId) {
+            query.codigo_interno = { $ne: filterDto.excludeId };
         }
 
-        // --- B. Build ERP query ---
-        const erpQuery = this.buildErpQuery(filterDto, visibleSkus);
+        // 2. Build Sort Options
+        const sortOptions: any = {};
+        const sortParam = filterDto.sortBy || 'name';
 
-        // --- C. Pagination & Sorting ---
-        const skip = (Number(page) - 1) * Number(limit);
-        const sortOptions = this.buildSortOptions(filterDto.sortBy);
+        switch (sortParam) {
+            case 'price': sortOptions['precios.pvp'] = 1; break;
+            case '-price': sortOptions['precios.pvp'] = -1; break;
+            case 'stock': sortOptions['stock.total_disponible'] = -1; break;
+            case '-stock': sortOptions['stock.total_disponible'] = 1; break;
+            case '-name': sortOptions['nombre'] = -1; break;
+            case 'name':
+            default:
+                sortOptions['nombre'] = 1;
+                // Add secondary sort for stability
+                sortOptions['_id'] = 1;
+                break;
+        }
 
-        // --- D. Execute query with featured products priority ---
-        const total = await this.productErpModel.countDocuments(erpQuery);
-        const erpProducts = await this.fetchWithFeaturedPriority(
-            erpQuery,
-            sortOptions,
-            skip,
-            Number(limit),
-            filterDto.sortBy,
-        );
+        // 3. Execution (Parallel Count & Fetch)
+        const [total, docs] = await Promise.all([
+            this.productoModel.countDocuments(query),
+            this.productoModel.find(query)
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(Number(limit))
+                .lean()
+                .exec()
+        ]);
 
-        // --- E. Merge with enriched data ---
-        const mergedProducts = await this.mergeWithEnrichedData(erpProducts);
-
-        // --- F. Map to public response ---
-        const mappedData = mergedProducts.map(p => this.mergerService.toPublicResponse(p));
+        // 4. Transform to Public Response
+        // We simulate a ResolvedProduct because we are now trusting 'Producto' as the single source
+        const mappedData = docs.map((doc: any) => {
+            // Adapt 'Producto' doc to 'ResolvedProduct' interface expected by public mapper
+            const resolved: ResolvedProduct = {
+                sku: doc.codigo_interno,
+                erpName: doc.nombre,
+                webName: doc.nombre_web || doc.nombre,
+                brand: doc.clasificacion?.marca || 'Genérico',
+                category: doc.clasificacion?.grupo || 'General',
+                price: doc.precios?.pvp || 0,
+                wholesalePrice: doc.precios?.pvm || 0,
+                stock: doc.stock?.total_disponible || 0,
+                isVisible: doc.es_publico,
+                enrichmentStatus: doc.enrichment_status || 'complete',
+                description: doc.descripcion_extendida || doc.nombre,
+                // Resolve images locally since we have the full object
+                images: doc.multimedia?.principal
+                    ? [doc.multimedia.principal, ...(doc.multimedia.galeria || [])]
+                    : [],
+                weight_kg: doc.peso_kg || 0,
+                dimensions: doc.dimensiones,
+                allows_custom_message: doc.permite_mensaje_personalizado,
+                attributes: doc.attributes || [],
+                _enrichedData: doc,
+                _erpData: null // Not available in this optimized query, but not needed for public read
+            };
+            return this.mergerService.toPublicResponse(resolved);
+        });
 
         return {
             data: mappedData,
@@ -197,214 +269,6 @@ export class CatalogService {
         return offerDocs.map(d => d.codigo_interno);
     }
 
-    // --- Private helpers ---
 
-    private buildErpQuery(filterDto: ProductFilterDto, visibleSkus: string[]): any {
-        const erpQuery: any = {
-            codigo: { $in: visibleSkus },
-            activo: true,
-        };
-
-        if (filterDto.excludeId) {
-            erpQuery.codigo.$ne = filterDto.excludeId;
-        }
-
-        if (filterDto.category) {
-            // HYBRID FILTERING:
-            // 1. Try to find products that have this category ID (from enriched data)
-            // 2. Fallback to string matching in ERP data if no enriched match found
-
-            // We already have visibleSkus which are pre-filtered by 'es_publico'.
-            // Now we want to further filter visibleSkus by category using the robust ObjectId ref.
-
-            // This requires a separate query to get SKUs that match both visibility AND category
-            // We can't do this purely inside 'visibleSkus' logic above because categories service logic is separate.
-            // But we can refine the erpQuery here.
-
-            const catRegex = { $regex: filterDto.category, $options: 'i' };
-
-            // Ideally validation should happen via ID lookup, but since we receive a name or ID string:
-            // Let's stick to the fallback string match for now as the primary mechanism for ERP collection,
-            // UNLESS we want to cross-reference the enriched collection's category IDs.
-
-            // Strategy: Filter by string in ERP (legacy) OR join with Enriched data.
-            // Since erpQuery only queries ProductERP collection, we can only query fields present there.
-            // ProductERP now has 'categoria_linea_cod' but not the ObjectIds (those are in Producto).
-
-            // WAIT - The Plan says "Filter productos by categoria_grupo_id".
-            // If we filter 'Producto' collection, we get a list of SKUs.
-            // We should use that list to restrict 'erpQuery.codigo'.
-
-            // However, 'visibleSkus' is already passed in. 
-            // If we want to strictly use ObjectIds, we should have filtered 'visibleSkus' 
-            // in the step A (Pre-filter) inside findProducts.
-
-            // Given the current structure where we build 'erpQuery' AFTER getting 'visibleSkus':
-            // We will stick to the string regex on ERP fields for now to ensure we don't return empty results 
-            // until the backfill is complete and reliable.
-            // BUT we should add the new 'categoria_linea_cod' to the OR clause if it helps (though we receive a name usually).
-
-            erpQuery.$or = [
-                { categoria_g1: catRegex },
-                { categoria_g2: catRegex },
-                { categoria_g3: catRegex },
-                // If the user passed a code, it might match here too
-                { categoria_linea_cod: filterDto.category }
-            ];
-        }
-
-        if (filterDto.brand) {
-            erpQuery.marca = filterDto.brand;
-        }
-
-        if (filterDto.searchTerm) {
-            const searchFilter = {
-                $or: [
-                    { nombre: { $regex: filterDto.searchTerm, $options: 'i' } },
-                    { codigo: { $regex: filterDto.searchTerm, $options: 'i' } },
-                ],
-            };
-
-            if (erpQuery.$or) {
-                erpQuery.$and = [{ $or: erpQuery.$or }, searchFilter];
-                delete erpQuery.$or;
-            } else {
-                erpQuery.$or = searchFilter.$or;
-            }
-        }
-
-        if (filterDto.minPrice || filterDto.maxPrice) {
-            erpQuery.precio_pvp = {};
-            if (filterDto.minPrice) erpQuery.precio_pvp.$gte = Number(filterDto.minPrice);
-            if (filterDto.maxPrice) erpQuery.precio_pvp.$lte = Number(filterDto.maxPrice);
-        }
-
-        if (filterDto.inStock === 'true') {
-            erpQuery.stock = { $gt: 0 };
-        }
-
-        return erpQuery;
-    }
-
-    private buildSortOptions(sortBy?: string): any {
-        const sort = sortBy || 'name';
-        const sortOptions: any = {};
-
-        switch (sort) {
-            case 'price':
-                sortOptions.precio_pvp = 1;
-                break;
-            case '-price':
-                sortOptions.precio_pvp = -1;
-                break;
-            case 'stock':
-                sortOptions.stock = -1;
-                break;
-            case '-stock':
-                sortOptions.stock = 1;
-                break;
-            case '-name':
-                sortOptions.nombre = -1;
-                break;
-            case 'name':
-            default:
-                sortOptions.imagen = -1;
-                sortOptions.nombre = 1;
-                break;
-        }
-
-        return sortOptions;
-    }
-
-    private async fetchWithFeaturedPriority(
-        erpQuery: any,
-        sortOptions: any,
-        skip: number,
-        limit: number,
-        sortBy?: string,
-    ): Promise<any[]> {
-        // Only apply featured priority for default sort
-        if (sortBy && sortBy !== 'name') {
-            return this.productErpModel
-                .find(erpQuery)
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(limit)
-                .lean()
-                .exec();
-        }
-
-        const productsToReturn: any[] = [];
-
-        // Fetch featured products if within current page range
-        let featuredSlice: string[] = [];
-        if (skip < this.featuredSkus.length) {
-            featuredSlice = this.featuredSkus.slice(skip, skip + limit);
-        }
-
-        if (featuredSlice.length > 0) {
-            const featuredDocs = await this.productErpModel
-                .find({
-                    $and: [
-                        erpQuery,
-                        { codigo: { $in: featuredSlice } }
-                    ]
-                })
-                .lean()
-                .exec();
-
-            // Maintain featured order
-            featuredSlice.forEach(sku => {
-                const doc = featuredDocs.find(d => d.codigo === sku);
-                if (doc) productsToReturn.push(doc);
-            });
-        }
-
-        // Fetch remaining products
-        if (productsToReturn.length < limit) {
-            const remaining = limit - productsToReturn.length;
-            const restSkip = Math.max(0, skip - this.featuredSkus.length);
-
-            const restDocs = await this.productErpModel
-                .find({
-                    $and: [
-                        erpQuery,
-                        { codigo: { $nin: this.featuredSkus } }
-                    ]
-                })
-                .sort(sortOptions)
-                .skip(restSkip)
-                .limit(remaining)
-                .lean()
-                .exec();
-
-            productsToReturn.push(...restDocs);
-        }
-
-        return productsToReturn;
-    }
-
-    private async mergeWithEnrichedData(erpProducts: any[]): Promise<ResolvedProduct[]> {
-        const skus = erpProducts.map(p => p.codigo);
-        const enrichedDocs = await this.productoModel
-            .find({ codigo_interno: { $in: skus } })
-            .lean()
-            .exec();
-
-        const enrichmentMap = new Map(
-            enrichedDocs.map(doc => [doc.codigo_interno, doc]),
-        );
-
-        return erpProducts.map(erpItem => {
-            const enrichedItem = enrichmentMap.get(erpItem.codigo);
-            return this.mergerService.merge(erpItem, enrichedItem);
-        });
-    }
-
-    private emptyPaginatedResponse(page: number, limit: number): PaginatedResponse<any> {
-        return {
-            data: [],
-            meta: { total: 0, page, limit, totalPages: 0 },
-        };
-    }
 }
+

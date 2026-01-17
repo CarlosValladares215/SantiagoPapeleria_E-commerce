@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
@@ -171,9 +171,50 @@ export class ProductService {
     return this.http.get<CategoryCount[]>(`${this.apiURL}/counts`, { params });
   }
 
+  // Cache Keys & State
+  private readonly CATEGORY_CACHE_KEY = 'category_structure_cache';
+  private readonly CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  private memoryCache: any[] | null = null;
+
   // Obtener estructura de categorías (Lineas -> Grupos)
+  // Implements caching: Memory -> LocalStorage -> API
   fetchCategoriesStructure(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiURL}/structure`);
+    // 1. Memory Cache
+    const memCache = this.memoryCache;
+    if (memCache) {
+      return of(memCache);
+    }
+
+    // 2. Storage Cache
+    const cached = localStorage.getItem(this.CATEGORY_CACHE_KEY);
+    if (cached) {
+      try {
+        const { data, timestamp } = JSON.parse(cached);
+        const age = Date.now() - timestamp;
+
+        if (age < this.CACHE_TTL_MS) {
+          this.memoryCache = data; // Hydrate memory
+          return of(data);
+        } else {
+          localStorage.removeItem(this.CATEGORY_CACHE_KEY); // Expired
+        }
+      } catch (e) {
+        localStorage.removeItem(this.CATEGORY_CACHE_KEY); // Invalid
+      }
+    }
+
+    // 3. Network Request
+    return this.http.get<any[]>(`${this.apiURL}/structure`).pipe(
+      map(data => {
+        // Save to cache
+        this.memoryCache = data;
+        localStorage.setItem(this.CATEGORY_CACHE_KEY, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+        return data;
+      })
+    );
   }
 
   // Obtener lista de marcas

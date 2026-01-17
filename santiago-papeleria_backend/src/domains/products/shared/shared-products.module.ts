@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ProductMergerService } from './product-merger.service';
 import { Producto, ProductoSchema } from '../schemas/producto.schema';
+import { Categoria, CategoriaSchema } from '../schemas/categoria.schema';
 import { ProductERP, ProductERPSchema } from '../schemas/product-erp.schema';
 import { MovimientoStock, MovimientoStockSchema } from '../schemas/movimiento-stock.schema';
 
@@ -21,6 +22,7 @@ import { MovimientoStock, MovimientoStockSchema } from '../schemas/movimiento-st
             { name: Producto.name, schema: ProductoSchema },
             { name: ProductERP.name, schema: ProductERPSchema },
             { name: MovimientoStock.name, schema: MovimientoStockSchema },
+            { name: Categoria.name, schema: CategoriaSchema },
         ]),
     ],
     providers: [ProductMergerService],

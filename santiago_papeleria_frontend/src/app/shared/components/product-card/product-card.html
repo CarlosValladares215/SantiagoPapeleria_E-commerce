@@ -16,12 +16,12 @@
                 <span class="text-[10px] opacity-80 font-bold uppercase tracking-widest ml-1">Oferta</span>
             </span>
             <!-- Countdown Timer - Only show if promotion has end date -->
-            @if (product.promocion_activa?.fecha_fin && countdownDisplay) {
+            @if (product.promocion_activa?.fecha_fin && countdownDisplay()) {
             <div
                 class="bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/10">
                 <i class="ri-timer-line text-red-400 text-sm"></i>
                 <span class="text-[11px] font-bold">Termina:</span>
-                <span class="font-mono text-[11px] font-bold tracking-wide ml-0.5">{{ countdownDisplay }}</span>
+                <span class="font-mono text-[11px] font-bold tracking-wide ml-0.5">{{ countdownDisplay() }}</span>
             </div>
             }
         </div>
@@ -32,7 +32,7 @@
             <button (click)="toggleFavorite($event)"
                 class="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white hover:scale-110 transition-all">
                 <i
-                    [class]="'text-xl ' + (isFavorite ? 'ri-heart-fill text-rose-500' : 'ri-heart-line text-slate-400')"></i>
+                    [class]="'text-xl ' + (isFavorite() ? 'ri-heart-fill text-rose-500' : 'ri-heart-line text-slate-400')"></i>
             </button>
         </div>
 
