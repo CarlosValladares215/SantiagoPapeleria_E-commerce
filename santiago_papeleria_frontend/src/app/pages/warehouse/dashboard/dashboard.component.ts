@@ -1,4 +1,5 @@
 import { Component, ChangeDetectorRef, OnInit, effect, inject } from '@angular/core';
+import Swal from 'sweetalert2';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -31,6 +32,7 @@ interface Order {
     totalUnits: number;
     total: number;
     paymentMethod: string;
+    paymentStatus: string;
     paymentProofUrl?: string;
     shippingCost: number;
     subtotal: number;
@@ -82,7 +84,7 @@ export class WarehouseDashboardComponent implements OnInit {
         return this.orders.filter(o => o.status === 'Devolucion_Pendiente');
     }
 
-    private productService = inject(ProductService); // Keep product service if needed for general purposes, otherwise could remove if strictly no inventory. Keeping for now as it might be used elsewhere.
+    private productService = inject(ProductService);
 
     constructor(
         private erpService: ErpService,
@@ -110,7 +112,10 @@ export class WarehouseDashboardComponent implements OnInit {
     loadOrders() {
         this.orderService.getOrders().subscribe({
             next: (data) => {
-                this.orders = data.map(order => this.mapBackendOrder(order));
+                // FILTER: Only show PAID orders in Warehouse Dashboard
+                const allOrders = data.map(order => this.mapBackendOrder(order));
+                this.orders = allOrders.filter(o => o.paymentStatus === 'PAGADO');
+
                 this.updateOrderStats();
                 this.cd.detectChanges();
             },
@@ -140,6 +145,14 @@ export class WarehouseDashboardComponent implements OnInit {
         const fullAddress = address ? address.calle : 'No especificada';
         const city = address ? address.ciudad : 'N/A';
 
+        let paymentStatus = (backendOrder as any).estado_pago || 'NO_PAGADO';
+
+        // LEGACY FIX: Blind Warehouse Issue
+        // If order is historically fulfilled (ENVIADO/ENTREGADO) but lacks payment status (old data), assume PAGADO.
+        if (['ENVIADO', 'ENTREGADO'].includes(backendOrder.estado_pedido) && paymentStatus === 'NO_PAGADO') {
+            paymentStatus = 'PAGADO';
+        }
+
         // Map Return Data
         let returnRequest = undefined;
         if (backendOrder.datos_devolucion) {
@@ -156,9 +169,16 @@ export class WarehouseDashboardComponent implements OnInit {
         let displayStatus = this.mapStatus(backendOrder.estado_pedido);
 
         // Custom mapping for returns
-        if (backendOrder.estado_pedido === 'PENDIENTE_REVISION') displayStatus = 'Devolucion_Pendiente';
-        if (backendOrder.estado_pedido === 'DEVOLUCION_APROBADA') displayStatus = 'Devolucion_Aprobada';
-        if (backendOrder.estado_pedido === 'DEVOLUCION_RECHAZADA') displayStatus = 'Devolucion_Rechazada';
+        // Custom mapping for returns
+        const returnState = backendOrder.estado_devolucion || backendOrder.datos_devolucion?.estado;
+
+        if (returnState === 'PENDIENTE' || returnState === 'PENDIENTE_REVISION') displayStatus = 'Devolucion_Pendiente';
+        if (returnState === 'APROBADA' || returnState === 'DEVOLUCION_APROBADA') displayStatus = 'Devolucion_Aprobada';
+        if (returnState === 'RECHAZADA' || returnState === 'DEVOLUCION_RECHAZADA') displayStatus = 'Devolucion_Rechazada';
+        if (returnState === 'RECIBIDA') displayStatus = 'Devolución Recibida'; // Or map to approved/pending based on flow
+
+        // Legacy / Specific
+        if (backendOrder.estado_pedido === 'CANCELADO') displayStatus = 'Cancelado';
 
 
         return {
@@ -187,6 +207,7 @@ export class WarehouseDashboardComponent implements OnInit {
             total: backendOrder.resumen_financiero.total_pagado,
             shippingCost: backendOrder.resumen_financiero.costo_envio || 0,
             paymentMethod: backendOrder.resumen_financiero.metodo_pago,
+            paymentStatus: paymentStatus, // Map new field
             paymentProofUrl: backendOrder.resumen_financiero.comprobante_pago ? `http://localhost:3000${backendOrder.resumen_financiero.comprobante_pago}` : undefined,
             status: displayStatus,
             products: backendOrder.items.map(item => ({
@@ -199,20 +220,16 @@ export class WarehouseDashboardComponent implements OnInit {
             returnRequest
         };
     }
-
+    // ... (inside mapStatus)
     mapStatus(backendStatus: string): any {
         const statusMap: { [key: string]: string } = {
-            'PAGADO': 'Pendiente',
-            'CONFIRMADO': 'Pendiente',
-            'PENDIENTE': 'Pendiente',
-            'EN_PREPARACION': 'Preparando',
-            'PREPARANDO': 'Preparando',
+            'PENDIENTE': 'Pendiente', // Logistic Pending
+            'PREPARADO': 'Preparando',
             'ENVIADO': 'Enviado',
             'ENTREGADO': 'Entregado',
-            'CANCELADO': 'Cancelado',
+            // 'CANCELADO': 'Cancelado', // Removed as it's handled by a specific if condition in mapBackendOrder
+            // Return statuses handled separately if needed, but PENDIENTE_REVISION might still come in legacy data or we map 'estado_devolucion' in the future.
             'PENDIENTE_REVISION': 'Devolucion_Pendiente',
-            'DEVOLUCION_APROBADA': 'Devolucion_Aprobada',
-            'DEVOLUCION_RECHAZADA': 'Devolucion_Rechazada'
         };
         return statusMap[backendStatus] || 'Pendiente';
     }
@@ -319,24 +336,81 @@ export class WarehouseDashboardComponent implements OnInit {
     }
 
     // Status Management
+    canSwitchTo(newStatus: string): boolean {
+        if (!this.selectedOrder) return false;
+
+        const currentStatus = this.selectedOrder.status;
+
+        // 1. Same status check
+        if (currentStatus === newStatus) return false;
+
+        // 2. Cancellation logic: Allow cancelling from non-final states
+        if (newStatus === 'Cancelado') {
+            return !['Entregado', 'Cancelado', 'Devolucion_Aprobada', 'Devolucion_Rechazada', 'Devolucion_Pendiente'].includes(currentStatus);
+        }
+
+        // 3. Define the strict sequence
+        const statusFlow = ['Pendiente', 'Preparando', 'Enviado', 'Entregado'];
+        const currentIndex = statusFlow.indexOf(currentStatus);
+        const newIndex = statusFlow.indexOf(newStatus);
+
+        // If current or new status is not in the main flow (e.g. it's a Return status), block manual transition via this dropdown
+        if (currentIndex === -1 || newIndex === -1) return false;
+
+        // 4. Sequential check: Only allow moving to the IMMEDIATE NEXT step
+        return newIndex === currentIndex + 1;
+    }
+
     pendingStatus: string | null = null;
     selectStatus(status: any) {
         if (!this.selectedOrder) return;
+
+        // Security check using the same logic
+        if (!this.canSwitchTo(status)) {
+            // Optional: Show a toast or shake the button
+            return;
+        }
+
         this.pendingStatus = status;
         this.isStatusDropdownOpen = false;
     }
 
     confirmStatusUpdate() {
         if (this.selectedOrder && this.pendingStatus) {
-            this.updateStatus(this.selectedOrder, this.pendingStatus);
+            Swal.fire({
+                title: '¿Confirmar cambio de estado?',
+                text: `El pedido pasará a estado: ${this.pendingStatus}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#F2CB07',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, Cambiar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.updateStatus(this.selectedOrder!, this.pendingStatus!);
+                }
+            });
         }
     }
 
     markAsDelivered(order: Order) {
         if (order.status === 'Entregado') return;
-        if (confirm(`¿Marcar pedido ${order.id} como ENTREGADO?`)) {
-            this.updateStatus(order, 'Entregado');
-        }
+
+        Swal.fire({
+            title: '¿Marcar como Entregado?',
+            text: `El pedido ${order.id} se marcará como entregado.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10B981',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, Entregado',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.updateStatus(order, 'Entregado');
+            }
+        });
     }
 
     private updateStatus(order: Order, newStatus: string) {

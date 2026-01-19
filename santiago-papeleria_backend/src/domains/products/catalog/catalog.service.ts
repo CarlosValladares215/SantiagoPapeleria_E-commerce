@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Producto, ProductoDocument } from '../schemas/producto.schema';
 import { ProductERP, ProductERPDocument } from '../schemas/product-erp.schema';
 import { Categoria, CategoriaDocument } from '../schemas/categoria.schema';
+import { Pedido } from '../../orders/schemas/pedido.schema';
 import { ProductMergerService } from '../shared/product-merger.service';
 import { ResolvedProduct, PaginatedResponse } from '../shared/interfaces';
 import { ProductFilterDto } from './dto/product-filter.dto';
@@ -31,6 +32,7 @@ export class CatalogService {
         @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,
         @InjectModel(ProductERP.name) private productErpModel: Model<ProductERPDocument>,
         @InjectModel(Categoria.name) private categoriaModel: Model<CategoriaDocument>,
+        @InjectModel(Pedido.name) private pedidoModel: Model<Pedido>,
         private readonly mergerService: ProductMergerService,
     ) { }
 
@@ -245,10 +247,6 @@ export class CatalogService {
         return this.mergerService.toDetailResponse(resolved);
     }
 
-    /**
-     * Gets SKUs of products with active offers.
-     * Used for offer-specific filtering.
-     */
     async getOfferSkus(): Promise<string[]> {
         const now = new Date();
         const offerDocs = await this.productoModel
@@ -265,10 +263,109 @@ export class CatalogService {
             .select('codigo_interno')
             .lean()
             .exec();
-
         return offerDocs.map(d => d.codigo_interno);
     }
 
+    /**
+     * Retrieves featured products (Best Sellers) via Real-Time Aggregation.
+     * Sorts products by total units sold (highest to lowest).
+     */
+    async getFeaturedProducts(limit: number = 6): Promise<any[]> {
+        // Filter: Last 60 Days (Trends) + Paid Status
+        const sinceDate = new Date();
+        sinceDate.setDate(sinceDate.getDate() - 60);
 
+        // 1. Aggregate Sales by NAME (Since ID is null and SKU is Generic)
+        const topSellingNames = await this.pedidoModel.aggregate([
+            {
+                $match: {
+                    estado_pedido: { $in: ['PAGADO', 'Pagado', 'ENTREGADO', 'Entregado', 'ENVIADO', 'Enviado'] }
+                }
+            },
+            { $unwind: '$items' },
+            {
+                $group: {
+                    _id: '$items.nombre', // Group by Exact Name
+                    totalSold: { $sum: '$items.cantidad' }
+                }
+            },
+            { $sort: { totalSold: -1 } }, // Descending order
+            { $limit: limit },
+            {
+                $project: {
+                    _id: 1 // _id is the name string
+                }
+            }
+        ]);
+
+        console.log('DEBUG: TopSellingNames:', topSellingNames);
+
+        if (!topSellingNames.length) {
+            console.log('DEBUG: No sales found (Name based), using fallback.');
+            const docs = await this.productoModel.find({
+                codigo_interno: { $in: this.featuredSkus },
+                es_publico: true
+            }).limit(limit).lean().exec();
+
+            return this.transformDocs(docs);
+        }
+
+        const names = topSellingNames.map(t => t._id).filter(n => n);
+
+        // 2. Fetch Product Details by NAME
+        const docs = await this.productoModel.find({
+            nombre: { $in: names },
+            es_publico: true
+        }).lean().exec();
+
+        console.log('DEBUG: Found Public Docs (by Name):', docs.map(d => d.nombre));
+
+        // 3. Re-sort to match sales ranking
+        const docsMap = new Map(docs.map(d => [d.nombre, d]));
+
+        const sortedDocs = topSellingNames
+            .map(t => docsMap.get(t._id))
+            .filter(d => !!d);
+
+        console.log('DEBUG: Final Sorted Docs (Name):', sortedDocs.length);
+
+        if (sortedDocs.length === 0) {
+            console.log('DEBUG: Sales found but no matching public products by name. Using fallback.');
+            const fallbackDocs = await this.productoModel.find({
+                codigo_interno: { $in: this.featuredSkus },
+                es_publico: true
+            }).limit(limit).lean().exec();
+            return this.transformDocs(fallbackDocs);
+        }
+
+        return this.transformDocs(sortedDocs);
+    }
+
+    private transformDocs(docs: any[]): any[] {
+        return docs.map((doc: any) => {
+            const resolved: ResolvedProduct = {
+                sku: doc.codigo_interno,
+                erpName: doc.nombre,
+                webName: doc.nombre_web || doc.nombre,
+                brand: doc.clasificacion?.marca || 'Genérico',
+                category: doc.clasificacion?.grupo || 'General',
+                price: doc.precios?.pvp || 0,
+                wholesalePrice: doc.precios?.pvm || 0,
+                stock: doc.stock?.total_disponible || 0,
+                isVisible: doc.es_publico,
+                enrichmentStatus: doc.enrichment_status || 'complete',
+                description: doc.descripcion_extendida || doc.nombre,
+                images: doc.multimedia?.principal
+                    ? [doc.multimedia.principal, ...(doc.multimedia.galeria || [])]
+                    : [],
+                weight_kg: doc.peso_kg || 0,
+                dimensions: doc.dimensiones,
+                allows_custom_message: doc.permite_mensaje_personalizado,
+                attributes: doc.attributes || [],
+                _enrichedData: doc,
+                _erpData: null
+            };
+            return this.mergerService.toPublicResponse(resolved);
+        });
+    }
 }
-

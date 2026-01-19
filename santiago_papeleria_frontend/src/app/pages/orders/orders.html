@@ -1,13 +1,11 @@
 <div class="bg-gray-50 min-h-screen pb-12">
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Breadcrumb -->
-        <nav class="flex mb-8" aria-label="Breadcrumb">
-            <ol class="flex items-center space-x-2 text-sm text-gray-500">
-                <li><a routerLink="/" class="hover:text-[#104D73] transition-colors"><i
-                            class="ri-home-line text-lg"></i></a></li>
-                <li><i class="ri-arrow-right-s-line"></i></li>
-                <li class="font-medium text-gray-900">Mis Pedidos</li>
-            </ol>
+        <!-- Breadcrumb -->
+        <nav class="flex items-center gap-2 mb-6 text-xs text-[#104D73]/80">
+            <a routerLink="/" class="hover:text-[#F2CB07] transition-colors">Inicio</a>
+            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+            <span class="text-[#104D73] font-bold">Mis Pedidos</span>
         </nav>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -34,7 +32,8 @@
 
                 <!-- Filters / Tabs -->
                 <div class="flex flex-wrap gap-2">
-                    <button *ngFor="let filter of filters" (click)="setFilter(filter.value)" [class]="activeFilter === filter.value 
+                    @for (filter of filters; track filter.value) {
+                    <button (click)="setFilter(filter.value)" [class]="activeFilter === filter.value 
                   ? 'bg-[#012e40] text-white shadow-md' 
                   : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'"
                         class="px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
@@ -44,11 +43,13 @@
                             [class.bg-gray-100]="activeFilter !== filter.value"
                             class="px-1.5 py-0.5 rounded-full inline-block">{{ filter.count }}</span>
                     </button>
+                    }
                 </div>
 
                 <!-- Orders List -->
                 <div class="space-y-4">
-                    <div *ngFor="let order of filteredOrders"
+                    @for (order of filteredOrders; track order.id) {
+                    <div
                         class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
 
                         <!-- Order Summary Row -->
@@ -74,9 +75,11 @@
                                     <div class="flex items-center gap-1.5">
                                         <i class="ri-shopping-bag-3-fill"></i> {{ order.itemsCount }} productos
                                     </div>
-                                    <div *ngIf="order.trackingId" class="flex items-center gap-1.5 text-gray-400">
+                                    @if(order.trackingId) {
+                                    <div class="flex items-center gap-1.5 text-gray-400">
                                         <i class="ri-barcode-line"></i> {{ order.trackingId }}
                                     </div>
+                                    }
                                 </div>
                             </div>
 
@@ -98,14 +101,14 @@
                         </div>
 
                         <!-- Expanded Details -->
-                        <div *ngIf="expandedOrderId === order.id"
-                            class="border-t border-gray-100 bg-gray-50/50 p-6 animate-fadeIn">
+                        @if (expandedOrderId === order.id) {
+                        <div class="border-t border-gray-100 bg-gray-50/50 p-6 animate-fadeIn">
 
                             <h3 class="text-sm font-bold text-[#012e40] mb-4">Productos</h3>
 
                             <!-- Return Details (New for HU048) -->
-                            <div *ngIf="order.status.includes('Devolución')" class="mb-6 p-4 rounded-lg border"
-                                [ngClass]="{
+                            @if (order.status.includes('Devolución')) {
+                            <div class="mb-6 p-4 rounded-lg border" [ngClass]="{
                                      'bg-red-50 border-red-100': order.status.includes('Rechazada'),
                                      'bg-green-50 border-green-100': order.status.includes('Aprobada'),
                                      'bg-yellow-50 border-yellow-100': order.status.includes('Pendiente')
@@ -121,21 +124,44 @@
                                 <p class="text-sm">
                                     <span class="font-medium">Estado:</span> {{ order.status }}
                                 </p>
-                                <div *ngIf="order.warehouseObservations" class="mt-2 pt-2 border-t border-gray-200/50">
+                                @if (order.warehouseObservations) {
+                                <div class="mt-2 pt-2 border-t border-gray-200/50">
                                     <p class="text-xs font-bold uppercase opacity-70 mb-1">Observaciones de Bodega:</p>
                                     <p class="text-sm italic">"{{ order.warehouseObservations }}"</p>
                                 </div>
-                                <div *ngIf="order.status.includes('Aprobada')"
-                                    class="mt-3 text-sm text-green-800 bg-green-100/50 p-3 rounded">
+                                }
+
+                                @if (order.returnDetails) {
+                                <div class="mt-3 pt-3 border-t border-gray-200/50">
+                                    <p class="text-xs font-bold uppercase opacity-70 mb-2">Tu Solicitud:</p>
+                                    <p class="text-sm text-gray-700 mb-2"><span class="font-medium">Motivo:</span> {{
+                                        order.returnDetails.motivo }}</p>
+                                    <div class="bg-white/50 rounded p-2 border border-gray-100">
+                                        <p class="text-xs font-bold text-gray-500 mb-1">Productos a devolver:</p>
+                                        <ul class="space-y-1">
+                                            @for (item of order.returnDetails.items; track item.name) {
+                                            <li class="text-xs text-gray-700 flex items-center gap-2">
+                                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                                <span class="font-bold">{{ item.quantity }}x</span> {{ item.name }}
+                                            </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                                }
+                                @if (order.status.includes('Aprobada')) {
+                                <div class="mt-3 text-sm text-green-800 bg-green-100/50 p-3 rounded">
                                     <strong>Instrucciones:</strong> Por favor envíe el producto a nuestra dirección
                                     principal. Revise su correo para más detalles.
                                 </div>
+                                }
                             </div>
+                            }
 
                             <!-- Product List -->
                             <div class="space-y-3 mb-8">
-                                <div *ngFor="let product of order.products"
-                                    class="flex items-center gap-4 bg-white p-4 rounded-lg border border-gray-100">
+                                @for (product of order.products; track product.name) {
+                                <div class="flex items-center gap-4 bg-white p-4 rounded-lg border border-gray-100">
                                     <!-- Image Placeholder -->
                                     <div
                                         class="w-12 h-12 bg-gray-100 rounded flex flex-col items-center justify-center text-gray-300">
@@ -154,24 +180,40 @@
                                         </p>
                                     </div>
                                 </div>
+                                }
                             </div>
 
                             <!-- Order Details Grid (Address & Payment) -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                 <div class="bg-white p-4 rounded-lg border border-gray-100">
                                     <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Dirección de Envío</h4>
-                                    <div class="text-sm text-gray-700" *ngIf="order.address as addr">
+                                    @if (order.address; as addr) {
+                                    <div class="text-sm text-gray-700">
                                         <p class="font-bold">{{ addr.calle }}</p>
                                         <p>{{ addr.ciudad }}</p>
                                         <p>{{ addr.codigo_postal }}</p>
                                     </div>
-                                    <div *ngIf="!order.address" class="text-sm text-gray-400 italic">Retiro en tienda
+                                    }
+                                    @if (!order.address) {
+                                    <div class="text-sm text-gray-400 italic">Retiro en tienda
                                     </div>
+                                    }
                                 </div>
                                 <div class="bg-white p-4 rounded-lg border border-gray-100">
                                     <h4 class="text-xs font-bold text-gray-400 uppercase mb-2">Método de Pago</h4>
                                     <div class="text-sm text-gray-700">
-                                        <p class="font-bold">{{ order.paymentInfo?.metodo || 'No especificado' }}</p>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <p class="font-bold">{{ order.paymentInfo?.metodo || 'No especificado' }}
+                                            </p>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded border" [ngClass]="{
+                                                'bg-green-100 text-green-700 border-green-200': order.paymentStatus === 'PAGADO',
+                                                'bg-yellow-100 text-yellow-700 border-yellow-200': order.paymentStatus === 'PENDIENTE_CONFIRMACION',
+                                                'bg-red-100 text-red-700 border-red-200': order.paymentStatus === 'RECHAZADO' || order.paymentStatus === 'NO_PAGADO',
+                                                'bg-gray-100 text-gray-700 border-gray-200': !order.paymentStatus
+                                            }">
+                                                {{ order.paymentStatus || 'NO_PAGADO' }}
+                                            </span>
+                                        </div>
                                         <div class="flex justify-between mt-1 text-xs text-gray-500">
                                             <span>Subtotal:</span>
                                             <span>{{ order.paymentInfo?.subtotal | currency }}</span>
@@ -201,8 +243,8 @@
                                         <p class="text-sm font-bold text-[#012e40]">{{ order.deliveryDate }}</p>
                                     </div>
                                 </div>
-                                <div *ngIf="order.trackingId"
-                                    class="bg-white p-4 rounded-lg border border-gray-100 flex items-center gap-3">
+                                @if (order.trackingId) {
+                                <div class="bg-white p-4 rounded-lg border border-gray-100 flex items-center gap-3">
                                     <div
                                         class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                                         <i class="ri-truck-line text-lg"></i>
@@ -212,12 +254,14 @@
                                         <p class="text-sm font-bold text-[#012e40]">{{ order.trackingId }}</p>
                                     </div>
                                 </div>
+                                }
                             </div>
 
                             <!-- Actions Buttons -->
                             <div class="flex flex-wrap gap-3">
                                 <!-- Status: Entregado -->
-                                <ng-container *ngIf="order.status === 'Entregado'">
+                                @if (order.status === 'Entregado') {
+                                <ng-container>
                                     <a [routerLink]="['/tracking']" [queryParams]="{id: order.orderNumber}"
                                         class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-colors text-sm flex items-center gap-2 cursor-pointer no-underline">
                                         <i class="ri-map-pin-line"></i> Rastrear Pedido
@@ -230,36 +274,47 @@
                                         class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-colors text-sm flex items-center gap-2 cursor-pointer no-underline">
                                         <i class="ri-repeat-line"></i> Volver a Comprar
                                     </a>
-                                    <button *ngIf="canReturn(order)" (click)="initiateReturn(order)"
+                                    @if(canReturn(order)) {
+                                    <button (click)="initiateReturn(order)"
                                         class="bg-white border border-gray-300 text-gray-700 font-bold py-2.5 px-6 rounded-md hover:bg-gray-50 transition-colors text-sm flex items-center gap-2">
                                         <i class="ri-arrow-go-back-line"></i> Solicitar Devolución
                                     </button>
+                                    }
                                 </ng-container>
+                                }
 
                                 <!-- Status: Enviado -->
-                                <ng-container *ngIf="order.status === 'Enviado'">
+                                @if (order.status === 'Enviado') {
+                                <ng-container>
                                     <a [routerLink]="['/tracking']" [queryParams]="{id: order.orderNumber}"
                                         class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-colors text-sm flex items-center gap-2 cursor-pointer no-underline">
                                         <i class="ri-map-pin-line"></i> Rastrear Pedido
                                     </a>
                                 </ng-container>
+                                }
 
                                 <!-- Status: Preparando / Pendiente -->
-                                <ng-container *ngIf="order.status === 'Preparando' || order.status === 'Pendiente'">
-                                    <button *ngIf="order.status === 'Pendiente'" (click)="initiateCancel(order)"
+                                @if (order.status === 'Preparando' || order.status === 'Pendiente') {
+                                <ng-container>
+                                    @if (order.status === 'Pendiente') {
+                                    <button (click)="initiateCancel(order)"
                                         class="bg-white border border-red-500 text-red-500 font-bold py-2.5 px-6 rounded-md hover:bg-red-50 transition-colors text-sm flex items-center gap-2">
                                         <i class="ri-close-line"></i> Cancelar Pedido
                                     </button>
+                                    }
                                     <a [routerLink]="['/tracking']" [queryParams]="{id: order.orderNumber}"
                                         class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-colors text-sm flex items-center gap-2 cursor-pointer no-underline">
                                         <i class="ri-eye-line"></i> Ver Detalles
                                     </a>
                                 </ng-container>
+                                }
                             </div>
 
                         </div>
+                        }
 
                     </div>
+                    }
                 </div>
 
             </div>
@@ -268,8 +323,8 @@
     </div>
 
     <!-- Cancellation Modal -->
-    <div *ngIf="showCancelModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+    @if (showCancelModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full overflow-hidden animate-scaleIn">
             <div class="p-6 text-center">
                 <div
@@ -289,18 +344,20 @@
                     </button>
                     <button (click)="confirmCancel()" [disabled]="isCancelling"
                         class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-bold hover:bg-red-600 transition-colors shadow-lg disabled:opacity-50 flex justify-center items-center gap-2">
-                        <span *ngIf="isCancelling"
-                            class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        @if (isCancelling) {
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        }
                         Sí, cancelar
                     </button>
                 </div>
             </div>
         </div>
     </div>
+    }
 
     <!-- Return Request Modal (HU046) -->
-    <div *ngIf="showReturnModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+    @if (showReturnModal) {
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
         <div
             class="bg-white rounded-lg shadow-xl max-w-lg w-full overflow-hidden animate-scaleIn flex flex-col max-h-[90vh]">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center">
@@ -316,20 +373,24 @@
 
                 <!-- Product Selection -->
                 <div class="space-y-3 mb-6">
-                    <div *ngFor="let item of returnForm.items" class="flex items-center gap-3 p-3 border rounded-lg"
-                        [class.border-[#0f4c75]]="item.selected">
+                    @for (item of returnForm.items; track item.name) {
+                    <div class="flex items-center gap-3 p-3 border rounded-lg" [class.border-[#0f4c75]]="item.selected">
                         <input type="checkbox" [(ngModel)]="item.selected"
                             class="w-5 h-5 rounded border-gray-300 text-[#0f4c75] focus:ring-[#0f4c75]">
                         <div class="flex-1">
                             <p class="text-sm font-bold text-[#012e40]">{{ item.name }}</p>
                             <p class="text-xs text-gray-500">Comprado: {{ item.max }}</p>
                         </div>
-                        <div class="w-20" *ngIf="item.selected">
+                        @if (item.selected) {
+                        <div class="w-20">
                             <label class="text-[10px] text-gray-500 block mb-1">Cantidad</label>
                             <input type="number" [(ngModel)]="item.quantity" min="1" [max]="item.max"
+                                (input)="validateQuantity(item)" (change)="validateQuantity(item)"
                                 class="w-full text-xs p-1 border rounded text-center">
                         </div>
+                        }
                     </div>
+                    }
                 </div>
 
                 <!-- Reason -->
@@ -348,11 +409,13 @@
                 </button>
                 <button (click)="submitReturn()" [disabled]="isReturning"
                     class="flex-1 px-4 py-2 bg-[#0f4c75] text-white rounded-lg font-bold hover:bg-[#0b3a5a] transition-colors shadow-lg flex justify-center items-center gap-2">
-                    <span *ngIf="isReturning"
-                        class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    @if (isReturning) {
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    }
                     Enviar Solicitud
                 </button>
             </div>
         </div>
     </div>
+    }
 </div>

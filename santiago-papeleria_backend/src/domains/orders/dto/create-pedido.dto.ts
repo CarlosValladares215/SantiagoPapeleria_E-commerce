@@ -67,6 +67,14 @@ export class CreatePedidoDto {
   @IsNotEmpty()
   estado_pedido: string;
 
+  @IsOptional()
+  @IsString()
+  estado_pago?: string;
+
+  @IsOptional()
+  @IsString()
+  estado_devolucion?: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ItemDto) // Importante para la validación de cada elemento del array

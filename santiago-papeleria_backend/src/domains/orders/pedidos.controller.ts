@@ -94,7 +94,6 @@ export class PedidosController {
     return this.pedidosService.requestReturn(id, userId, { items, motivo });
   }
 
-  // POST /pedidos/:id/return/validate
   @Post(':id/return/validate')
   async validateReturn(
     @Param('id') id: string,
@@ -102,5 +101,22 @@ export class PedidosController {
   ): Promise<PedidoDocument> {
     const { decision, observations } = body;
     return this.pedidosService.validateReturn(id, decision, observations);
+  }
+
+  // PATCH /pedidos/:id/return/receive (Bodega)
+  @Patch(':id/return/receive')
+  async receiveReturn(
+    @Param('id') id: string,
+    @Body('observations') observations: string,
+  ): Promise<PedidoDocument> {
+    return this.pedidosService.receiveReturn(id, observations);
+  }
+
+  // PATCH /pedidos/:id/return/finalize (Admin/Finance)
+  @Patch(':id/return/finalize')
+  async finalizeReturn(
+    @Param('id') id: string,
+  ): Promise<PedidoDocument> {
+    return this.pedidosService.finalizeReturn(id);
   }
 }

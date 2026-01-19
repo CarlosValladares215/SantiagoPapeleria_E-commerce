@@ -60,6 +60,7 @@ export const routes: Routes = [
       { path: 'cart', loadComponent: () => import('./pages/cart/cart').then(m => m.Cart) },
       { path: 'tracking', component: Tracking, canActivate: [authGuard] },
       { path: 'offers', component: Offers },
+      { path: 'sucursales', loadComponent: () => import('./pages/sucursales/sucursales').then(m => m.Sucursales) },
       { path: 'login', component: Login },
       { path: 'register', component: Register },
       { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password/forgot-password').then(m => m.ForgotPassword) },
@@ -67,7 +68,7 @@ export const routes: Routes = [
       { path: 'reset-password', loadComponent: () => import('./pages/reset-password/reset-password').then(m => m.ResetPasswordComponent) },
       { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.Profile) },
       { path: 'orders', loadComponent: () => import('./pages/orders/orders').then(m => m.Orders) },
-      { path: 'favorites', loadComponent: () => import('./pages/favorites/favorites').then(m => m.Favorites) },
+      { path: 'favorites', redirectTo: 'profile' },
 
       // Wildcard inside layout ensures 404 page gets header/footer
       { path: '**', component: NotFound },

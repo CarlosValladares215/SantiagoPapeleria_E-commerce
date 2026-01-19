@@ -48,4 +48,5 @@ export interface Usuario {
     fecha_creacion?: Date | string;
     token?: string; // JWT token
     carrito?: any[];
+    favorites?: string[];
 }

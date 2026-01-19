@@ -1,0 +1,39 @@
+// Hero Styles (Consistent with Sucursales & Home)
+.hero-banner {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5); // Slightly darker for text readiness
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    h1 {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 1200px) {
+        height: 350px;
+    }
+
+    @media (max-width: 768px) {
+        height: 280px;
+    }
+
+    @media (max-width: 480px) {
+        height: 220px;
+    }
+}

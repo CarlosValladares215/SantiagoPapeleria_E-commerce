@@ -1,15 +1,30 @@
-import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
-import { ChatbotService, ChatResponse } from './chatbot.service';
+// src/domains/chatbot/chatbot.controller.ts
+
+import { Controller, Post, Get, Body, Logger } from '@nestjs/common';
+import { ChatbotOrchestrator } from './orchestrator/chatbot-orchestrator.service';
+import { ChatMessageDto } from './dto/chat-message.dto';
+import { ChatResponseDto } from './dto/chat-response.dto';
 
 @Controller('chatbot')
 export class ChatbotController {
-    constructor(private readonly chatbotService: ChatbotService) { }
+    private readonly logger = new Logger(ChatbotController.name);
 
+    constructor(private readonly orchestrator: ChatbotOrchestrator) { }
+
+    /**
+     * Process a user message and return bot response
+     */
     @Post('message')
-    async sendMessage(@Body() body: { message: string, userId?: string }): Promise<ChatResponse> {
-        // In a real scenario, userId would optionally come from a JWT guard via @Req() user
-        // For now we accept it in body for flexibility if auth is not strictly enforced on this endpoint yet
-        // or if the frontend passes it manually for this specific implementation phase.
-        return this.chatbotService.processMessage(body.message, body.userId);
+    async sendMessage(@Body() dto: ChatMessageDto): Promise<ChatResponseDto> {
+        this.logger.debug(`Received message: ${dto.message?.substring(0, 50)}...`);
+        return this.orchestrator.processMessage(dto);
+    }
+
+    /**
+     * Health check endpoint for frontend to determine if chatbot should be displayed
+     */
+    @Get('health')
+    async getHealth(): Promise<{ healthy: boolean; nlp: any }> {
+        return this.orchestrator.getHealth();
     }
 }

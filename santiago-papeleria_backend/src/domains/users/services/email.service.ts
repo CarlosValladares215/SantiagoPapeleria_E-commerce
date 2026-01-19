@@ -189,29 +189,163 @@ Si no solicitaste esto, ignora este mensaje.
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
+        // Safe Access Helpers
+        const clientName = order.usuario_id?.razon_social || ((order.usuario_id?.nombre || '') + ' ' + (order.usuario_id?.apellido || '')) || 'Cliente Final';
+        const clientRuc = order.usuario_id?.identificacion ? `RUC/CI: ${order.usuario_id.identificacion}` : '';
+        const clientPhone = order.usuario_id?.telefono ? `Tel: ${order.usuario_id.telefono}` : '';
+        const clientAddress = order.usuario_id?.direccion_fiscal ? `Dir: ${order.usuario_id.direccion_fiscal}` : '';
+
+        // Shipping Address
+        let shippingAddressHtml = '<p style="margin:0;color:#666;">Dirección no registrada</p>';
+        if (order.datos_envio?.direccion_destino) {
+            const d = order.datos_envio.direccion_destino;
+            shippingAddressHtml = `
+                <p style="margin:0;font-weight:bold;color:#333;">${d.calle || ''}</p>
+                <p style="margin:0;color:#666;">${d.referencia || ''}</p>
+                <p style="margin:0;color:#666;">${d.ciudad || ''}${d.ciudad && d.provincia ? ', ' : ''}${d.provincia || ''}</p>
+            `;
+        }
+
         const itemsHtml = order.items.map((item: any) => `
-            <tr>
-                <td>${item.nombre}</td>
-                <td>${item.cantidad}</td>
-                <td>$${item.subtotal.toFixed(2)}</td>
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:10px;text-align:left;">
+                    <div style="font-weight:bold;color:#333;">${item.nombre}</div>
+                    <div style="font-size:11px;color:#888;">${item.codigo_dobranet || ''}</div>
+                </td>
+                <td style="padding:10px;text-align:right;color:#555;">${item.cantidad}</td>
+                <td style="padding:10px;text-align:right;color:#555;">$${item.precio_unitario_aplicado?.toFixed(2)}</td>
+                <td style="padding:10px;text-align:right;font-weight:bold;color:#333;">$${item.subtotal.toFixed(2)}</td>
             </tr>
         `).join('');
 
-        const htmlContent = this.getTemplate('order-confirmation.html', {
-            appName,
-            userName: 'Cliente',
-            orderNumber: order.numero_pedido_web.toString(),
-            orderDate,
-            itemsHtml,
-            subtotal: order.resumen_financiero.subtotal_sin_impuestos.toFixed(2),
-            shipping: order.resumen_financiero.costo_envio.toFixed(2),
-            total: order.resumen_financiero.total_pagado.toFixed(2),
-            paymentMethod: order.resumen_financiero.metodo_pago,
-            ordersLink: `${frontendUrl}/orders`
-        });
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Confirmación de Pedido</title>
+        </head>
+        <body style="margin:0;padding:20px;font-family:Arial,sans-serif;background-color:#f4f4f4;">
+            
+            <table cellpadding="0" cellspacing="0" style="max-width:800px;margin:0 auto;background-color:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                <!-- Header -->
+                <tr>
+                    <td style="padding:30px;background-color:#ffffff;border-bottom:2px solid #f0f0f0;">
+                        <table width="100%">
+                            <tr>
+                                <td valign="top">
+                                    <h1 style="margin:0;color:#1e3a8a;font-size:24px;">Santiago Papelería</h1>
+                                    <p style="margin:5px 0 0;color:#666;font-size:13px;">Av. Principal 123, Ciudad</p>
+                                    <p style="margin:0;color:#666;font-size:13px;">Tel: (02) 123-4567</p>
+                                    <p style="margin:0;color:#666;font-size:13px;">RUC: 0999999999001</p>
+                                </td>
+                                <td valign="top" style="text-align:right;">
+                                    <h2 style="margin:0;color:#333;font-size:20px;">FACTURA / PEDIDO</h2>
+                                    <p style="margin:5px 0 0;color:#555;font-size:16px;font-family:monospace;">#${order.numero_pedido_web}</p>
+                                    <p style="margin:2px 0;color:#888;font-size:12px;">${orderDate}</p>
+                                    <div style="margin-top:5px;display:inline-block;padding:4px 8px;background-color:#f3f4f6;color:#374151;border-radius:12px;font-size:11px;font-weight:bold;text-transform:uppercase;">
+                                        ${order.estado_pedido}
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Client Info -->
+                <tr>
+                    <td style="padding:30px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="50%" valign="top" style="padding-right:20px;">
+                                    <h3 style="margin:0 0 10px;font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Cliente</h3>
+                                    <div style="border-left:4px solid #3b82f6;padding-left:12px;">
+                                        <p style="margin:0;font-weight:bold;color:#111;">${clientName}</p>
+                                        <p style="margin:4px 0 0;font-size:13px;color:#555;">${order.usuario_id?.email || ''}</p>
+                                        <div style="margin-top:8px;font-size:12px;color:#666;">
+                                            ${clientRuc ? `<div style="margin-bottom:2px;">${clientRuc}</div>` : ''}
+                                            ${clientPhone ? `<div style="margin-bottom:2px;">${clientPhone}</div>` : ''}
+                                            ${clientAddress ? `<div>${clientAddress}</div>` : ''}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td width="50%" valign="top">
+                                    <h3 style="margin:0 0 10px;font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Dirección de Envío</h3>
+                                    <div style="border-left:4px solid #e5e7eb;padding-left:12px;font-size:13px;">
+                                        ${shippingAddressHtml}
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Items -->
+                <tr>
+                    <td style="padding:0 30px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <thead>
+                                <tr style="border-bottom:2px solid #1f2937;">
+                                    <th style="padding:10px;text-align:left;font-size:12px;color:#4b5563;text-transform:uppercase;">Descripción</th>
+                                    <th style="padding:10px;text-align:right;font-size:12px;color:#4b5563;text-transform:uppercase;width:60px;">Cant.</th>
+                                    <th style="padding:10px;text-align:right;font-size:12px;color:#4b5563;text-transform:uppercase;width:80px;">Unit.</th>
+                                    <th style="padding:10px;text-align:right;font-size:12px;color:#4b5563;text-transform:uppercase;width:80px;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${itemsHtml}
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Footer Summary -->
+                <tr>
+                    <td style="padding:30px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="60%"></td> <!-- Spacer -->
+                                <td width="40%">
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                        <tr>
+                                            <td style="padding:3px 0;text-align:left;color:#666;font-size:13px;">Subtotal:</td>
+                                            <td style="padding:3px 0;text-align:right;color:#333;font-weight:500;">$${order.resumen_financiero.subtotal_sin_impuestos?.toFixed(2)}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:3px 0;text-align:left;color:#666;font-size:13px;">Envío:</td>
+                                            <td style="padding:3px 0;text-align:right;color:#333;font-weight:500;">$${order.resumen_financiero.costo_envio?.toFixed(2)}</td>
+                                        </tr>
+                                        ${order.resumen_financiero.total_impuestos > 0 ? `
+                                        <tr>
+                                            <td style="padding:3px 0;text-align:left;color:#666;font-size:13px;">Impuestos:</td>
+                                            <td style="padding:3px 0;text-align:right;color:#333;font-weight:500;">$${order.resumen_financiero.total_impuestos.toFixed(2)}</td>
+                                        </tr>` : ''}
+                                        <tr>
+                                            <td style="padding:10px 0;text-align:left;color:#111;font-size:16px;font-weight:bold;border-top:1px solid #ddd;">TOTAL:</td>
+                                            <td style="padding:10px 0;text-align:right;color:#1e3a8a;font-size:16px;font-weight:bold;border-top:1px solid #ddd;">$${order.resumen_financiero.total_pagado.toFixed(2)}</td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                
+                <!-- CTA -->
+                <tr>
+                    <td style="padding:0 30px 40px;text-align:center;">
+                        <a href="${frontendUrl}/orders" style="display:inline-block;padding:12px 24px;background-color:#1e3a8a;color:#ffffff;text-decoration:none;font-weight:bold;border-radius:6px;">Ver Estado del Pedido</a>
+                        <p style="margin:20px 0 0;font-size:12px;color:#999;">Gracias por tu compra.</p>
+                    </td>
+                </tr>
+            </table>
+
+        </body>
+        </html>
+        `;
 
         try {
-            await this.sendEmail(email, `Ped. #${order.numero_pedido_web} Confirmado - ${appName}`, htmlContent);
+            await this.sendEmail(email, `Factura #${order.numero_pedido_web} - ${appName}`, htmlContent);
             this.logger.log(`Order confirmation email sent to ${email} for Order #${order.numero_pedido_web}`);
         } catch (error) {
             this.logger.error(`Failed to send order confirmation to ${email}`, error);
@@ -365,6 +499,330 @@ Si no solicitaste esto, ignora este mensaje.
             this.logger.log(`Return decision email sent to ${email} for Order #${order.numero_pedido_web}`);
         } catch (error) {
             this.logger.error(`Failed to send return decision email to ${email}`, error);
+        }
+    }
+
+    // =====================================================
+    // TRANSACTIONAL ORDER EMAILS
+    // =====================================================
+
+    /**
+     * Send order received confirmation email (when order is created)
+     */
+    async sendOrderReceived(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        // Extract financials from order (handle both old and new schema)
+        const resumen = order.resumen_financiero || {};
+        const subtotalValue = resumen.subtotal_sin_impuestos || order.subtotal || 0;
+        const totalValue = resumen.total_pagado || order.total || 0;
+        const envioValue = resumen.costo_envio || order.costoEnvio || 0;
+        const metodoPago = resumen.metodo_pago || order.metodoPago || 'No especificado';
+
+        const itemsHtml = (order.items || []).map((item: any) => {
+            const itemSubtotal = item.subtotal || (item.precio_unitario_aplicado || 0) * (item.cantidad || 1);
+            return `
+            <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                    <p style="margin: 0; font-size: 14px; font-weight: 500; color: #111827;">${item.nombre || 'Producto'}</p>
+                    <p style="margin: 3px 0 0; font-size: 12px; color: #6b7280;">Cantidad: ${item.cantidad || 1}</p>
+                </td>
+                <td style="padding: 12px 0; text-align: right; border-bottom: 1px solid #e5e5e5;">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: #111827;">$${itemSubtotal.toFixed(2)}</p>
+                </td>
+            </tr>
+        `}).join('');
+
+        const htmlContent = this.getTemplate('order-received.html', {
+            numero_pedido: String(order.numero_pedido_web || order._id),
+            fecha: new Date(order.createdAt || Date.now()).toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }),
+            items_html: itemsHtml,
+            subtotal: `$${subtotalValue.toFixed(2)}`,
+            envio: envioValue > 0 ? `$${envioValue.toFixed(2)}` : 'GRATIS',
+            total: `$${totalValue.toFixed(2)}`,
+            metodo_pago: metodoPago,
+            tracking_url: `${frontendUrl}/orders`
+        });
+
+        try {
+            await this.sendEmail(email, `Pedido Recibido #${order.numero_pedido_web || order._id} - Santiago Papelería`, htmlContent);
+            this.logger.log(`Order received email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send order received email to ${email}`, error);
+        }
+    }
+
+    /**
+     * Send payment confirmed / invoice email
+     */
+    async sendPaymentConfirmed(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        // Extract financials from order (handle both old and new schema)
+        const resumen = order.resumen_financiero || {};
+        const subtotalValue = resumen.subtotal_sin_impuestos || order.subtotal || 0;
+        const totalValue = resumen.total_pagado || order.total || 0;
+        const envioValue = resumen.costo_envio || order.costoEnvio || 0;
+        const impuestosValue = resumen.total_impuestos || (totalValue * 0.15 / 1.15);
+        const metodoPago = resumen.metodo_pago || order.metodoPago || 'No especificado';
+
+        const itemsTableHtml = (order.items || []).map((item: any) => {
+            const precioUnitario = item.precio_unitario_aplicado || 0;
+            const cantidad = item.cantidad || 1;
+            const itemSubtotal = item.subtotal || (precioUnitario * cantidad);
+            return `
+            <tr style="border-bottom: 1px solid #e5e5e5;">
+                <td style="padding: 15px 20px;">
+                    <div style="font-size: 13px; font-weight: 500; color: #111827;">${item.nombre || 'Producto'}</div>
+                    <div style="font-size: 11px; color: #6b7280;">${item.codigo_dobranet || ''}</div>
+                </td>
+                <td style="padding: 15px 10px; text-align: center; font-size: 13px; color: #374151;">${cantidad}</td>
+                <td style="padding: 15px 10px; text-align: right; font-size: 13px; color: #374151;">$${precioUnitario.toFixed(2)}</td>
+                <td style="padding: 15px 20px; text-align: right; font-size: 13px; font-weight: 500; color: #111827;">$${itemSubtotal.toFixed(2)}</td>
+            </tr>
+        `}).join('');
+
+        // Get direccion from datos_envio (new schema) or direccionEnvio (legacy)
+        const datosEnvio = order.datos_envio || {};
+        const direccion = datosEnvio.direccion_destino || order.direccionEnvio || {};
+
+        const htmlContent = this.getTemplate('payment-confirmed.html', {
+            numero_pedido: String(order.numero_pedido_web || order._id),
+            fecha: new Date().toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }),
+            nombre_cliente: order.cliente?.nombre || order.nombre_cliente || 'Cliente',
+            identificacion_cliente: order.cliente?.cedula || order.cedula_cliente || '',
+            direccion_cliente: `${direccion.calle || ''}, ${direccion.ciudad || ''}`,
+            email_cliente: email,
+            items_table_html: itemsTableHtml,
+            subtotal: `$${subtotalValue.toFixed(2)}`,
+            impuestos: `$${impuestosValue.toFixed(2)}`,
+            envio: envioValue > 0 ? `$${envioValue.toFixed(2)}` : 'GRATIS',
+            total: `$${totalValue.toFixed(2)}`,
+            metodo_pago: metodoPago,
+            invoice_pdf_url: `${frontendUrl}/orders`,
+            support_url: `${frontendUrl}/contact`
+        });
+
+        try {
+            await this.sendEmail(email, `Factura - Pago Confirmado #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Payment confirmed email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send payment confirmed email to ${email}`, error);
+        }
+    }
+
+    /**
+     * Send order preparing email (estado_pedido -> PREPARADO)
+     */
+    async sendOrderPreparing(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        const itemsSummaryHtml = (order.items || []).slice(0, 3).map((item: any) => `
+            <div style="margin-bottom: 10px;">
+                <span style="font-size: 13px; font-weight: 500; color: #111827;">${item.nombre || 'Producto'}</span>
+                <span style="font-size: 12px; color: #6b7280;"> x${item.cantidad || 1}</span>
+            </div>
+        `).join('');
+
+        const htmlContent = this.getTemplate('order-preparing.html', {
+            nombre: order.cliente?.nombre || order.nombre_cliente || 'Cliente',
+            numero_pedido: order.numero_pedido_web || order._id,
+            fecha: new Date().toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }),
+            items_summary_html: itemsSummaryHtml,
+            tracking_url: `${frontendUrl}/orders`
+        });
+
+        try {
+            await this.sendEmail(email, `Tu pedido está siendo preparado #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Order preparing email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send order preparing email to ${email}`, error);
+        }
+    }
+
+    /**
+     * Send order shipped email (estado_pedido -> ENVIADO)
+     */
+    async sendOrderShipped(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const firstItem = order.items?.[0];
+        const extraCount = Math.max(0, (order.items?.length || 1) - 1);
+
+        const resumen = order.resumen_financiero || {};
+        const totalValue = resumen.total_pagado || order.total || 0;
+
+        const htmlContent = this.getTemplate('order-shipped.html', {
+            numero_pedido: String(order.numero_pedido_web || order._id),
+            empresa_envio: order.datos_envio?.courier || order.guia?.transportadora || 'Servientrega',
+            numero_guia: order.datos_envio?.guia_tracking || order.guia?.codigo || String(order.numero_pedido_web || 'Pendiente'),
+            tracking_url: order.guia?.url_tracking || `${frontendUrl}/tracking/${order.numero_pedido_web || order._id}`,
+            resumen_items: firstItem ? (firstItem.nombre || 'Producto') : 'Artículos de papelería',
+            cantidad_items_extra: String(extraCount),
+            total: `$${totalValue.toFixed(2)}`
+        });
+
+        try {
+            await this.sendEmail(email, `¡Tu pedido va en camino! #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Order shipped email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send order shipped email to ${email}`, error);
+        }
+    }
+
+    /**
+     * Send order delivered email (estado_pedido -> ENTREGADO)
+     */
+    async sendOrderDelivered(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const datosEnvio = order.datos_envio || {};
+        const direccion = datosEnvio.direccion_destino || order.direccionEnvio || {};
+
+        const htmlContent = this.getTemplate('order-delivered.html', {
+            numero_pedido: String(order.numero_pedido_web || order._id),
+            direccion_entrega: `${direccion.calle || 'Dirección'}, ${direccion.ciudad || ''}`,
+            fecha_entrega: new Date().toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }),
+            review_url: `${frontendUrl}/orders`
+        });
+
+        try {
+            await this.sendEmail(email, `¡Pedido Entregado! #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Order delivered email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send order delivered email to ${email}`, error);
+        }
+    }
+
+    /**
+     * Send return requested email (estado_devolucion -> PENDIENTE)
+     */
+    async sendReturnRequested(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        const htmlContent = this.getTemplate('return-requested.html', {
+            nombre: order.cliente?.nombre || order.nombre_cliente || 'Cliente',
+            numero_pedido: order.numero_pedido_web || order._id,
+            motivo: order.datos_devolucion?.motivo || 'No especificado',
+            tracking_url: `${frontendUrl}/orders`
+        });
+
+        try {
+            await this.sendEmail(email, `Solicitud de Devolución Recibida - Pedido #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Return requested email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send return requested email to ${email}`, error);
+        }
+    }
+
+    /**
+     * Send return approved email (estado_devolucion -> APROBADA)
+     */
+    async sendReturnApproved(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        const htmlContent = this.getTemplate('return-approved.html', {
+            nombre: order.cliente?.nombre || order.nombre_cliente || 'Cliente',
+            numero_pedido: order.numero_pedido_web || order._id,
+            monto_reembolso: `$${(order.total || 0).toFixed(2)}`,
+            label_url: `${frontendUrl}/orders`,
+            store_url: `${frontendUrl}/contact`
+        });
+
+        try {
+            await this.sendEmail(email, `¡Devolución Aprobada! - Pedido #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Return approved email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send return approved email to ${email}`, error);
+        }
+    }
+
+    /**
+     * Send return rejected email (estado_devolucion -> RECHAZADA)
+     */
+    async sendReturnRejected(email: string, order: any, observations: string): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        const htmlContent = this.getTemplate('return-rejected.html', {
+            numero_pedido: order.numero_pedido_web || order._id,
+            fecha: new Date().toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }),
+            observaciones: observations || 'No cumple con las políticas de devolución.',
+            support_url: `${frontendUrl}/contact`
+        });
+
+        try {
+            await this.sendEmail(email, `Devolución No Aprobada - Pedido #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Return rejected email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send return rejected email to ${email}`, error);
+        }
+    }
+
+    /**
+ * Send return received email (estado_devolucion -> RECIBIDA)
+ */
+    async sendReturnReceived(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        // Calculate refund amount based on returned items
+        const returnedItems = order.datos_devolucion?.items || [];
+        const orderItems = order.items || [];
+
+        let subtotalRefund = 0;
+
+        returnedItems.forEach((rItem: any) => {
+            // Find original item to get price
+            // Matchear por nombre ya que codigo puede no venir
+            const original = orderItems.find((oItem: any) => oItem.nombre === rItem.name || oItem.nombre === rItem.nombre);
+            if (original) {
+                subtotalRefund += (original.precio_unitario || 0) * (rItem.quantity || rItem.cantidad || 0);
+            }
+        });
+
+        const taxRate = 0.15; // 15% IVA
+        const taxes = subtotalRefund * taxRate;
+        const totalRefund = subtotalRefund + taxes;
+
+        const firstItem = returnedItems[0];
+
+        const htmlContent = this.getTemplate('return-received.html', {
+            numero_pedido: order.numero_pedido_web || order._id,
+            items_resumen: firstItem ? (firstItem.name || firstItem.nombre) : 'Artículos devueltos',
+            cantidad: String(returnedItems.length || 1),
+            monto_reembolso: `$${totalRefund.toFixed(2)}`,
+            subtotal: `$${subtotalRefund.toFixed(2)}`,
+            impuestos: `$${taxes.toFixed(2)}`,
+            total_reembolso: `$${totalRefund.toFixed(2)}`,
+            tracking_url: `${frontendUrl}/orders`,
+            support_url: `${frontendUrl}/contact`
+        });
+
+        try {
+            await this.sendEmail(email, `Devolución Recibida en Bodega - Pedido #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Return received email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send return received email to ${email}`, error);
+        }
+    }
+
+
+    /**
+     * Send refund processed email (estado_pago -> REEMBOLSADO)
+     */
+    async sendRefundProcessed(email: string, order: any): Promise<void> {
+        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+
+        const htmlContent = this.getTemplate('refund-processed.html', {
+            numero_pedido: order.numero_pedido_web || order._id,
+            monto_reembolso: `$${(order.total || 0).toFixed(2)}`,
+            metodo_pago: order.metodoPago || 'Método original',
+            fecha: new Date().toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' }),
+            order_url: `${frontendUrl}/orders`
+        });
+
+        try {
+            await this.sendEmail(email, `Reembolso Procesado - Pedido #${order.numero_pedido_web || order._id}`, htmlContent);
+            this.logger.log(`Refund processed email sent to ${email}`);
+        } catch (error) {
+            this.logger.error(`Failed to send refund processed email to ${email}`, error);
         }
     }
 }

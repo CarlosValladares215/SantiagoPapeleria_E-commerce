@@ -1,0 +1,97 @@
+<!-- src/app/features/chatbot/components/chat-widget/chat-widget.component.html -->
+
+<!-- Floating Button -->
+<div class="chat-trigger">
+    @if (!state.isOpen()) {
+    <div class="chat-helper-badge" (click)="state.toggleChat()">
+        <span>¿Necesitas ayuda?</span>
+        <span>👋</span>
+    </div>
+    }
+
+    <button class="chat-button" (click)="state.toggleChat()">
+        <img src="assets/images/bot_avatar.png" alt="Chat">
+    </button>
+</div>
+
+<!-- Chat Window -->
+@if (state.isOpen()) {
+<div class="chat-window">
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <div class="chat-avatar">
+                <img src="assets/images/bot_avatar.png" alt="Bot">
+            </div>
+            <div>
+                <h3 class="chat-title">Asistente Santiago</h3>
+                <span class="chat-status">
+                    <span class="status-dot"></span>
+                    En línea
+                </span>
+            </div>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+            <button class="header-btn" (click)="handleResetChat()" title="Nueva conversación">
+                <lucide-icon name="refresh-cw" [size]="16"></lucide-icon>
+            </button>
+            <button class="header-btn" (click)="state.closeChat()" title="Minimizar">
+                <lucide-icon name="x" [size]="18"></lucide-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Messages Area -->
+    <div class="chat-messages" #scrollContainer>
+        @if (state.messages().length === 0) {
+        <!-- Empty State with Quick Actions -->
+        <div class="empty-state">
+            <div class="empty-icon">
+                <lucide-icon name="message-circle" [size]="40"></lucide-icon>
+            </div>
+            <p class="empty-text">¿En qué puedo ayudarte hoy?</p>
+        </div>
+        } @else {
+        @for (msg of state.messages(); track msg.id) {
+        <app-chat-message [message]="msg" (optionSelected)="handleOptionClick($event)"
+            (productSelected)="handleProductClick($event)" (actionSelected)="handleActionClick($event)">
+        </app-chat-message>
+        }
+        }
+    </div>
+
+    <!-- Quick Suggestion Cards (shown when few messages) -->
+    @if (state.messages().length <= 1) { <div class="quick-suggestions">
+        <button class="suggestion-card" (click)="handleSuggestionClick('¿Dónde está mi pedido?')">
+            <lucide-icon name="truck" [size]="18"></lucide-icon>
+            <span>¿Dónde está mi pedido?</span>
+        </button>
+        <button class="suggestion-card" (click)="handleSuggestionClick('Buscar productos')">
+            <lucide-icon name="search" [size]="18"></lucide-icon>
+            <span>Buscar productos</span>
+        </button>
+        <button class="suggestion-card" (click)="handleSuggestionClick('¿Cómo agrego una dirección?')">
+            <lucide-icon name="map-pin" [size]="18"></lucide-icon>
+            <span>Agregar dirección</span>
+        </button>
+        <button class="suggestion-card" (click)="handleSuggestionClick('Ver ofertas')">
+            <lucide-icon name="tag" [size]="18"></lucide-icon>
+            <span>Ver promociones</span>
+        </button>
+</div>
+}
+
+<!-- Input Area -->
+<div class="chat-input-area">
+    <form class="chat-input-form" (submit)="handleSend($event)">
+        <input type="text" class="chat-input" [(ngModel)]="inputText" name="message" placeholder="Escribe tu mensaje..."
+            autocomplete="off" [disabled]="state.isLoading()">
+        <button type="submit" class="send-button" [disabled]="!inputText.trim() || state.isLoading()">
+            <lucide-icon name="send" [size]="18"></lucide-icon>
+        </button>
+    </form>
+</div>
+</div>
+}

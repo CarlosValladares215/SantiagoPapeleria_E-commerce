@@ -26,12 +26,14 @@
                 </button>
 
                 <!-- Dropdown Menu -->
-                <ng-container *ngIf="showSortDropdown">
+                @if (showSortDropdown) {
+                <ng-container>
                     <div class="fixed inset-0 z-10" (click)="closeSortDropdown()">
                     </div>
                     <div
                         class="absolute right-0 mt-2 w-64 bg-white border-2 border-gray-200 rounded-lg shadow-xl z-20 overflow-hidden">
-                        <button *ngFor="let option of sortOptions" (click)="onSortSelect(option.value)" [class]="'w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors ' +
+                        @for (option of sortOptions; track option.value) {
+                        <button (click)="onSortSelect(option.value)" [class]="'w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors ' +
                 (currentSort === option.value ? 'bg-blue-50' : '')">
                             <div class="flex items-center space-x-3">
                                 <i
@@ -41,11 +43,14 @@
                                     {{ option.label }}
                                 </span>
                             </div>
-                            <i *ngIf="currentSort === option.value"
-                                class="ri-check-line text-[#104D73] font-semibold"></i>
+                            @if (currentSort === option.value) {
+                            <i class="ri-check-line text-[#104D73] font-semibold"></i>
+                            }
                         </button>
+                        }
                     </div>
                 </ng-container>
+                }
             </div>
         </div>
     </div>

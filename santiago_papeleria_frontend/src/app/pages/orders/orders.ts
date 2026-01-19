@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
@@ -38,12 +38,21 @@ interface Order {
         total: number;
     };
     warehouseObservations?: string;
+    paymentStatus?: string; // Added for Triple State
+    returnDetails?: {
+        motivo: string;
+        items: {
+            name: string;
+            quantity: number;
+        }[];
+    };
 }
+
 
 @Component({
     selector: 'app-orders',
     standalone: true,
-    imports: [CommonModule, RouterLink, FormsModule, ProfileSidebarComponent],
+    imports: [CommonModule, NgClass, RouterLink, FormsModule, ProfileSidebarComponent],
     templateUrl: './orders.html',
     styleUrl: './orders.scss'
 })
@@ -98,6 +107,7 @@ export class Orders implements OnInit {
             trackingId: backendOrder.datos_envio?.guia_tracking,
             total: backendOrder.resumen_financiero.total_pagado,
             deliveryDate: backendOrder.estado_pedido.toLowerCase() === 'entregado' ? 'Entregado' : 'Por confirmar',
+            paymentStatus: backendOrder.estado_pago || 'NO_PAGADO', // Map Payment Status
             address: backendOrder.datos_envio?.direccion_destino,
             paymentInfo: {
                 metodo: backendOrder.resumen_financiero.metodo_pago,
@@ -112,7 +122,14 @@ export class Orders implements OnInit {
                 unitPrice: item.precio_unitario_aplicado,
                 image: 'assets/products/placeholder.png'
             })),
-            warehouseObservations: backendOrder.datos_devolucion?.observaciones_bodega
+            warehouseObservations: backendOrder.datos_devolucion?.observaciones_bodega,
+            returnDetails: backendOrder.datos_devolucion ? {
+                motivo: backendOrder.datos_devolucion.motivo,
+                items: backendOrder.datos_devolucion.items?.map((i: any) => ({
+                    name: i.nombre,
+                    quantity: i.cantidad
+                })) || []
+            } : undefined
         };
     }
 
@@ -295,6 +312,14 @@ export class Orders implements OnInit {
             }))
         };
         this.showReturnModal = true;
+    }
+
+    validateQuantity(item: any) {
+        if (item.quantity > item.max) {
+            item.quantity = item.max;
+        } else if (item.quantity < 1) {
+            item.quantity = 1;
+        }
     }
 
     closeReturnModal() {

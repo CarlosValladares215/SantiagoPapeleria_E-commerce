@@ -1,5 +1,12 @@
 <div class="bg-gray-50 min-h-screen pb-12">
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Breadcrumb -->
+        <nav class="flex items-center gap-2 mb-6 text-xs text-[#104D73]/80">
+            <a routerLink="/" class="hover:text-[#F2CB07] transition-colors">Inicio</a>
+            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+            <span class="text-[#104D73] font-bold">Carrito de Compras</span>
+        </nav>
 
         <!-- Items List -->
         @if (cartService.cartItems().length === 0) {

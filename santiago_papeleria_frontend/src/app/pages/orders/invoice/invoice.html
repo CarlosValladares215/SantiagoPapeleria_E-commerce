@@ -1,55 +1,107 @@
 <div class="min-h-screen bg-gray-100 p-8 print:p-0 print:bg-white flex justify-center">
 
     <!-- Printable Area -->
-    <div *ngIf="order(); else loadingOrError"
-        class="bg-white shadow-lg print:shadow-none max-w-[21cm] w-full p-8 md:p-12 scale-100 print:w-full">
+    @if (order()) {
+    <div class="bg-white shadow-lg print:shadow-none max-w-[21cm] w-full p-8 md:p-12 scale-100 print:w-full">
 
         <!-- Action Bar (Hidden in Print) -->
         <div class="mb-8 flex justify-between items-center print:hidden">
-            <a href="javascript:window.close()" class="text-gray-500 hover:text-gray-800 font-medium">Wait, Close</a>
-            <button (click)="print()" class="bg-[#012e40] text-white px-6 py-2 rounded font-bold hover:bg-[#0f4c75]">
-                <i class="ri-printer-line mr-2"></i> Imprimir / Guardar PDF
+            <a href="javascript:window.close()"
+                class="text-gray-500 hover:text-gray-800 font-medium flex items-center gap-2">
+                <i class="ri-arrow-left-line"></i> Volver / Cerrar
+            </a>
+            <button (click)="print()"
+                class="bg-[#012e40] text-white px-6 py-2 rounded font-bold hover:bg-[#0f4c75] shadow-sm flex items-center gap-2">
+                <i class="ri-printer-line"></i> Imprimir / Guardar PDF
             </button>
         </div>
 
         <!-- Invoice Header -->
-        <div class="flex justify-between items-start border-b border-gray-200 pb-8 mb-8">
+        <div class="flex justify-between items-start border-b border-gray-200 pb-8 mb-8" id="invoice-header">
             <div>
-                <h1 class="text-4xl font-bold text-[#012e40] mb-2 uppercase tracking-wide">Factura</h1>
-                <p class="text-gray-500 font-medium">Comprobante de Venta</p>
+                <h1 class="text-4xl font-bold text-[#012e40] mb-2 uppercase tracking-wide">
+                    @if (order()?.estado_pago === 'PAGADO') { Factura } @else { Orden de Compra }
+                </h1>
+                <p class="text-gray-500 font-medium">
+                    @if (order()?.estado_pago === 'PAGADO') { Comprobante de Venta Electrónico } @else { Documento
+                    Informativo - No Valido como Factura }
+                </p>
+                <div class="mt-4">
+                    <span class="px-3 py-1 rounded-full text-sm font-bold border" [ngClass]="{
+                            'bg-green-100 text-green-800 border-green-200': order()?.estado_pedido === 'ENTREGADO',
+                            'bg-yellow-100 text-yellow-800 border-yellow-200': order()?.estado_pedido !== 'ENTREGADO'
+                        }">
+                        {{ order()?.estado_pedido }}
+                    </span>
+                </div>
             </div>
             <div class="text-right">
                 <h2 class="text-2xl font-bold text-gray-800">Santiago Papelería</h2>
-                <p class="text-sm text-gray-500 mt-1">Av. Pío Jaramillo Alvarado y Venezuela</p>
-                <p class="text-sm text-gray-500">Loja, Ecuador</p>
-                <p class="text-sm text-gray-500">RUC: 1104567890001</p>
-                <p class="text-sm text-gray-500">info@santiagopapeleria.com</p>
+                <p class="text-sm text-gray-600 mt-1">Av. Pío Jaramillo Alvarado y Venezuela</p>
+                <p class="text-sm text-gray-600">Loja, Ecuador</p>
+                <p class="text-sm text-gray-600">Tel: (02) 123-4567</p>
+                <p class="text-sm text-gray-600">RUC: 1104567890001</p>
+                <p class="text-sm text-gray-600">info@santiagopapeleria.com</p>
             </div>
         </div>
 
         <!-- Info Grid -->
         <div class="grid grid-cols-2 gap-12 mb-10">
             <div>
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Facturar a</h3>
-                <p class="font-bold text-gray-800 text-lg">{{ order()?.datos_envio?.direccion_destino?.calle ||
-                    'Cliente' }}</p>
-                <p class="text-gray-600">{{ order()?.datos_envio?.direccion_destino?.ciudad }}</p>
-                <p class="text-gray-600">{{ order()?.datos_envio?.direccion_destino?.codigo_postal }}</p>
-                <p class="text-gray-600 mt-2 text-sm">{{ authService.user()?.email }}</p>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Cliente</h3>
+                <div class="border-l-4 border-[#012e40] pl-4">
+                    <p class="font-bold text-gray-800 text-lg">
+                        {{ order()?.usuario_id?.razon_social || ((order()?.usuario_id?.nombre || '') + ' ' +
+                        (order()?.usuario_id?.apellido || '')) || 'Cliente Final' }}
+                    </p>
+                    <p class="text-gray-600">{{ order()?.usuario_id?.email }}</p>
+                    @if (order()?.usuario_id?.identificacion) {
+                    <p class="text-gray-600 text-sm mt-1">
+                        <span class="font-medium">RUC/CI:</span> {{ order()?.usuario_id?.identificacion }}
+                    </p>
+                    }
+                    @if (order()?.usuario_id?.telefono) {
+                    <p class="text-gray-600 text-sm">
+                        <span class="font-medium">Tel:</span> {{ order()?.usuario_id?.telefono }}
+                    </p>
+                    }
+                    @if (order()?.usuario_id?.direccion_fiscal) {
+                    <p class="text-gray-600 text-sm">
+                        <span class="font-medium">Dir:</span> {{ order()?.usuario_id?.direccion_fiscal }}
+                    </p>
+                    }
+                </div>
+
+                <div class="mt-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Dirección de Envío</h3>
+                    @if (order()?.datos_envio?.direccion_destino; as address) {
+                    <div class="pl-4 border-l-4 border-gray-200 text-sm text-gray-600">
+                        <p class="font-medium text-gray-800">{{ address.calle }}</p>
+                        <p>{{ address.referencia }}</p>
+                        <p>
+                            @if (address.ciudad) { <span>{{ address.ciudad }}</span> }
+                            @if (address.ciudad && address.provincia) { <span>, </span> }
+                            @if (address.provincia) { <span>{{ address.provincia }}</span> }
+                        </p>
+                    </div>
+                    } @else {
+                    <p class="text-sm text-gray-400 italic pl-4">Misma del cliente / No registrada</p>
+                    }
+                </div>
             </div>
+
             <div class="text-right">
-                <div class="mb-4">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Número de Pedido</h3>
-                    <p class="font-bold text-gray-800 text-xl">WEB-{{ order()?.numero_pedido_web }}</p>
-                </div>
-                <div class="mb-4">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fecha</h3>
-                    <p class="font-medium text-gray-800">{{ order()?.fecha_compra | date:'d MMMM, yyyy' }}</p>
-                </div>
-                <div>
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total</h3>
-                    <p class="font-bold text-[#012e40] text-xl">{{ order()?.resumen_financiero?.total_pagado | currency
-                        }}</p>
+                <div class="mb-6 bg-gray-50 p-4 rounded-lg inline-block text-left min-w-[200px]">
+                    <div class="mb-2">
+                        <span class="block text-xs font-bold text-gray-500 uppercase">Número de Pedido</span>
+                        <span class="block font-mono text-xl font-bold text-[#012e40]">#{{ order()?.numero_pedido_web
+                            }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs font-bold text-gray-500 uppercase">Fecha de Emisión</span>
+                        <span class="block font-medium text-gray-800">{{ order()?.fecha_compra | date:'d MMMM, yyyy'
+                            }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,28 +111,33 @@
             <thead>
                 <tr class="border-b-2 border-gray-100 text-left">
                     <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Descripción</th>
-                    <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Cant.</th>
-                    <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Precio Unit.
+                    <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-center w-24">Cant.
                     </th>
-                    <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Total</th>
+                    <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right w-32">Precio
+                        Unit.</th>
+                    <th class="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-right w-32">Total</th>
                 </tr>
             </thead>
             <tbody class="text-sm text-gray-700">
-                <tr *ngFor="let item of order()?.items" class="border-b border-gray-50">
+                @for (item of order()?.items; track item.codigo_dobranet) {
+                <tr class="border-b border-gray-50">
                     <td class="py-4">
                         <p class="font-bold text-gray-800">{{ item.nombre }}</p>
-                        <p class="text-xs text-gray-400">Código: {{ item.codigo_dobranet }}</p>
+                        @if (item.codigo_dobranet) {
+                        <p class="text-xs text-gray-400">Cód: {{ item.codigo_dobranet }}</p>
+                        }
                     </td>
                     <td class="py-4 text-center">{{ item.cantidad }}</td>
                     <td class="py-4 text-right">{{ item.precio_unitario_aplicado | currency }}</td>
-                    <td class="py-4 text-right font-medium text-gray-800">{{ item.subtotal | currency }}</td>
+                    <td class="py-4 text-right font-bold text-gray-800">{{ item.subtotal | currency }}</td>
                 </tr>
+                }
             </tbody>
         </table>
 
         <!-- Totals -->
         <div class="flex justify-end mb-12">
-            <div class="w-64">
+            <div class="w-72">
                 <div class="flex justify-between mb-2 text-sm text-gray-600">
                     <span>Subtotal</span>
                     <span class="font-medium">{{ order()?.resumen_financiero?.subtotal_sin_impuestos | currency
@@ -90,28 +147,39 @@
                     <span>Costo de Envío</span>
                     <span class="font-medium">{{ order()?.resumen_financiero?.costo_envio | currency }}</span>
                 </div>
+                @if ((order()?.resumen_financiero?.total_impuestos || 0) > 0) {
                 <div class="flex justify-between mb-4 text-sm text-gray-600">
                     <span>IVA (15%)</span>
                     <span class="font-medium">{{ order()?.resumen_financiero?.total_impuestos | currency }}</span>
                 </div>
-                <div class="flex justify-between pt-4 border-t-2 border-gray-100 text-lg font-bold text-[#012e40]">
-                    <span>Total</span>
+                }
+                <div class="flex justify-between pt-4 border-t-2 border-gray-800 text-xl font-bold text-[#012e40]">
+                    <span>Total a Pagar</span>
                     <span>{{ order()?.resumen_financiero?.total_pagado | currency }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="text-center text-xs text-gray-400 print:fixed print:bottom-8 print:left-0 print:w-full">
-            <p class="mb-1">Gracias por confirmar con Santiago Papelería</p>
-            <p>Este documento es un comprobante electrónico válido.</p>
+        <div class="text-center text-xs text-gray-400 border-t border-gray-100 pt-8 mt-12">
+            <p class="mb-1 font-medium text-gray-500">Gracias por su compra en Santiago Papelería</p>
+            <p>Este documento es un comprobante de pedido electrónico generado automáticamente.</p>
+            <p class="mt-2">Para consultas, por favor contacte a soporte mencionando su número de pedido.</p>
         </div>
     </div>
-
-    <ng-template #loadingOrError>
-        <div class="text-center pt-20">
-            <p *ngIf="loading()">Cargando factura...</p>
-            <p *ngIf="error()" class="text-red-500">{{ error() }}</p>
+    } @else {
+    <div class="text-center pt-20">
+        @if (loading()) {
+        <div class="animate-pulse flex flex-col items-center">
+            <div class="h-8 w-64 bg-gray-200 rounded mb-4"></div>
+            <div class="h-4 w-48 bg-gray-200 rounded"></div>
         </div>
-    </ng-template>
+        }
+        @if (error()) {
+        <p class="text-red-500 font-bold bg-red-50 p-4 rounded-lg inline-block border border-red-100">
+            <i class="ri-error-warning-line mr-2"></i> {{ error() }}
+        </p>
+        }
+    </div>
+    }
 </div>

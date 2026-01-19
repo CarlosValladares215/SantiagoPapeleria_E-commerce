@@ -448,5 +448,30 @@ export class UsuariosController {
 
     return { message: 'Initial users setup complete (or already existed).' };
   }
+
+  // POST /usuarios/favorites/toggle
+  @Post('favorites/toggle')
+  @UseGuards(JwtAuthGuard)
+  async toggleFavorite(
+    @Body() body: any,
+    @Headers('authorization') authHeader: string
+  ) {
+    console.log('[UsuariosController] Toggle Body:', body);
+    const { productId } = body;
+
+    if (!productId) throw new BadRequestException('Product ID is required');
+
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = jwt.verify(token, this.jwtSecret) as any;
+    const userId = decoded.sub;
+
+    const updatedUser = await this.usuariosService.toggleFavorite(userId, productId);
+    if (!updatedUser) throw new BadRequestException('Invalid User or Product ID');
+
+    return {
+      message: 'Favorites updated',
+      favorites: updatedUser.favorites
+    };
+  }
 }
 

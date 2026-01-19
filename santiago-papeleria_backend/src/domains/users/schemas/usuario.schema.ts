@@ -173,6 +173,9 @@ export class Usuario {
 
   @Prop({ type: [CartItem], default: [] })
   carrito: CartItem[];
+
+  @Prop({ type: [String], default: [] })
+  favorites: string[]; // Generic Array of Product IDs
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario);

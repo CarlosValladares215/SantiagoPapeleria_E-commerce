@@ -1,4 +1,11 @@
-<div class="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-6">
+<div class="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4 sm:px-6 lg:px-8">
+
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 mb-6 text-xs text-[#104D73]/80 w-full max-w-4xl">
+        <a routerLink="/" class="hover:text-[#F2CB07] transition-colors">Inicio</a>
+        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+        <span class="text-[#104D73] font-bold">Registro</span>
+    </nav>
 
     <div [formGroup]="registerForm"
         class="w-full max-w-4xl bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">

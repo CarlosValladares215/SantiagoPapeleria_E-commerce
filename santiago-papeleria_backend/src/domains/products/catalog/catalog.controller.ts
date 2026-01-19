@@ -22,6 +22,20 @@ export class CatalogController {
     constructor(private readonly catalogService: CatalogService) { }
 
     /**
+     * GET /productos/mas-vendidos
+     * Helper endpoint for homepage "Featured Products"
+     */
+    @Get('mas-vendidos')
+    async getBestSellers(@Query('limit') limit: number) {
+        // We can inject ReportsService here if needed, 
+        // OR better: keep CatalogService independent and implement a simple best-seller query there 
+        // or inject ReportsService into CatalogController.
+        // Let's see if we can inject ReportsService.
+        // Actually, CatalogService already has logic or can have it. 
+        return this.catalogService.getFeaturedProducts(Number(limit) || 10);
+    }
+
+    /**
      * GET /productos
      * Lists products with optional filters and pagination.
      */

@@ -79,17 +79,48 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadTopProducts() {
-    this.reportesService.getTopProducts(10).subscribe(products => {
+    this.reportesService.getTopProducts(this.selectedRange, 10).subscribe(products => {
       this.topProducts = products;
       this.cdr.detectChanges();
     });
   }
 
+  // Recent Orders State
+  currentOrderPage = 1;
+  orderPageSize = 10;
+  totalOrders = 0;
+  selectedOrderStatus = 'Todos';
+  selectedPaymentStatus = 'Todos'; // New State
+  selectedCustomerType = 'Todos';
+
   loadRecentOrders() {
-    this.reportesService.getRecentOrders(20).subscribe((orders: any[]) => {
-      this.recentOrders = orders;
-      this.cdr.detectChanges();
+    this.reportesService.getRecentOrders(
+      this.currentOrderPage,
+      this.orderPageSize,
+      this.selectedOrderStatus,
+      this.selectedCustomerType,
+      this.selectedPaymentStatus // New Param
+    ).subscribe({
+      next: (data) => {
+        this.recentOrders = data.data;
+        this.totalOrders = data.total;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error fetching recent orders', err)
     });
+  }
+
+  onPageChange(page: number) {
+    this.currentOrderPage = page;
+    this.loadRecentOrders();
+  }
+
+  onFilterChange(filters: { status: string, customerType: string, paymentStatus: string }) { // Updated Interface
+    this.selectedOrderStatus = filters.status;
+    this.selectedCustomerType = filters.customerType;
+    this.selectedPaymentStatus = filters.paymentStatus;
+    this.currentOrderPage = 1; // Reset to page 1
+    this.loadRecentOrders();
   }
 
   onRangeChange(range: string) {
@@ -99,6 +130,9 @@ export class SalesDashboardComponent implements OnInit, OnDestroy {
       this.refreshSubscription.unsubscribe();
     }
     this.startAutoRefresh();
+    // Reload charts/tables as well
+    this.loadTopProducts();
+    this.loadRecentOrders();
   }
 
   exportReport(format: 'pdf' | 'excel') {

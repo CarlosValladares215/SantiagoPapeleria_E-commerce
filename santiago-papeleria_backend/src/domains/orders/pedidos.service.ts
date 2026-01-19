@@ -38,10 +38,34 @@ export class PedidosService {
     const guiaTracking = `GUIA-${dateStr}-${siguienteNumero}`;
 
     // 2. Crear el documento del pedido
+    // MAPPING INICIAL DE ESTADOS
+    let estadoPago = 'NO_PAGADO';
+    let estadoPedido = 'PENDIENTE';
+
+    // Si viene del frontend como PENDIENTE_PAGO (Transferencia), es PENDIENTE_CONFIRMACION
+    if (createPedidoDto.estado_pedido === 'PENDIENTE_PAGO' || createPedidoDto.estado_pago === 'PENDIENTE_CONFIRMACION') {
+      estadoPago = 'PENDIENTE_CONFIRMACION';
+    }
+    // Si viene PENDIENTE normal (Efectivo/Contraentrega), es NO_PAGADO por defecto hasta que pague
+    else if (createPedidoDto.estado_pedido === 'PENDIENTE') {
+      estadoPago = 'NO_PAGADO';
+    }
+    // Si ya viene PAGADO (Pasarela futura)
+    else if (createPedidoDto.estado_pedido === 'PAGADO' || createPedidoDto.estado_pago === 'PAGADO') {
+      estadoPago = 'PAGADO';
+    }
+
+
     const createdPedido = new this.pedidoModel({
       ...createPedidoDto,
-      usuario_id: new Types.ObjectId(createPedidoDto.usuario_id), // Asegurar ObjectId
-      numero_pedido_web: siguienteNumero, // Asignar el número único
+      usuario_id: new Types.ObjectId(createPedidoDto.usuario_id),
+      numero_pedido_web: siguienteNumero,
+
+      // ESTADOS SEPARADOS
+      estado_pedido: estadoPedido,
+      estado_pago: estadoPago,
+      estado_devolucion: 'NINGUNA',
+
       datos_envio: {
         ...createPedidoDto.datos_envio,
         guia_tracking: guiaTracking
@@ -53,7 +77,6 @@ export class PedidosService {
     const savedPedido = await createdPedido.save();
 
     // 3.1 Descontar Stock Localmente (RN-STOCK-001)
-    // Esto asegura que el stock baje inmediatamente antes de la sync con ERP
     for (const item of savedPedido.items) {
       if (item.codigo_dobranet) {
         await this.stockService.updateStock(
@@ -66,29 +89,171 @@ export class PedidosService {
       }
     }
 
-    // 4. Enviar correo de confirmación (Asíncrono)
+    // 4. Enviar correo de confirmación (SOLO CONFIRMACIÓN, NO FACTURA)
+    // El frontend espera confirmación inmediata de recepcion
     this.sendConfirmationEmail(createPedidoDto.usuario_id, savedPedido);
 
-    // 5. Enviar pedido al ERP DobraNet (Asíncrono con reintentos)
+    // 5. Enviar pedido al ERP DobraNet
     this.sendOrderToErpWithRetry(savedPedido);
 
     return savedPedido;
   }
 
+  // --- NUEVOS MÉTODOS DE GESTIÓN DE ESTADOS ---
+
+  // Gestión Financiera (Admin)
+  async updatePaymentStatus(id: string, status: string, userId?: string): Promise<PedidoDocument> {
+    const pedido = await this.pedidoModel.findById(id);
+    if (!pedido) throw new Error('Pedido no encontrado');
+
+    const previousStatus = pedido.estado_pago;
+    pedido.estado_pago = status;
+
+    // Si se marca como PAGADO, enviar Factura y permitir flujo logístico
+    if (status === 'PAGADO' && previousStatus !== 'PAGADO') {
+      // Enviar Factura con nuevo template
+      this.sendPaymentEmail(pedido.usuario_id.toString(), pedido);
+      this.logger.log(`💰 Pedido #${pedido.numero_pedido_web} marcado como PAGADO. Factura enviada.`);
+    }
+
+    return await pedido.save();
+  }
+
+  // Gestión Logística (Bodega)
+  async updateLogisticStatus(id: string, status: string): Promise<PedidoDocument> {
+    const pedido = await this.pedidoModel.findById(id);
+    if (!pedido) throw new Error('Pedido no encontrado');
+
+    // REGLA DE NEGOCIO: 
+    // - No se puede 'PREPARADO' o 'ENVIADO' si no está 'PAGADO'.
+    // - 'CANCELADO' SÍ se permite en cualquier momento (para cancelar pedidos no pagados).
+    if (['PREPARADO', 'ENVIADO'].includes(status) && pedido.estado_pago !== 'PAGADO') {
+      throw new Error('No se puede procesar logísticamente un pedido NO PAGADO.');
+    }
+
+    const previousStatus = pedido.estado_pedido;
+    pedido.estado_pedido = status;
+    const saved = await pedido.save();
+
+    // Enviar email según el nuevo estado logístico
+    this.sendLogisticEmail(pedido.usuario_id.toString(), saved, status);
+
+    return saved;
+  }
+
+
+  // Método Legacy para compatibilidad (Redirige según el estado)
+  async updateStatus(id: string, status: string): Promise<PedidoDocument> {
+    // Si intentan usar el endpoint viejo para pagar
+    if (['PAGADO', 'RECHAZADO', 'NO_PAGADO'].includes(status)) {
+      return this.updatePaymentStatus(id, status);
+    }
+    return this.updateLogisticStatus(id, status);
+  }
+
+
   // Método auxiliar para manejar el envío de correo sin bloquear
   private async sendConfirmationEmail(userId: string, order: PedidoDocument) {
     try {
-      const user = await this.usuariosService.findById(userId);
-      if (user && user.email) {
-        // Pasamos el nombre del usuario al servicio de email si es necesario modificar sendOrderConfirmation
-        // Por ahora el servicio usa 'Cliente' como default o lo que le pasemos en el futuro.
-        // Para mejorar, podríamos modificar EmailService para aceptar userName, pero por ahora seguimos el plan.
-        await this.emailService.sendOrderConfirmation(user.email, order);
+      const email = await this.getUserEmailFromOrder(order);
+      if (email) {
+        await this.emailService.sendOrderReceived(email, order);
       }
     } catch (error) {
       this.logger.error('Error enviando correo de confirmación de pedido:', error);
     }
   }
+
+  // Nuevo: Enviar Factura (Solo al Pagar)
+  private async sendPaymentEmail(userId: string, order: PedidoDocument) {
+    try {
+      const email = await this.getUserEmailFromOrder(order);
+      if (email) {
+        await this.emailService.sendPaymentConfirmed(email, order);
+      }
+    } catch (error) {
+      this.logger.error('Error enviando email de pago confirmado:', error);
+    }
+  }
+
+  // Enviar emails de estado logístico (PREPARADO, ENVIADO, ENTREGADO)
+  private async sendLogisticEmail(userId: string, order: PedidoDocument, status: string) {
+    try {
+      const email = await this.getUserEmailFromOrder(order);
+      if (!email) return;
+
+      switch (status) {
+        case 'PREPARADO':
+          await this.emailService.sendOrderPreparing(email, order);
+          break;
+        case 'ENVIADO':
+          await this.emailService.sendOrderShipped(email, order);
+          break;
+        case 'ENTREGADO':
+          await this.emailService.sendOrderDelivered(email, order);
+          break;
+      }
+    } catch (error) {
+      this.logger.error(`Error enviando email de estado ${status}:`, error);
+    }
+  }
+
+  // Helper: Extract user email from order (handles populated or unpopulated usuario_id)
+  private async getUserEmailFromOrder(order: PedidoDocument): Promise<string | null> {
+    try {
+      // If usuario_id is populated (is an object with email)
+      if (order.usuario_id && typeof order.usuario_id === 'object' && (order.usuario_id as any).email) {
+        return (order.usuario_id as any).email;
+      }
+      // If usuario_id is just an ObjectId string
+      const userId = order.usuario_id?._id?.toString() || order.usuario_id?.toString();
+      if (userId) {
+        const user = await this.usuariosService.findById(userId);
+        return user?.email || null;
+      }
+      return null;
+    } catch (error) {
+      this.logger.error('Error extrayendo email del usuario:', error);
+      return null;
+    }
+  }
+
+  // Enviar email de solicitud de devolución recibida
+  private async sendReturnRequestEmail(userId: string, order: PedidoDocument) {
+    try {
+      const email = await this.getUserEmailFromOrder(order);
+      if (email) {
+        await this.emailService.sendReturnRequested(email, order);
+      }
+    } catch (error) {
+      this.logger.error('Error enviando email de solicitud de devolución:', error);
+    }
+  }
+
+  // Enviar email de devolución recibida en bodega
+  private async sendReturnReceivedEmail(userId: string, order: PedidoDocument) {
+    try {
+      const email = await this.getUserEmailFromOrder(order);
+      if (email) {
+        await this.emailService.sendReturnReceived(email, order);
+      }
+    } catch (error) {
+      this.logger.error('Error enviando email de devolución recibida:', error);
+    }
+  }
+
+  // Enviar email de reembolso procesado
+  private async sendRefundEmail(userId: string, order: PedidoDocument) {
+    try {
+      const email = await this.getUserEmailFromOrder(order);
+      if (email) {
+        await this.emailService.sendRefundProcessed(email, order);
+      }
+    } catch (error) {
+      this.logger.error('Error enviando email de reembolso:', error);
+    }
+  }
+
 
   /**
    * Envía el pedido al ERP DobraNet con reintentos (max 3)
@@ -195,63 +360,10 @@ export class PedidosService {
     return pedidos;
   }
 
-  // Actualizar estado del pedido (Sin historial)
-  async updateStatus(id: string, status: string): Promise<PedidoDocument> {
-    console.log(`🔄 [Backend] updateStatus llamado para Pedido ID: ${id}, Nuevo Estado: ${status}`);
 
-    const pedido = await this.pedidoModel.findById(id);
-    if (!pedido) {
-      console.error(`❌ [Backend] Pedido no encontrado: ${id}`);
-      throw new Error('Pedido no encontrado');
-    }
 
-    const oldStatus = pedido.estado_pedido;
-    console.log(`ℹ️ [Backend] Estado anterior: ${oldStatus}`);
+  // Solicitar devolución de un pedido
 
-    pedido.estado_pedido = status;
-
-    // Set fecha_entrega if status is ENTREGADO
-    if (status.toUpperCase() === 'ENTREGADO') {
-      pedido.fecha_entrega = new Date();
-    }
-
-    const saveResult = await pedido.save();
-
-    // Create Notification if status changed
-    if (oldStatus !== status) {
-      console.log(`🔔 [Backend] Cambio de estado detectado. Creando notificación...`);
-      let message = `El estado de tu pedido #${pedido.numero_pedido_web} ha cambiado a: ${status.toUpperCase()}`;
-
-      try {
-        const noti = await this.notificationsService.create({
-          usuario_id: pedido.usuario_id.toString(),
-          titulo: 'Actualización de Pedido',
-          mensaje: message,
-          tipo: 'order_status',
-          metadata: { orderId: id, status: status }
-        });
-        console.log(`✅ [Backend] Notificación creada para Usuario: ${pedido.usuario_id}`);
-
-        // Send Email if status is ENTREGADO
-        if (status.toUpperCase() === 'ENTREGADO') {
-          const user = await this.usuariosService.findById(pedido.usuario_id.toString());
-          if (user && user.email) {
-            // Assuming sendOrderConfirmation logic is generic enough or create a new one
-            // For now, logging intention. Ideally, we need specific email template.
-            console.log(`📧 [Backend] Mock Enviando email de entrega a ${user.email}`);
-            // await this.emailService.sendOrderDelivered(user.email, pedido);
-          }
-        }
-
-      } catch (error) {
-        console.error(`❌ [Backend] Error creando notificación/email:`, error);
-      }
-    } else {
-      console.log(`⚠️ [Backend] El estado no ha cambiado, no se crea notificación.`);
-    }
-
-    return saveResult;
-  }
 
   // Solicitar devolución de un pedido
   async requestReturn(id: string, userId: string, returnData: any): Promise<PedidoDocument> {
@@ -265,7 +377,7 @@ export class PedidosService {
       throw new Error('No autorizado para solicitar devolución de este pedido');
     }
 
-    // 2. Verify Status is ENTREGADO
+    // 2. Verify Status is ENTREGADO (Logistic Rule)
     if (pedido.estado_pedido.toUpperCase() !== 'ENTREGADO') {
       throw new Error('Solo se pueden devolver pedidos entregados');
     }
@@ -279,13 +391,14 @@ export class PedidosService {
       throw new Error(`El plazo de devolución (5 días) ha expirado. Han pasado ${diffDays} días.`);
     }
 
-    // 4. Update Status and Save Data
-    pedido.estado_pedido = 'PENDIENTE_REVISION';
+    // 4. Update Return Status ONLY (Decoupled Logic)
+    pedido.estado_devolucion = 'PENDIENTE'; // Top-level Return State
+
     pedido.datos_devolucion = {
       motivo: returnData.motivo,
       fecha_solicitud: new Date(),
       items: returnData.items,
-      estado: 'PENDIENTE_REVISION',
+      estado: 'PENDIENTE',
       observaciones_bodega: ''
     };
 
@@ -294,10 +407,11 @@ export class PedidosService {
     // Notify Admin (Log for now)
     this.logger.log(`↩️ Solicitud de devolución creada para pedido #${pedido.numero_pedido_web}`);
 
+    // Send email to customer confirming return request received
+    this.sendReturnRequestEmail(pedido.usuario_id.toString(), saved);
+
     return saved;
   }
-
-
 
   // Validar devolución (Bodega)
   async validateReturn(id: string, decision: 'APPROVE' | 'REJECT', observations: string): Promise<PedidoDocument> {
@@ -306,23 +420,24 @@ export class PedidosService {
       throw new Error('Pedido no encontrado');
     }
 
-    if (pedido.estado_pedido !== 'PENDIENTE_REVISION') {
-      throw new Error('El pedido no está en revisión de devolución');
+    // Check Return Status, NOT Logistic Status
+    if (pedido.estado_devolucion !== 'PENDIENTE') {
+      throw new Error('El pedido no tiene una devolución pendiente de revisión');
     }
 
     // Log status change attempt
     this.logger.log(`🔍 [ValidateReturn] Order ${id} - Decision: ${decision}`);
-    this.logger.log(`🔍 [ValidateReturn] Current Status: ${pedido.estado_pedido}`);
+    this.logger.log(`🔍 [ValidateReturn] Current Return Status: ${pedido.estado_devolucion}`);
 
-    const newStatus = decision === 'APPROVE' ? 'DEVOLUCION_APROBADA' : 'DEVOLUCION_RECHAZADA';
+    // Map decision to Return Status
     const returnStatus = decision === 'APPROVE' ? 'APROBADA' : 'RECHAZADA';
 
-    pedido.estado_pedido = newStatus;
-    this.logger.log(`🔍 [ValidateReturn] New Status Set: ${newStatus}`);
+    // Update Return Status Only
+    pedido.estado_devolucion = returnStatus;
+    this.logger.log(`🔍 [ValidateReturn] New Return Status Set: ${returnStatus}`);
 
     // Update datos_devolucion (ensure it exists)
     if (!pedido.datos_devolucion) {
-      // Fallback if data missing, though it should exist
       pedido.datos_devolucion = {
         motivo: 'N/A',
         fecha_solicitud: new Date(),
@@ -338,7 +453,7 @@ export class PedidosService {
     }
 
     const saved = await pedido.save();
-    this.logger.log(`✅ [ValidateReturn] Saved Status: ${saved.estado_pedido}`);
+    this.logger.log(`✅ [ValidateReturn] Saved Return Status: ${saved.estado_devolucion}`);
 
     // Create Notification
     const notiTitle = decision === 'APPROVE' ? 'Devolución Aprobada' : 'Devolución Rechazada';
@@ -376,13 +491,77 @@ export class PedidosService {
       }
 
       if (userEmail) {
-        await this.emailService.sendReturnDecision(userEmail, pedido, decision, observations);
+        // Use new templates based on decision
+        if (decision === 'APPROVE') {
+          await this.emailService.sendReturnApproved(userEmail, pedido);
+        } else {
+          await this.emailService.sendReturnRejected(userEmail, pedido, observations);
+        }
       } else {
         this.logger.warn(`Could not send return email for Order ${id}: User email not found`);
       }
     } catch (emailErr) {
       this.logger.error(`Error sending return email for Order ${id}`, emailErr);
     }
+
+    return saved;
+  }
+
+  // Paso 3: Bodega recibe el producto (Físico)
+  async receiveReturn(id: string, observations: string): Promise<PedidoDocument> {
+    const pedido = await this.findOne(id);
+    if (!pedido) throw new Error('Pedido no encontrado');
+
+    // Strict Rule: Can only receive if previously APPROVED
+    if (pedido.estado_devolucion !== 'APROBADA') {
+      throw new Error('Solo se pueden recibir devoluciones previamente aprobadas por administración.');
+    }
+
+    // Update Status
+    pedido.estado_devolucion = 'RECIBIDA';
+
+    if (pedido.datos_devolucion) {
+      pedido.datos_devolucion.estado = 'RECIBIDA';
+      if (observations) {
+        // Append entry observation
+        const prevObs = (pedido.datos_devolucion as any).observaciones_bodega || '';
+        (pedido.datos_devolucion as any).observaciones_bodega = prevObs + ` | [Recepción]: ${observations}`;
+      }
+    }
+
+    const saved = await pedido.save();
+    this.logger.log(`📦 [Bodega] Devolución recibida para pedido #${pedido.numero_pedido_web}`);
+
+    // Send email notifying customer product was received
+    this.sendReturnReceivedEmail(pedido.usuario_id.toString(), saved);
+
+    return saved;
+  }
+
+  // Paso 4: Admin finaliza/reembolsa (Cierre Financiero)
+  async finalizeReturn(id: string): Promise<PedidoDocument> {
+    const pedido = await this.findOne(id);
+    if (!pedido) throw new Error('Pedido no encontrado');
+
+    // Strict Rule: Can only finalize if RECEIVED (Physically in warehouse)
+    if (pedido.estado_devolucion !== 'RECIBIDA') {
+      throw new Error('No se puede finalizar el reembolso si el producto no ha sido recibido en bodega.');
+    }
+
+    // 1. Update Return Status (Closed)
+    pedido.estado_devolucion = 'REEMBOLSADA';
+    if (pedido.datos_devolucion) pedido.datos_devolucion.estado = 'REEMBOLSADA';
+
+    // 2. Update Payment Status (Money back)
+    pedido.estado_pago = 'REEMBOLSADO';
+
+    // TODO: Trigger Credit Note or Stripe Refund here
+
+    const saved = await pedido.save();
+    this.logger.log(`💰 [Finanzas] Reembolso procesado para pedido #${pedido.numero_pedido_web}`);
+
+    // Send refund completed email
+    this.sendRefundEmail(pedido.usuario_id.toString(), saved);
 
     return saved;
   }
@@ -407,7 +586,7 @@ export class PedidosService {
     }
 
     // 3. Cancel
-    pedido.estado_pedido = 'Cancelado';
+    pedido.estado_pedido = 'CANCELADO';
     const saved = await pedido.save();
 
     console.log(`✅ [Backend] Pedido ${pedido.numero_pedido_web} cancelado por el usuario ${userId}`);

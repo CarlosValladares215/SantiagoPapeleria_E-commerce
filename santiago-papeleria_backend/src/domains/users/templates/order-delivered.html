@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pedido Entregado - Santiago Papelería</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #F2F2F2; font-family: 'Inter', Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F2F2F2; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0"
+                    style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 25px; text-align: center; border-bottom: 1px solid #e5e5e5;">
+                            <h2
+                                style="margin: 0; font-size: 20px; font-weight: 700; color: #104D73; text-transform: uppercase; letter-spacing: 1px;">
+                                Santiago Papelería</h2>
+                            <div
+                                style="width: 50px; height: 3px; background-color: #F2CB07; margin: 10px auto 0; border-radius: 2px;">
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Hero -->
+                    <tr>
+                        <td style="padding: 50px 40px; text-align: center;">
+                            <div
+                                style="width: 90px; height: 90px; background-color: #D1FAE5; border-radius: 50%; margin: 0 auto 25px; line-height: 90px; font-size: 50px;">
+                                ✓</div>
+                            <h1 style="margin: 0; font-size: 32px; font-weight: 700; color: #10B981;">¡Pedido Entregado!
+                            </h1>
+                            <p
+                                style="margin: 20px auto 0; font-size: 16px; color: #6b7280; line-height: 1.7; max-width: 450px;">
+                                ¡Tu paquete ha llegado a su destino! Esperamos que tus nuevos artículos de papelería te
+                                inspiren a crear cosas increíbles.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Thank You Message -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #f9fafb; border-radius: 12px; border: 1px solid #e5e5e5; padding: 25px; text-align: center;">
+                                <tr>
+                                    <td>
+                                        <span style="font-size: 24px; color: #104D73;">❤️</span>
+                                        <p
+                                            style="margin: 10px 0 0; font-size: 16px; font-weight: 500; color: #104D73; font-style: italic;">
+                                            "Gracias por elegir Santiago Papelería. Tu apoyo significa el mundo para
+                                            nosotros."
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Return Policy Notice -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #EFF6FF; border-left: 4px solid #104D73; border-radius: 0 10px 10px 0; padding: 20px;">
+                                <tr>
+                                    <td style="width: 35px; vertical-align: top;">
+                                        <span style="font-size: 20px;">ℹ️</span>
+                                    </td>
+                                    <td>
+                                        <p style="margin: 0; font-size: 14px; font-weight: 600; color: #104D73;">¿Algo
+                                            no está bien?</p>
+                                        <p style="margin: 8px 0 0; font-size: 13px; color: #6b7280; line-height: 1.6;">
+                                            Recuerda que tienes una ventana de <strong>5 días naturales</strong> para
+                                            realizar cualquier cambio o devolución. Consulta nuestras políticas en el
+                                            sitio web.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Leave Review CTA -->
+                    <tr>
+                        <td style="padding: 0 40px 30px; text-align: center;">
+                            <p style="margin: 0 0 20px; font-size: 14px; color: #6b7280;">¿Te encantó tu compra?
+                                ¡Cuéntale al mundo!</p>
+                            <a href="{{review_url}}"
+                                style="display: inline-block; background-color: #104D73; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 15px 35px; border-radius: 50px; box-shadow: 0 4px 12px rgba(16,77,115,0.3);">
+                                ⭐ Dejar una Reseña
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Delivery Details -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="border: 1px solid #e5e5e5; border-radius: 10px; overflow: hidden;">
+                                <tr>
+                                    <td
+                                        style="background-color: #f9fafb; padding: 12px 20px; border-bottom: 1px solid #e5e5e5;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td
+                                                    style="font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">
+                                                    Detalles del Envío</td>
+                                                <td
+                                                    style="text-align: right; font-size: 11px; color: #9ca3af; font-family: monospace;">
+                                                    #{{numero_pedido}}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 15px 20px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="width: 50%;">
+                                                    <p
+                                                        style="margin: 0 0 3px; font-size: 10px; color: #9ca3af; text-transform: uppercase; font-weight: 700;">
+                                                        Entregado en</p>
+                                                    <p style="margin: 0; font-size: 13px; color: #374151;">
+                                                        {{direccion_entrega}}</p>
+                                                </td>
+                                                <td style="width: 50%; text-align: right;">
+                                                    <p
+                                                        style="margin: 0 0 3px; font-size: 10px; color: #9ca3af; text-transform: uppercase; font-weight: 700;">
+                                                        Fecha de entrega</p>
+                                                    <p style="margin: 0; font-size: 13px; color: #374151;">
+                                                        {{fecha_entrega}}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="background-color: #f3f4f6; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+                            <table cellpadding="0" cellspacing="0" style="margin: 0 auto 15px;">
+                                <tr>
+                                    <td style="padding: 0 10px;"><a href="#"
+                                            style="color: #104D73; text-decoration: none; font-size: 18px;">📘</a></td>
+                                    <td style="padding: 0 10px;"><a href="#"
+                                            style="color: #104D73; text-decoration: none; font-size: 18px;">📷</a></td>
+                                    <td style="padding: 0 10px;"><a href="#"
+                                            style="color: #104D73; text-decoration: none; font-size: 18px;">✉️</a></td>
+                                </tr>
+                            </table>
+                            <p style="margin: 0 0 5px; font-size: 10px; color: #9ca3af;">© 2024 Santiago Papelería.
+                                Todos los derechos reservados.</p>
+                            <p style="margin: 0; font-size: 10px; color: #9ca3af;">
+                                Recibiste este correo porque realizaste una compra en nuestro sitio web.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
