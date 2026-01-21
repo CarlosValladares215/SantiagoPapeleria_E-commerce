@@ -25,30 +25,57 @@
                         <p class="text-sm text-gray-500">Historial completo de tus compras</p>
                     </div>
                     <div class="text-center">
-                        <span class="block text-2xl font-bold text-[#012e40]">{{ orders.length }}</span>
+                        <span class="block text-2xl font-bold text-[#012e40]">{{ orders().length }}</span>
                         <span class="text-xs text-gray-500 font-medium">Pedidos Totales</span>
                     </div>
                 </div>
 
-                <!-- Filters / Tabs -->
+                <!-- Filters -->
                 <div class="flex flex-wrap gap-2">
-                    @for (filter of filters; track filter.value) {
-                    <button (click)="setFilter(filter.value)" [class]="activeFilter === filter.value 
+                    @for (filter of filters(); track filter.value) {
+                    <button (click)="setFilter(filter.value)" [class]="activeFilter() === filter.value 
                   ? 'bg-[#012e40] text-white shadow-md' 
                   : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'"
                         class="px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
                         {{ filter.label }}
-                        <span class="text-xs opacity-80" [class.bg-white]="activeFilter === filter.value"
-                            [class.text-[#012e40]]="activeFilter === filter.value"
-                            [class.bg-gray-100]="activeFilter !== filter.value"
+                        <span class="text-xs opacity-80" [class.bg-white]="activeFilter() === filter.value"
+                            [class.text-[#012e40]]="activeFilter() === filter.value"
+                            [class.bg-gray-100]="activeFilter() !== filter.value"
                             class="px-1.5 py-0.5 rounded-full inline-block">{{ filter.count }}</span>
                     </button>
                     }
                 </div>
 
-                <!-- Orders List -->
+                <!-- ORDERS CONTENT -->
                 <div class="space-y-4">
-                    @for (order of filteredOrders; track order.id) {
+
+                    <!-- SKELETON LOADER -->
+                    @if (isLoading()) {
+                    @for (i of [1,2,3]; track i) {
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 animate-pulse">
+                        <div class="flex flex-col md:flex-row justify-between gap-6">
+                            <div class="space-y-3 flex-1">
+                                <div class="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
+                                <div class="flex gap-4">
+                                    <div class="h-4 bg-gray-200 rounded w-20"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <div class="h-3 bg-gray-200 rounded w-10 mb-2 ml-auto"></div>
+                                    <div class="h-6 bg-gray-200 rounded w-24"></div>
+                                </div>
+                                <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                    }
+
+                    <!-- LIST -->
+                    @if (!isLoading()) {
+                    @for (order of filteredOrders(); track order.id) {
                     <div
                         class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md">
 
@@ -94,30 +121,30 @@
 
                                 <button
                                     class="w-10 h-10 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-[#012e40] flex items-center justify-center transition-all duration-300"
-                                    [class.rotate-180]="expandedOrderId === order.id">
+                                    [class.rotate-180]="expandedOrderId() === order.id">
                                     <i class="ri-arrow-down-s-line text-xl"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Expanded Details -->
-                        @if (expandedOrderId === order.id) {
+                        @if (expandedOrderId() === order.id) {
                         <div class="border-t border-gray-100 bg-gray-50/50 p-6 animate-fadeIn">
-
+                            <!-- ... Content Remains the same, just keeping structure ... -->
                             <h3 class="text-sm font-bold text-[#012e40] mb-4">Productos</h3>
 
                             <!-- Return Details (New for HU048) -->
                             @if (order.status.includes('Devolución')) {
                             <div class="mb-6 p-4 rounded-lg border" [ngClass]="{
-                                     'bg-red-50 border-red-100': order.status.includes('Rechazada'),
-                                     'bg-green-50 border-green-100': order.status.includes('Aprobada'),
-                                     'bg-yellow-50 border-yellow-100': order.status.includes('Pendiente')
-                                 }">
+                                         'bg-red-50 border-red-100': order.status.includes('Rechazada'),
+                                         'bg-green-50 border-green-100': order.status.includes('Aprobada'),
+                                         'bg-yellow-50 border-yellow-100': order.status.includes('Pendiente')
+                                     }">
                                 <h3 class="text-sm font-bold mb-2 flex items-center gap-2" [ngClass]="{
-                                        'text-red-700': order.status.includes('Rechazada'),
-                                        'text-green-700': order.status.includes('Aprobada'),
-                                        'text-yellow-700': order.status.includes('Pendiente')
-                                    }">
+                                            'text-red-700': order.status.includes('Rechazada'),
+                                            'text-green-700': order.status.includes('Aprobada'),
+                                            'text-yellow-700': order.status.includes('Pendiente')
+                                        }">
                                     <i class="ri-information-fill text-lg"></i>
                                     Detalle de Devolución
                                 </h3>
@@ -206,11 +233,11 @@
                                             <p class="font-bold">{{ order.paymentInfo?.metodo || 'No especificado' }}
                                             </p>
                                             <span class="text-[10px] font-bold px-2 py-0.5 rounded border" [ngClass]="{
-                                                'bg-green-100 text-green-700 border-green-200': order.paymentStatus === 'PAGADO',
-                                                'bg-yellow-100 text-yellow-700 border-yellow-200': order.paymentStatus === 'PENDIENTE_CONFIRMACION',
-                                                'bg-red-100 text-red-700 border-red-200': order.paymentStatus === 'RECHAZADO' || order.paymentStatus === 'NO_PAGADO',
-                                                'bg-gray-100 text-gray-700 border-gray-200': !order.paymentStatus
-                                            }">
+                                                    'bg-green-100 text-green-700 border-green-200': order.paymentStatus === 'PAGADO',
+                                                    'bg-yellow-100 text-yellow-700 border-yellow-200': order.paymentStatus === 'PENDIENTE_CONFIRMACION',
+                                                    'bg-red-100 text-red-700 border-red-200': order.paymentStatus === 'RECHAZADO' || order.paymentStatus === 'NO_PAGADO',
+                                                    'bg-gray-100 text-gray-700 border-gray-200': !order.paymentStatus
+                                                }">
                                                 {{ order.paymentStatus || 'NO_PAGADO' }}
                                             </span>
                                         </div>
@@ -314,6 +341,7 @@
                         }
 
                     </div>
+                    }
                     }
                 </div>
 

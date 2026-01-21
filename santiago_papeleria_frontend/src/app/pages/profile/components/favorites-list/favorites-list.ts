@@ -1,5 +1,7 @@
 import { Component, inject, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { CartService } from '../../../../services/cart/cart.service';
 
 import { ProductService } from '../../../../services/product/product.service';
 import { FavoritesService } from '../../../../services/favorites/favorites.service';
@@ -15,6 +17,16 @@ import { Product } from '../../../../models/product.model';
 export class FavoritesListComponent implements OnInit {
     productService = inject(ProductService);
     favoritesService = inject(FavoritesService);
+    cartService = inject(CartService);
+    router = inject(Router);
+
+    handleAddToCart(product: Product) {
+        this.cartService.addToCart(product, 1);
+    }
+
+    navigateToProduct(slugOrId: string) {
+        this.router.navigate(['/product', slugOrId]);
+    }
 
     activeFilter: string = 'Todos';
 

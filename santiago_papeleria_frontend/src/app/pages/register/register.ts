@@ -205,29 +205,38 @@ export class Register {
     }
     // END VALIDATION BLOCK
 
-    // Async Check for Email on Step 2
+    // Async Check for Cedula and Email on Step 2
     if (this.currentStep === 2) {
+      this.isSubmitting = true;
       const email = this.registerForm.get('email')?.value;
-      if (email) {
-        this.isSubmitting = true;
-        this.authService.checkEmailAvailability(email).subscribe({
+      const cedula = this.registerForm.get('cedula')?.value;
+
+      // 1. Check Cedula Availability
+      if (cedula) {
+        this.authService.checkCedulaAvailability(cedula).subscribe({
           next: (res) => {
-            this.isSubmitting = false;
             if (res.exists) {
-              this.registerForm.get('email')?.setErrors({ notUnique: true });
-              this.registerForm.get('email')?.markAsTouched();
+              this.isSubmitting = false;
+              this.registerForm.get('cedula')?.setErrors({ notUnique: true });
+              this.registerForm.get('cedula')?.markAsTouched();
               this.cdr.detectChanges();
             } else {
-              this.proceedToNext();
+              // 2. Cedula OK, Check Email Availability
+              this.checkEmailAndProceed(email);
             }
           },
           error: (err) => {
             this.isSubmitting = false;
-            // Handle error gracefully, maybe allow proceed or warn
-            alert('No se pudo verificar el correo. Intente nuevamente.');
+            console.error('Error checking cedula:', err);
+            // Block progress on network error to prevent submitting with potentially duplicate data or incomplete validation
+            alert('No se pudo verificar la cédula. Por favor revise su conexión e intente nuevamente.');
             this.cdr.detectChanges();
           }
         });
+        return;
+      } else {
+        // Should ideally not happen due to validators, but if optional/empty -> proceed to check email
+        this.checkEmailAndProceed(email);
         return;
       }
     }
@@ -249,6 +258,32 @@ export class Register {
     }
     this.scrollToTop();
     this.cdr.detectChanges();
+  }
+
+  private checkEmailAndProceed(email: string) {
+    if (email) {
+      this.authService.checkEmailAvailability(email).subscribe({
+        next: (res) => {
+          this.isSubmitting = false;
+          if (res.exists) {
+            this.registerForm.get('email')?.setErrors({ notUnique: true });
+            this.registerForm.get('email')?.markAsTouched();
+            this.cdr.detectChanges();
+          } else {
+            this.proceedToNext();
+          }
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          console.error('Error checking email:', err);
+          alert('No se pudo verificar el correo. Por favor revise su conexión e intente nuevamente.');
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.isSubmitting = false;
+      this.proceedToNext();
+    }
   }
 
   prevStep() {

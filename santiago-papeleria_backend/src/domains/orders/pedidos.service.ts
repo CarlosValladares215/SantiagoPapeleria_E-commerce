@@ -116,6 +116,15 @@ export class PedidosService {
       this.logger.log(`💰 Pedido #${pedido.numero_pedido_web} marcado como PAGADO. Factura enviada.`);
     }
 
+    // Si se marca como RECHAZADO (Admin rechaza pago)
+    if (status === 'RECHAZADO' && previousStatus !== 'RECHAZADO') {
+      // Only restore if not already cancelled (Double safety)
+      if (pedido.estado_pedido !== 'CANCELADO') {
+        await this.restoreStock(pedido, 'PAGO_RECHAZADO');
+        pedido.estado_pedido = 'CANCELADO'; // Auto-cancel order
+      }
+    }
+
     return await pedido.save();
   }
 
@@ -133,6 +142,16 @@ export class PedidosService {
 
     const previousStatus = pedido.estado_pedido;
     pedido.estado_pedido = status;
+
+    // Si se cancela logísticamente (Bodega/Admin)
+    if (status === 'CANCELADO' && previousStatus !== 'CANCELADO') {
+      // Check if payment was already rejected (which already restored stock)
+      // If payment is NOT rejected, then this is a fresh cancellation -> restore
+      if (pedido.estado_pago !== 'RECHAZADO') {
+        await this.restoreStock(pedido, 'CANCELACION_LOGISTICA');
+      }
+    }
+
     const saved = await pedido.save();
 
     // Enviar email según el nuevo estado logístico
@@ -290,16 +309,22 @@ export class PedidosService {
         } else {
           lastError = erpResponse.MSG || 'Error desconocido del ERP';
           this.logger.warn(`⚠️ ERP rechazó pedido: ${lastError}`);
+
+          // Stop retrying if product is not found (Deterministic Error)
+          if (lastError.includes('NO ENCONTRADO') || lastError.includes('NOT FOUND')) {
+            this.logger.warn('⛔ No se reintentará sincronización por error determinístico.');
+            break;
+          }
         }
       } catch (error) {
         lastError = error.message || 'Error de conexión';
         this.logger.error(`❌ Error enviando pedido al ERP (intento ${attempts}): ${lastError}`);
+      }
 
-        // Esperar antes de reintentar (backoff exponencial)
-        if (attempts < maxRetries) {
-          const waitTime = Math.pow(2, attempts) * 1000; // 2s, 4s, 8s
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
+      // Backoff mechanism for both logical and connection errors
+      if (!success && attempts < maxRetries) {
+        const waitTime = Math.pow(2, attempts) * 1000; // 2s, 4s, 8s
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
 
@@ -575,7 +600,7 @@ export class PedidosService {
 
     // 1. Verify Ownership
     // Check both objectId and string for safety
-    if (pedido.usuario_id.toString() !== userId) {
+    if (pedido.usuario_id.toString() !== userId && (pedido.usuario_id as any)._id?.toString() !== userId) {
       throw new Error('No autorizado para cancelar este pedido');
     }
 
@@ -587,9 +612,38 @@ export class PedidosService {
 
     // 3. Cancel
     pedido.estado_pedido = 'CANCELADO';
+
+    // 4. Restore Stock (User Cancellation)
+    await this.restoreStock(pedido, 'CANCELACION_USUARIO');
+
     const saved = await pedido.save();
 
     console.log(`✅ [Backend] Pedido ${pedido.numero_pedido_web} cancelado por el usuario ${userId}`);
     return saved;
+  }
+
+  /**
+   * Restaura el stock de los items del pedido.
+   * Se debe llamar al cancelar o rechazar un pedido.
+   */
+  private async restoreStock(pedido: PedidoDocument, reason: string) {
+    this.logger.log(`🔄 Restaurando stock para pedido #${pedido.numero_pedido_web}. Motivo: ${reason}`);
+
+    for (const item of pedido.items) {
+      if (item.codigo_dobranet) {
+        try {
+          // Restore exact quantity
+          await this.stockService.updateStock(
+            item.codigo_dobranet,
+            item.cantidad, // Positive value to add back
+            `RESTORE-${pedido.numero_pedido_web}`,
+            'DEVOLUCION', // Using DEVOLUCION as generic term for 'Giving back to stock'
+            pedido.usuario_id.toString()
+          );
+        } catch (error) {
+          this.logger.error(`❌ Error restaurando stock para item ${item.codigo_dobranet}:`, error);
+        }
+      }
+    }
   }
 }

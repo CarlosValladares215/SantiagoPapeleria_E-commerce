@@ -132,7 +132,23 @@ export class UsuariosController {
       direcciones_entrega: dto.direcciones_entrega // Include delivery addresses
     };
 
-    const user = await this.usuariosService.registerInternal(userData);
+    let user: UsuarioDocument;
+    try {
+      user = await this.usuariosService.registerInternal(userData);
+    } catch (error: any) {
+      if (error.code === 11000) {
+        // Check which key was duplicated
+        if (error.keyPattern?.cedula) {
+          throw new ConflictException('Esta cédula ya está registrada');
+        }
+        if (error.keyPattern?.email) {
+          throw new ConflictException('Este email ya está registrado');
+        }
+        // Fallback
+        throw new ConflictException('El usuario ya existe (Email o Cédula duplicados)');
+      }
+      throw error;
+    }
 
     // 4. Enviar email (Try-Catch para evitar 500 si falla SMTP)
     try {
@@ -160,14 +176,16 @@ export class UsuariosController {
       userId: user._id,
       access_token: jwtToken,
       user: {
-        _id: user._id,
+        _id: user._id, // Fixed: Return _id to match frontend model
         nombres: user.nombres,
         email: user.email,
         cedula: user.cedula,
         telefono: user.telefono,
         tipo_cliente: user.tipo_cliente,
         role: user.role,
-        datos_negocio: user.datos_negocio
+        datos_negocio: user.datos_negocio,
+        direcciones_entrega: user.direcciones_entrega, // Fixed: Include addresses
+        favorites: user.favorites // Fixed: Include favorites just in case
       }
     };
   }
@@ -177,6 +195,17 @@ export class UsuariosController {
   async checkEmail(@Body('email') email: string) {
     if (!email) throw new BadRequestException('Email required');
     const user = await this.usuariosService.findByEmail(email);
+    return { exists: !!user };
+  }
+
+  // POST /usuarios/check-cedula (Verificar disponibilidad de cédula)
+  @Post('check-cedula')
+  async checkCedula(@Body('cedula') cedula: string) {
+    if (!cedula) throw new BadRequestException('Cedula required');
+    // Validar formato (simple 10 dígitos)
+    if (!/^\d{10}$/.test(cedula)) throw new BadRequestException('Invalid format');
+
+    const user = await this.usuariosService.findByCedula(cedula);
     return { exists: !!user };
   }
 
@@ -244,14 +273,16 @@ export class UsuariosController {
       message: 'Cuenta verificada exitosamente',
       access_token: jwtToken, // Return token for auto-login
       user: {
-        id: user._id,
+        _id: user._id, // Fixed: Return _id to match frontend model
         email: user.email,
         nombres: user.nombres,
         cedula: user.cedula,
         telefono: user.telefono,
         roles: [user.tipo_cliente], // keeping 'roles' array for compatibility if used elsewhere, although register uses 'role' string and 'tipo_cliente'
         tipo_cliente: user.tipo_cliente,
-        datos_negocio: user.datos_negocio
+        datos_negocio: user.datos_negocio,
+        direcciones_entrega: user.direcciones_entrega,
+        favorites: user.favorites // Fixed: Include favorites just in case
       }
     };
   }

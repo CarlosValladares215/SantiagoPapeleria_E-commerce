@@ -123,7 +123,7 @@ export class Usuario {
   @Prop({ required: true })
   nombres: string;
 
-  @Prop()
+  @Prop({ unique: true }) // Added unique constraint
   cedula: string;
 
   @Prop()

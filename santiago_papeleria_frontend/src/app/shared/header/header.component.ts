@@ -40,6 +40,9 @@ export class Header implements OnInit {
   megaMenu = signal<string>('none');
   groupedCategories = signal<SuperCategoryGroup[]>([]);
   private megaHideTimeout: any;
+  private megaShowTimeout: any;
+  private readonly HOVER_DELAY = 250;
+  private readonly CLOSE_DELAY = 200;
 
   ngOnInit() {
     this.productService.fetchCategoriesStructure().subscribe(grouped => {
@@ -48,17 +51,37 @@ export class Header implements OnInit {
   }
 
   openMega(menu: string) {
+    // 1. Cancelar cualquier cierre pendiente (si venimos del contenido o de otro menú)
     clearTimeout(this.megaHideTimeout);
-    this.megaMenu.set(menu);
+
+    // 2. Si ya estamos en el mismo menú, no hacemos nada
+    if (this.megaMenu() === menu) return;
+
+    // 3. Cancelar apertura pendiente de otro menú (si movió el mouse rápido de A a B)
+    clearTimeout(this.megaShowTimeout);
+
+    // 4. Programar apertura (Hover Intent)
+    // Si ya hay un menú abierto, el cambio es inmediato (UX: exploración fluida)
+    const delay = this.megaMenu() !== 'none' ? 0 : this.HOVER_DELAY;
+
+    this.megaShowTimeout = setTimeout(() => {
+      this.megaMenu.set(menu);
+    }, delay);
   }
 
   scheduleCloseMega() {
+    // 1. Si el usuario saca el mouse antes de que se abra, cancelamos la apertura
+    clearTimeout(this.megaShowTimeout);
+
+    // 2. Programar cierre con "delay decente"
     this.megaHideTimeout = setTimeout(() => {
       this.megaMenu.set('none');
-    }, 250);
+    }, this.CLOSE_DELAY);
   }
 
   cancelCloseMega() {
+    // El usuario entró al área del menú o regresó al trigger
     clearTimeout(this.megaHideTimeout);
+    clearTimeout(this.megaShowTimeout); // (Opcional) Si entra al contenido, ya está abierto
   }
 }

@@ -20,6 +20,7 @@ export class Login {
 
   showPassword = false;
   isLoading = false;
+  rememberMe = true;
 
   constructor(
     private router: Router,
@@ -29,7 +30,7 @@ export class Login {
   handleSubmit() {
     this.isLoading = true;
 
-    this.authService.login(this.formData).subscribe({
+    this.authService.login(this.formData, this.rememberMe).subscribe({
       next: ({ user, token }) => {
         this.isLoading = false;
         console.log('Login exitoso:', user);

@@ -28,7 +28,8 @@
       <!-- Scrollable Area -->
       <div #scrollContainer class="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory scrollbar-hide px-2">
         <div *ngFor="let product of products()" class="snap-center shrink-0 w-[240px] md:w-[340px]">
-          <app-product-card [product]="product"></app-product-card>
+          <app-product-card [product]="product" (viewDetails)="navigateToProduct($event)"
+            (addToCart)="handleAddToCart($event)"></app-product-card>
         </div>
       </div>
 

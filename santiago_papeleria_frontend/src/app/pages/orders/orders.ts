@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -61,20 +61,35 @@ export class Orders implements OnInit {
     orderService = inject(OrderService);
     router = inject(Router);
 
-    activeFilter: string = 'Todos';
-    expandedOrderId: string | null = null; // Track expanded order
+    activeFilter = signal<string>('Todos');
+    expandedOrderId = signal<string | null>(null);
+    isLoading = signal<boolean>(true);
 
-    orders: Order[] = [];
+    orders = signal<Order[]>([]);
 
-    filters = [
+    filters = signal([
         { label: 'Todos', count: 0, value: 'Todos' },
         { label: 'Pendientes', count: 0, value: 'Pendiente' },
         { label: 'Preparando', count: 0, value: 'Preparando' },
         { label: 'Enviados', count: 0, value: 'Enviado' },
         { label: 'Entregados', count: 0, value: 'Entregado' },
-        { label: 'Devoluciones', count: 0, value: 'Devolucion' }, // Group all return statuses
+        { label: 'Devoluciones', count: 0, value: 'Devolucion' },
         { label: 'Cancelados', count: 0, value: 'Cancelado' }
-    ];
+    ]);
+
+    // Computed Filtered Orders
+    filteredOrders = computed(() => {
+        const currentFilter = this.activeFilter();
+        const currentOrders = this.orders();
+
+        if (currentFilter === 'Todos') {
+            return currentOrders;
+        }
+        if (currentFilter === 'Devolucion') {
+            return currentOrders.filter(order => order.status.includes('Devolución'));
+        }
+        return currentOrders.filter(order => order.status === currentFilter);
+    });
 
     ngOnInit() {
         this.loadUserOrders();
@@ -82,18 +97,26 @@ export class Orders implements OnInit {
 
     loadUserOrders() {
         const userId = this.authService.user()?._id;
-        if (!userId) return;
+        if (!userId) {
+            this.isLoading.set(false);
+            return;
+        }
 
+        this.isLoading.set(true);
         this.orderService.getOrdersByUser(userId).subscribe({
             next: (data) => {
                 // Sort by date desc
                 const sorted = (data as BackendOrder[]).sort((a, b) =>
                     new Date(b.fecha_compra).getTime() - new Date(a.fecha_compra).getTime()
                 );
-                this.orders = sorted.map(order => this.mapBackendOrder(order));
+                this.orders.set(sorted.map(order => this.mapBackendOrder(order)));
                 this.updateFilters();
+                this.isLoading.set(false);
             },
-            error: (err) => console.error('Error fetching user orders', err)
+            error: (err) => {
+                console.error('Error fetching user orders', err);
+                this.isLoading.set(false);
+            }
         });
     }
 
@@ -120,7 +143,7 @@ export class Orders implements OnInit {
                 quantity: item.cantidad,
                 totalPrice: item.subtotal,
                 unitPrice: item.precio_unitario_aplicado,
-                image: 'assets/products/placeholder.png'
+                image: 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768924502/placeholder_ni9blz.png'
             })),
             warehouseObservations: backendOrder.datos_devolucion?.observaciones_bodega,
             returnDetails: backendOrder.datos_devolucion ? {
@@ -152,15 +175,16 @@ export class Orders implements OnInit {
     }
 
     updateFilters() {
-        const allCount = this.orders.length;
-        const pendingCount = this.orders.filter(o => o.status === 'Pendiente').length;
-        const preparingCount = this.orders.filter(o => o.status === 'Preparando').length;
-        const sentCount = this.orders.filter(o => o.status === 'Enviado').length;
-        const deliveredCount = this.orders.filter(o => o.status === 'Entregado').length;
-        const cancelledCount = this.orders.filter(o => o.status === 'Cancelado').length;
-        const returnsCount = this.orders.filter(o => o.status.includes('Devolución')).length;
+        const os = this.orders();
+        const allCount = os.length;
+        const pendingCount = os.filter(o => o.status === 'Pendiente').length;
+        const preparingCount = os.filter(o => o.status === 'Preparando').length;
+        const sentCount = os.filter(o => o.status === 'Enviado').length;
+        const deliveredCount = os.filter(o => o.status === 'Entregado').length;
+        const cancelledCount = os.filter(o => o.status === 'Cancelado').length;
+        const returnsCount = os.filter(o => o.status.includes('Devolución')).length;
 
-        this.filters = [
+        this.filters.set([
             { label: 'Todos', count: allCount, value: 'Todos' },
             { label: 'Pendientes', count: pendingCount, value: 'Pendiente' },
             { label: 'Preparando', count: preparingCount, value: 'Preparando' },
@@ -168,29 +192,19 @@ export class Orders implements OnInit {
             { label: 'Entregados', count: deliveredCount, value: 'Entregado' },
             { label: 'Devoluciones', count: returnsCount, value: 'Devolucion' },
             { label: 'Cancelados', count: cancelledCount, value: 'Cancelado' }
-        ];
+        ]);
     }
 
     toggleExpand(orderId: string) {
-        if (this.expandedOrderId === orderId) {
-            this.expandedOrderId = null;
+        if (this.expandedOrderId() === orderId) {
+            this.expandedOrderId.set(null);
         } else {
-            this.expandedOrderId = orderId;
+            this.expandedOrderId.set(orderId);
         }
-    }
-
-    get filteredOrders() {
-        if (this.activeFilter === 'Todos') {
-            return this.orders;
-        }
-        if (this.activeFilter === 'Devolucion') {
-            return this.orders.filter(order => order.status.includes('Devolución'));
-        }
-        return this.orders.filter(order => order.status === this.activeFilter);
     }
 
     setFilter(filter: string) {
-        this.activeFilter = filter;
+        this.activeFilter.set(filter);
     }
 
     // Helpers for Resume Badge Styles

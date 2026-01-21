@@ -1,11 +1,12 @@
 import { Component, inject, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../services/auth/auth.service';
 import { ReportesService } from '../../../../services/reportes.service';
 import { ProductService } from '../../../../services/product/product.service';
 import { Product } from '../../../../models/product.model';
 import { ProductCard } from '../../../../shared/components/product-card/product-card';
+import { CartService } from '../../../../services/cart/cart.service';
 
 @Component({
   selector: 'app-featured-products',
@@ -18,6 +19,8 @@ export class FeaturedProducts implements OnInit {
   authService = inject(AuthService);
   private reportesService = inject(ReportesService);
   private productService = inject(ProductService);
+  private cartService = inject(CartService);
+  private router = inject(Router);
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
@@ -73,5 +76,14 @@ export class FeaturedProducts implements OnInit {
     if (this.scrollContainer) {
       this.scrollContainer.nativeElement.scrollBy({ left: 300, behavior: 'smooth' });
     }
+  }
+
+  navigateToProduct(result: string) {
+    // result can be slug or id
+    this.router.navigate(['/product', result]);
+  }
+
+  handleAddToCart(product: Product) {
+    this.cartService.addToCart(product, 1);
   }
 }

@@ -22,7 +22,7 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
       <!-- Bot Avatar -->
       @if (message.sender === 'bot' && !message.isLoading) {
         <div class="avatar">
-          <img src="assets/images/bot_avatar.png" alt="Bot">
+          <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768923352/bot_avatar_h4ftod.jpg" alt="Bot">
         </div>
       }
 
@@ -44,7 +44,7 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
               @for (product of products; track product._id || product.sku) {
                 <div class="product-card" (click)="productSelected.emit(product)">
                   <div class="product-image">
-                    <img [src]="product.multimedia?.principal || 'assets/images/placeholder.png'" [alt]="product.nombre">
+                    <img [src]="product.multimedia?.principal || 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768924502/placeholder_ni9blz.png'" [alt]="product.nombre">
                   </div>
                   <div class="product-info">
                     <span class="product-brand">{{ product.brand || 'Sin marca' }}</span>
