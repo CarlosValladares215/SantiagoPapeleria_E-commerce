@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Devolución Aprobada - Santiago Papelería</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #F2F2F2; font-family: 'Inter', Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F2F2F2; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0"
+                    style="max-width: 600px; background-color: #ffffff; border-radius: 0; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e5e5e5;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: #104D73; padding: 25px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td
+                                                    style="width: 36px; height: 36px; background-color: #F2CB07; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                                    <span
+                                                        style="color: #104D73; font-size: 16px; font-weight: 700;">✎</span>
+                                                </td>
+                                                <td style="padding-left: 10px;">
+                                                    <span
+                                                        style="font-size: 16px; font-weight: 700; color: #ffffff;">SANTIAGO</span>
+                                                    <span style="font-size: 16px; font-weight: 700; color: #F2DF7E;">
+                                                        PAPELERÍA</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span style="font-size: 12px; color: rgba(255,255,255,0.8);">Pedido
+                                            #{{numero_pedido}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Hero -->
+                    <tr>
+                        <td style="padding: 50px 40px; text-align: center;">
+                            <div
+                                style="width: 70px; height: 70px; background-color: #D1FAE5; border-radius: 50%; margin: 0 auto 20px; line-height: 70px; font-size: 32px;">
+                                ✓</div>
+                            <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #10B981;">¡Devolución
+                                Aprobada!</h1>
+                            <p
+                                style="margin: 15px auto 0; font-size: 15px; color: #6b7280; line-height: 1.6; max-width: 450px;">
+                                Hola {{nombre}}, hemos revisado tu solicitud y el proceso de devolución ya está en
+                                marcha.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Reference Info -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #f9fafb; border: 1px solid #e5e5e5; border-radius: 10px; padding: 20px;">
+                                <tr>
+                                    <td style="width: 50%;">
+                                        <p
+                                            style="margin: 0 0 3px; font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
+                                            Referencia del Pedido</p>
+                                        <p style="margin: 0; font-size: 16px; font-weight: 700; color: #104D73;">
+                                            {{numero_pedido}}-RT</p>
+                                    </td>
+                                    <td style="width: 50%; text-align: right;">
+                                        <p
+                                            style="margin: 0 0 3px; font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
+                                            Monto a Reembolsar</p>
+                                        <p style="margin: 0; font-size: 16px; font-weight: 700; color: #111827;">
+                                            {{monto_reembolso}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Instructions -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <h2 style="margin: 0 0 10px; font-size: 18px; font-weight: 700; color: #104D73;">ℹ️ ¿Cómo
+                                envío el producto de vuelta?</h2>
+                            <p style="margin: 0 0 25px; font-size: 14px; color: #6b7280; line-height: 1.6;">
+                                Para completar tu reembolso, por favor sigue estos pasos para hacernos llegar los
+                                artículos:
+                            </p>
+
+                            <!-- Options -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="width: 48%; vertical-align: top;">
+                                        <table width="100%" cellpadding="0" cellspacing="0"
+                                            style="border: 1px solid #e5e5e5; border-radius: 10px; padding: 20px;">
+                                            <tr>
+                                                <td>
+                                                    <div
+                                                        style="width: 45px; height: 45px; background-color: #FEF9C3; border-radius: 10px; margin-bottom: 15px; text-align: center; line-height: 45px; font-size: 22px;">
+                                                        🚚</div>
+                                                    <h3
+                                                        style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: #111827;">
+                                                        Servientrega</h3>
+                                                    <p
+                                                        style="margin: 0 0 15px; font-size: 12px; color: #6b7280; line-height: 1.5;">
+                                                        Imprime la etiqueta de envío y pégala en el paquete. Déjalo en
+                                                        cualquier punto Servientrega.</p>
+                                                    <a href="{{label_url}}"
+                                                        style="display: block; text-align: center; background-color: #104D73; color: #ffffff; font-size: 12px; font-weight: 600; text-decoration: none; padding: 10px; border-radius: 6px;">
+                                                        Imprimir Etiqueta
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td style="width: 4%;"></td>
+                                    <td style="width: 48%; vertical-align: top;">
+                                        <table width="100%" cellpadding="0" cellspacing="0"
+                                            style="border: 1px solid #e5e5e5; border-radius: 10px; padding: 20px;">
+                                            <tr>
+                                                <td>
+                                                    <div
+                                                        style="width: 45px; height: 45px; background-color: #FEF9C3; border-radius: 10px; margin-bottom: 15px; text-align: center; line-height: 45px; font-size: 22px;">
+                                                        🏪</div>
+                                                    <h3
+                                                        style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: #111827;">
+                                                        Entrega en Sucursal</h3>
+                                                    <p
+                                                        style="margin: 0 0 15px; font-size: 12px; color: #6b7280; line-height: 1.5;">
+                                                        Acércate a nuestra sucursal física con el producto y tu número
+                                                        de pedido.</p>
+                                                    <a href="{{store_url}}"
+                                                        style="display: block; text-align: center; background-color: #ffffff; color: #104D73; font-size: 12px; font-weight: 600; text-decoration: none; padding: 10px; border-radius: 6px; border: 2px solid #104D73;">
+                                                        Ver Ubicación
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Important Notes -->
+                    <tr>
+                        <td style="padding: 0 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #EFF6FF; border-left: 4px solid #104D73; border-radius: 0 8px 8px 0; padding: 18px;">
+                                <tr>
+                                    <td style="width: 30px; vertical-align: top;">
+                                        <span style="font-size: 18px;">📋</span>
+                                    </td>
+                                    <td>
+                                        <p style="margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #104D73;">
+                                            Consideraciones importantes:</p>
+                                        <ul
+                                            style="margin: 0; padding-left: 18px; font-size: 12px; color: #6b7280; line-height: 1.8;">
+                                            <li>Los productos deben estar en su empaque original.</li>
+                                            <li>El reembolso se procesará dentro de las 48hs hábiles tras recibir el
+                                                paquete.</li>
+                                            <li>Asegúrate de embalar bien el producto para evitar daños.</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Contact -->
+                    <tr>
+                        <td style="padding: 20px 40px 30px; border-top: 1px solid #e5e5e5; text-align: center;">
+                            <p style="margin: 0; font-size: 13px; color: #6b7280;">
+                                ¿Tienes dudas? Responde a este correo o contáctanos por WhatsApp al <strong>+593 99 123
+                                    4567</strong>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #012E40; padding: 30px; text-align: center;">
+                            <table cellpadding="0" cellspacing="0" style="margin: 0 auto 15px;">
+                                <tr>
+                                    <td style="padding: 0 10px;"><a href="#"
+                                            style="color: #F2DF7E; text-decoration: none; font-size: 16px;">🌐</a></td>
+                                    <td style="padding: 0 10px;"><a href="#"
+                                            style="color: #F2DF7E; text-decoration: none; font-size: 16px;">✉️</a></td>
+                                    <td style="padding: 0 10px;"><a href="#"
+                                            style="color: #F2DF7E; text-decoration: none; font-size: 16px;">📞</a></td>
+                                </tr>
+                            </table>
+                            <p style="margin: 0 0 5px; font-size: 14px; font-weight: 700; color: #ffffff;">Santiago
+                                Papelería</p>
+                            <p
+                                style="margin: 0; font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px;">
+                                Loja, Ecuador<br />
+                                © 2024 Todos los derechos reservados.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

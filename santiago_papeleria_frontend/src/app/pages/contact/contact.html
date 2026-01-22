@@ -1,220 +1,194 @@
-<div class="w-full">
+<div class="w-full bg-[#FAFAFA]">
 
     <!-- Hero Section -->
-    <div class="bg-[#0F4C75] py-16 text-center text-white">
-        <div class="container mx-auto px-4">
-            <h1 class="text-4xl font-bold mb-4">Contáctanos</h1>
-            <p class="max-w-2xl mx-auto text-lg leading-relaxed opacity-90">
-                Estamos aquí para ayudarte. Ponte en contacto con nuestro equipo de expertos.
-            </p>
+    <div class="hero-banner mb-8">
+        <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768903391/hero-bg_rfsvfq.jpg"
+            alt="Contáctanos - Santiago Papelería">
+        <div class="overlay">
+            <div class="text-center">
+                <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-white">Contáctanos</h1>
+                <p class="text-[#F2DF7E] text-sm md:text-base max-w-2xl mx-auto px-4 font-medium">
+                    Estamos aquí para ayudarte. Ponte en contacto con nuestro equipo de expertos.
+                </p>
+            </div>
         </div>
     </div>
 
     <!-- Content Section -->
-    <div class="container mx-auto px-4 py-12 max-w-6xl">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <!-- Breadcrumb -->
+        <nav class="flex items-center gap-2 mb-6 text-xs text-[#104D73]/80">
+            <a routerLink="/" class="hover:text-[#F2CB07] transition-colors">Inicio</a>
+            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+            <span class="text-[#104D73] font-bold">Contacto</span>
+        </nav>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <!-- Left Column: Contact Form -->
             <div class="lg:col-span-2">
-                <h2 class="text-2xl font-bold text-[#012e40] mb-8">Envíanos un Mensaje</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-[#F2F2F2]">
+                    <h2 class="text-xl font-bold text-[#104D73] mb-6 border-b border-[#F2F2F2] pb-2">Envíanos un Mensaje
+                    </h2>
 
-                <form class="space-y-6">
-                    <!-- Type of Inquiry -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Consulta</label>
-                        <div class="relative">
-                            <select
-                                class="w-full border border-gray-300 rounded-md py-3 pl-10 pr-4 appearance-none focus:outline-none focus:ring-2 focus:ring-[#f2cb07] focus:border-transparent bg-white">
-                                <option>Consulta General</option>
-                                <option>Pedidos</option>
-                                <option>Soporte Técnico</option>
-                            </select>
-                            <div
-                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                <i class="ri-question-line text-lg"></i>
+                    <form class="space-y-4">
+                        <!-- Type of Inquiry -->
+                        <div>
+                            <label class="block text-xs font-bold text-[#104D73] mb-1.5">Tipo de Consulta</label>
+                            <div class="relative">
+                                <select
+                                    class="w-full border border-gray-200 rounded py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-[#F2CB07] bg-white text-gray-700 appearance-none">
+                                    <option>Consulta General</option>
+                                    <option>Pedidos</option>
+                                    <option>Soporte Técnico</option>
+                                </select>
+                                <div
+                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#104D73]/50">
+                                    <i class="ri-question-line text-base"></i>
+                                </div>
+                                <div
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
+                                    <i class="ri-arrow-down-s-line text-lg"></i>
+                                </div>
                             </div>
-                            <div
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-                                <i class="ri-arrow-down-s-line text-lg"></i>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Name -->
+                            <div>
+                                <label class="block text-xs font-bold text-[#104D73] mb-1.5">Nombre Completo *</label>
+                                <input type="text"
+                                    class="w-full border border-gray-200 rounded py-2.5 px-3 text-sm focus:outline-none focus:border-[#F2CB07] text-gray-700">
+                            </div>
+                            <!-- Email -->
+                            <div>
+                                <label class="block text-xs font-bold text-[#104D73] mb-1.5">Correo Electrónico
+                                    *</label>
+                                <input type="email"
+                                    class="w-full border border-gray-200 rounded py-2.5 px-3 text-sm focus:outline-none focus:border-[#F2CB07] text-gray-700">
                             </div>
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Name -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
-                            <input type="text"
-                                class="w-full border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#f2cb07] focus:border-transparent">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Phone -->
+                            <div>
+                                <label class="block text-xs font-bold text-[#104D73] mb-1.5">Teléfono</label>
+                                <input type="tel" placeholder="099 999 9999"
+                                    class="w-full border border-gray-200 rounded py-2.5 px-3 text-sm focus:outline-none focus:border-[#F2CB07] text-gray-700">
+                            </div>
+                            <!-- Subject -->
+                            <div>
+                                <label class="block text-xs font-bold text-[#104D73] mb-1.5">Asunto *</label>
+                                <input type="text"
+                                    class="w-full border border-gray-200 rounded py-2.5 px-3 text-sm focus:outline-none focus:border-[#F2CB07] text-gray-700">
+                            </div>
                         </div>
-                        <!-- Email -->
+
+                        <!-- Message -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico *</label>
-                            <input type="email"
-                                class="w-full border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#f2cb07] focus:border-transparent">
+                            <label class="block text-xs font-bold text-[#104D73] mb-1.5">Mensaje *</label>
+                            <textarea rows="5" placeholder="Describe tu consulta o solicitud..."
+                                class="w-full border border-gray-200 rounded py-2.5 px-3 text-sm focus:outline-none focus:border-[#F2CB07] text-gray-700"></textarea>
+                            <p class="text-[10px] text-gray-400 mt-1 text-right">0/500 caracteres</p>
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Phone -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
-                            <input type="tel" placeholder="+593 99 123 4567"
-                                class="w-full border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#f2cb07] focus:border-transparent">
-                        </div>
-                        <!-- Subject -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Asunto *</label>
-                            <input type="text"
-                                class="w-full border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#f2cb07] focus:border-transparent">
-                        </div>
-                    </div>
-
-                    <!-- Message -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Mensaje *</label>
-                        <textarea rows="6" placeholder="Describe tu consulta o solicitud..."
-                            class="w-full border border-gray-300 rounded-md py-3 px-4 focus:outline-none focus:ring-2 focus:ring-[#f2cb07] focus:border-transparent"></textarea>
-                        <p class="text-xs text-gray-400 mt-1">0/500 caracteres</p>
-                    </div>
-
-                    <!-- Button -->
-                    <button type="button"
-                        class="bg-[#f2cb07] text-[#012e40] font-bold py-3.5 px-8 rounded-md hover:bg-[#e0bc06] transition-colors flex items-center gap-2">
-                        <i class="ri-send-plane-fill"></i> Enviar Mensaje
-                    </button>
-
-                </form>
+                        <!-- Button -->
+                        <button type="button"
+                            class="w-full sm:w-auto bg-[#104D73] text-white font-bold py-3 px-8 rounded hover:bg-[#012E40] transition-colors flex items-center justify-center gap-2 text-sm shadow-md">
+                            <i class="ri-send-plane-fill text-[#F2CB07]"></i> Enviar Mensaje
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Right Column: Contact Info -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-lg shadow-lg border border-gray-100 p-8 h-fit">
-                    <h3 class="text-lg font-bold text-[#012e40] mb-6">Información de Contacto</h3>
+            <div class="lg:col-span-1 space-y-6">
+
+                <!-- Info Section -->
+                <div class="bg-white rounded-lg shadow-sm border border-[#F2F2F2] p-6">
+                    <h3 class="text-lg font-bold text-[#104D73] mb-5 border-b border-[#F2F2F2] pb-2">Información de
+                        Contacto</h3>
 
                     <div class="space-y-6">
                         <!-- Address -->
-                        <div class="flex gap-4">
+                        <div class="flex gap-3">
                             <div
-                                class="w-10 h-10 rounded bg-[#0F4C75] flex items-center justify-center text-white shrink-0">
-                                <i class="ri-map-pin-line text-xl"></i>
+                                class="w-8 h-8 rounded-full bg-[#104D73]/10 flex items-center justify-center text-[#104D73] shrink-0">
+                                <i class="ri-map-pin-line text-lg"></i>
                             </div>
                             <div>
-                                <p class="font-bold text-[#012e40] mb-0.5">Dirección</p>
-                                <p class="text-gray-600 text-sm">Av. Amazonas N24-03 y Colón</p>
-                                <p class="text-gray-600 text-sm">Quito, Ecuador</p>
+                                <p class="font-bold text-[#104D73] text-sm mb-1">Direcciones</p>
+                                <div class="space-y-2 text-xs text-gray-600">
+                                    <div>
+                                        <p class="font-semibold text-[#012E40]">Matriz:</p>
+                                        <p>Azuay 152-48 entre 18 de Noviembre y Avenida Universitaria</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-[#012E40]">Sucursal 1:</p>
+                                        <p>Almacén UTPL</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-[#012E40]">Sucursal 2:</p>
+                                        <p>Calle Guaranda y Avenida Cuxibamba</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Phone -->
-                        <div class="flex gap-4">
+                        <div class="flex gap-3">
                             <div
-                                class="w-10 h-10 rounded bg-[#0F4C75] flex items-center justify-center text-white shrink-0">
-                                <i class="ri-phone-line text-xl"></i>
+                                class="w-8 h-8 rounded-full bg-[#104D73]/10 flex items-center justify-center text-[#104D73] shrink-0">
+                                <i class="ri-phone-line text-lg"></i>
                             </div>
                             <div>
-                                <p class="font-bold text-[#012e40] mb-0.5">Teléfono</p>
-                                <p class="text-gray-600 text-sm">+593 99 123 4567</p>
-                                <p class="text-gray-600 text-sm">+593 2 234 5678</p>
+                                <p class="font-bold text-[#104D73] text-sm mb-1">Teléfonos</p>
+                                <div class="space-y-1 text-xs text-gray-600">
+                                    <p><span class="font-semibold text-[#012E40]">Fijo:</span> 07 257 3358</p>
+                                    <p><span class="font-semibold text-[#012E40]">Cel. Mayor:</span> 0939826491 /
+                                        0939522690</p>
+                                    <p><span class="font-semibold text-[#012E40]">Cel. Menor:</span> 0987667459</p>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Email -->
-                        <div class="flex gap-4">
+                        <div class="flex gap-3">
                             <div
-                                class="w-10 h-10 rounded bg-[#0F4C75] flex items-center justify-center text-white shrink-0">
-                                <i class="ri-mail-line text-xl"></i>
+                                class="w-8 h-8 rounded-full bg-[#104D73]/10 flex items-center justify-center text-[#104D73] shrink-0">
+                                <i class="ri-mail-line text-lg"></i>
                             </div>
                             <div>
-                                <p class="font-bold text-[#012e40] mb-0.5">Email</p>
-                                <p class="text-gray-600 text-sm">ventas@santiagopapeleria.com</p>
-                                <p class="text-gray-600 text-sm">soporte@santiagopapeleria.com</p>
-                            </div>
-                        </div>
-
-                        <!-- Hours -->
-                        <div class="flex gap-4">
-                            <div
-                                class="w-10 h-10 rounded bg-[#0F4C75] flex items-center justify-center text-white shrink-0">
-                                <i class="ri-time-line text-xl"></i>
-                            </div>
-                            <div>
-                                <p class="font-bold text-[#012e40] mb-0.5">Horarios</p>
-                                <p class="text-gray-600 text-sm">Lun - Vie: 8:00 AM - 6:00 PM</p>
-                                <p class="text-gray-600 text-sm">Sábado: 9:00 AM - 2:00 PM</p>
-                                <p class="text-gray-600 text-sm">Domingo: Cerrado</p>
+                                <p class="font-bold text-[#104D73] text-sm mb-1">Escríbanos</p>
+                                <div class="space-y-1 text-xs text-gray-600">
+                                    <p><span class="font-semibold text-[#012E40]">Ventas:</span>
+                                        ventas@santiagopapeleria.com</p>
+                                    <p><span class="font-semibold text-[#012E40]">Dudas:</span>
+                                        servicios@santiagopapeleria.com</p>
+                                    <p><span class="font-semibold text-[#012E40]">Facturas:</span>
+                                        facturas@santiagopapeleria.com</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Social Media Section -->
+                <div class="bg-[#104D73] rounded-lg shadow-sm p-6 text-white text-center">
+                    <h3 class="text-lg font-bold mb-4">Síguenos en Redes</h3>
+                    <div class="flex justify-center gap-4">
+                        <a href="https://www.facebook.com/megasantiago.ec/" target="_blank"
+                            class="w-10 h-10 rounded-full bg-white/10 hover:bg-[#F2CB07] hover:text-[#012E40] flex items-center justify-center transition-all">
+                            <i class="ri-facebook-fill text-xl"></i>
+                        </a>
+                        <a href="https://www.instagram.com/mega.santiago/?hl=es" target="_blank"
+                            class="w-10 h-10 rounded-full bg-white/10 hover:bg-[#F2CB07] hover:text-[#012E40] flex items-center justify-center transition-all">
+                            <i class="ri-instagram-fill text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
             </div>
 
         </div>
-    </div>
-
-    <!-- Map Section -->
-    <div class="bg-gray-50 py-12">
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="text-center mb-8">
-                <h2 class="text-2xl font-bold text-[#012e40]">Nuestra Ubicación</h2>
-                <p class="text-gray-600 mt-2">Visítanos en nuestra tienda física en el corazón de Quito. Contamos con
-                    amplio estacionamiento y fácil acceso.</p>
-            </div>
-
-            <div class="rounded-lg overflow-hidden shadow-lg h-[400px]">
-                <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127643.08508752077!2d-78.5020127!3d-0.1806532!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d59a4002422195%3A0xe77da215a40bfae!2sQuito%2C%20Ecuador!5e0!3m2!1sen!2sus!4v1655123456789!5m2!1sen!2sus"
-                    width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
-            </div>
-        </div>
-    </div>
-
-    <!-- Features Section -->
-    <div class="py-16">
-        <div class="container mx-auto px-4 max-w-6xl">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <!-- Item 1 -->
-                <div class="flex flex-col items-center">
-                    <div
-                        class="w-16 h-16 rounded-full bg-[#f2cb07] flex items-center justify-center text-[#012e40] mb-4">
-                        <i class="ri-car-line text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-[#012e40] mb-2">Estacionamiento</h3>
-                    <p class="text-gray-600 text-sm max-w-xs">Amplio estacionamiento gratuito para nuestros clientes</p>
-                </div>
-
-                <!-- Item 2 -->
-                <div class="flex flex-col items-center">
-                    <div
-                        class="w-16 h-16 rounded-full bg-[#f2cb07] flex items-center justify-center text-[#012e40] mb-4">
-                        <i class="ri-bus-line text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-[#012e40] mb-2">Transporte Público</h3>
-                    <p class="text-gray-600 text-sm max-w-xs">Cerca de paradas de bus y estación del Metro</p>
-                </div>
-
-                <!-- Item 3 -->
-                <div class="flex flex-col items-center">
-                    <div
-                        class="w-16 h-16 rounded-full bg-[#f2cb07] flex items-center justify-center text-[#012e40] mb-4">
-                        <i class="ri-wheelchair-line text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-[#012e40] mb-2">Accesibilidad</h3>
-                    <p class="text-gray-600 text-sm max-w-xs">Instalaciones completamente accesibles</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chat Button Floating (matches screenshot corner) -->
-    <div class="fixed bottom-6 right-6 z-50">
-        <button
-            class="bg-[#1C4ED8] hover:bg-blue-800 text-white rounded-full px-5 py-3 shadow-lg flex items-center gap-2 font-bold transition-all">
-            <i class="ri-customer-service-2-fill text-xl"></i>
-            <span>Talk with Us</span>
-        </button>
-    </div>
-
+    </main>
 </div>

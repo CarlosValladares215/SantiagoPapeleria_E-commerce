@@ -1,99 +1,89 @@
-import { Component, inject } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component, inject, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../services/auth/auth.service';
-
-interface Product {
-  id: number;
-  name: string;
-  brand: string;
-  price: number;
-  wholesalePrice: number;
-  image: string;
-  stock: number;
-  category: string;
-  isLowStock: boolean;
-}
+import { ReportesService } from '../../../../services/reportes.service';
+import { ProductService } from '../../../../services/product/product.service';
+import { Product } from '../../../../models/product.model';
+import { ProductCard } from '../../../../shared/components/product-card/product-card';
+import { CartService } from '../../../../services/cart/cart.service';
 
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [RouterModule, CommonModule],
+  imports: [RouterModule, CommonModule, ProductCard],
   templateUrl: './featured-products.html',
   styleUrl: './featured-products.scss',
 })
-export class FeaturedProducts {
+export class FeaturedProducts implements OnInit {
   authService = inject(AuthService);
+  private reportesService = inject(ReportesService);
+  private productService = inject(ProductService);
+  private cartService = inject(CartService);
+  private router = inject(Router);
 
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
 
-  products = [
-    {
-      id: 1,
-      name: 'Cuaderno Universitario 100 Hojas',
-      brand: 'Norma',
-      price: 2.50,
-      wholesalePrice: 2.10,
-      image: 'assets/home/products/notebook.jpg',
-      stock: 150,
-      category: 'Útiles Escolares',
-      isLowStock: false
-    },
-    {
-      id: 2,
-      name: 'Bolígrafo BIC Cristal Azul (Caja 50 unidades)',
-      brand: 'BIC',
-      price: 25.00,
-      wholesalePrice: 20.00,
-      image: 'assets/home/products/bic-box.jpg',
-      stock: 3,
-      category: 'Suministros de Oficina',
-      isLowStock: true
-    },
-    {
-      id: 3,
-      name: 'Resma Papel Bond A4 75g (500 hojas)',
-      brand: 'Reprograf',
-      price: 4.80,
-      wholesalePrice: 4.20,
-      image: 'assets/home/products/paper-a4.jpg',
-      stock: 89,
-      category: 'Suministros de Oficina',
-      isLowStock: false
-    },
-    {
-      id: 4,
-      name: 'Calculadora Científica Casio FX-570',
-      brand: 'Casio',
-      price: 35.00,
-      wholesalePrice: 30.00,
-      image: 'assets/home/products/casio.jpg',
-      stock: 25,
-      category: 'Tecnología',
-      isLowStock: false
-    },
-    {
-      id: 5,
-      name: 'Set Marcadores Sharpie 12 Colores',
-      brand: 'Sharpie',
-      price: 18.50,
-      wholesalePrice: 15.80,
-      image: 'assets/home/products/sharpie.jpg',
-      stock: 0,
-      category: 'Arte y Manualidades',
-      isLowStock: false
-    },
-    {
-      id: 6,
-      name: 'Archivador Palanca A4 Lomo Ancho',
-      brand: 'Leitz',
-      price: 8.90,
-      wholesalePrice: 7.50,
-      image: 'assets/home/products/binder.jpg',
-      stock: 45,
-      category: 'Suministros de Oficina',
-      isLowStock: false
+  products = signal<Product[]>([]);
+  loading = signal<boolean>(true);
+
+  ngOnInit() {
+    this.fetchBestSellers();
+  }
+
+  fetchBestSellers() {
+    this.loading.set(true);
+    // Try to get real best sellers first
+    // Use public catalog endpoint instead of protected reports endpoint
+    this.productService.getFeaturedProducts(6).subscribe({
+      next: (products) => {
+        if (products && products.length > 0) {
+          this.products.set(products);
+          this.loading.set(false);
+        } else {
+          this.fetchFallbackProducts();
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching featured products', err);
+        this.fetchFallbackProducts();
+      }
+    });
+  }
+
+  fetchFallbackProducts() {
+    console.log('Fetching fallback products (Latest)...');
+    this.productService.getLatestProducts(6).subscribe({
+      next: (products) => {
+        this.products.set(products);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error fetching fallback products', err);
+        this.products.set([]);
+        this.loading.set(false);
+      }
+    });
+  }
+
+  scrollLeft() {
+    if (this.scrollContainer) {
+      this.scrollContainer.nativeElement.scrollBy({ left: -300, behavior: 'smooth' });
     }
-  ];
+  }
 
+  scrollRight() {
+    if (this.scrollContainer) {
+      this.scrollContainer.nativeElement.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  }
 
+  navigateToProduct(result: string) {
+    // result can be slug or id
+    this.router.navigate(['/product', result]);
+  }
+
+  handleAddToCart(product: Product) {
+    this.cartService.addToCart(product, 1);
+  }
 }

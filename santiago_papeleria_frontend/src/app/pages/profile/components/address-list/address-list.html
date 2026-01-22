@@ -1,0 +1,128 @@
+<div>
+    <!-- Addresses List -->
+    @if (!showAddressForm) {
+    <div>
+        <div
+            class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-[#0f4c75] mb-1">Mis Direcciones</h1>
+                <p class="text-gray-500 text-sm">Gestiona tus lugares de entrega</p>
+            </div>
+            <button (click)="initNewAddress()"
+                class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-all flex items-center gap-2">
+                <i class="ri-add-line"></i> Nueva Dirección
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @for (addr of addresses; track addr; let i = $index) {
+            <div
+                class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-[#f2cb07] transition-all relative group">
+                <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button (click)="editAddress(i)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><i
+                            class="ri-pencil-line"></i></button>
+                    <button (click)="deleteAddress(i)" class="p-1.5 text-red-600 hover:bg-red-50 rounded"><i
+                            class="ri-delete-bin-line"></i></button>
+                </div>
+
+                <span
+                    class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded inline-block mb-3 font-bold uppercase">{{
+                    addr.alias }}</span>
+                <h4 class="font-bold text-[#012e40]">{{ addr.calle_principal }}</h4>
+                <p class="text-sm text-gray-500">{{ addr.ciudad }}, {{ addr.provincia }}</p>
+                @if (addr.referencia) {
+                <p class="text-xs text-gray-400 mt-2 italic">"{{ addr.referencia }}"</p>
+                }
+            </div>
+            }
+
+            @if (addresses.length === 0) {
+            <div
+                class="col-span-full py-12 text-center text-gray-400 bg-white rounded-lg border-2 border-dashed border-gray-200">
+                <i class="ri-map-pin-add-line text-4xl mb-3 block"></i>
+                <span class="block">No tienes direcciones guardadas</span>
+            </div>
+            }
+        </div>
+    </div>
+    }
+
+    <!-- Address Form -->
+    @if (showAddressForm) {
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-[#0f4c75] text-lg">{{ editingAddressIndex !== null ? 'Editar Dirección' : 'Nueva
+                Dirección' }}</h3>
+            <button (click)="cancelAddressEdit()" class="text-gray-400 hover:text-gray-600"><i
+                    class="ri-close-line text-xl"></i></button>
+        </div>
+
+        <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <form [formGroup]="addressForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Alias (ej. Casa, Oficina)</label>
+                    <input type="text" formControlName="alias"
+                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Provincia</label>
+                    <select formControlName="provincia"
+                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                        @for (p of provincias; track p) { <option [value]="p">{{ p }}</option> }
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Ciudad</label>
+                    <input type="text" formControlName="ciudad"
+                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Código Postal</label>
+                    <input type="text" formControlName="codigo_postal" placeholder="Ej. 110101"
+                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Calle Principal / dirección</label>
+                    <input type="text" formControlName="calle_principal"
+                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Referencia</label>
+                    <textarea formControlName="referencia" rows="2"
+                        class="w-full bg-gray-50 border border-gray-200 rounded p-2.5 text-sm"></textarea>
+                </div>
+
+                <div class="pt-4">
+                    <button type="button" (click)="saveAddress()" [disabled]="isLoading || addressForm.invalid"
+                        class="w-full bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-3 rounded-md transition-colors disabled:opacity-50">
+                        {{ editingAddressIndex !== null ? 'Actualizar Dirección' : 'Guardar Dirección' }}
+                    </button>
+                </div>
+            </form>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-2">Ubicación en Mapa (Requerido)</label>
+                <div class="border border-gray-200 rounded-lg overflow-hidden h-[400px]">
+                    <app-map
+                        [initialLocation]="addressForm.value.lat ? { lat: addressForm.value.lat, lng: addressForm.value.lng } : null"
+                        (locationChange)="onLocationSelected($event)">
+                    </app-map>
+                </div>
+                <p class="text-xs text-gray-400 mt-2 text-center"><i class="ri-information-line"></i> Haz click o
+                    arrastra el marcador para fijar tu ubicación exacta.</p>
+                @if (addressForm.get('lat')?.invalid && addressForm.get('lat')?.touched) {
+                <div class="text-red-500 text-xs font-bold text-center mt-1">Debes seleccionar una ubicación en el mapa.
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Shared Feedback -->
+    @if (successMessage) {
+    <p class="fixed bottom-8 right-8 z-50 bg-green-600 text-white px-6 py-4 rounded shadow-lg animate-bounce">
+        <i class="ri-checkbox-circle-line mr-2"></i> {{ successMessage }}
+    </p>
+    }
+</div>

@@ -74,19 +74,25 @@ export class ReportsService {
         return ((current - previous) / previous) * 100;
     }
 
-    async getProductosMasVendidos(limit: number = 10, categoria?: string) {
-        const matchStage: any = {};
+    async getProductosMasVendidos(limit: number = 10, categoria?: string, fecha: string = 'all') {
+        const { start, end } = this.getDateRange(fecha);
+
+        const matchStage: any = {
+            estado_pedido: { $in: PAID_STATUSES },
+            fecha_compra: { $gte: start, $lte: end }
+        };
+
         if (categoria && categoria !== 'Todas') {
             // Assuming products collection might be joined or we filter differently.
             // For now, let's keep it simple.
         }
 
         return this.pedidoModel.aggregate([
-            { $match: { estado_pedido: { $in: PAID_STATUSES } } },
+            { $match: matchStage },
             { $unwind: '$items' },
             {
                 $group: {
-                    _id: '$items.producto',
+                    _id: '$items.nombre', // Group by NAME (Fixes null ID bug)
                     nombre_snapshot: { $first: '$items.nombre' },
                     unidades: { $sum: '$items.cantidad' },
                     ingresos: { $sum: '$items.subtotal' }
@@ -94,19 +100,11 @@ export class ReportsService {
             },
             { $sort: { unidades: -1 } },
             { $limit: limit },
-            {
-                $lookup: {
-                    from: 'productos',
-                    localField: '_id',
-                    foreignField: '_id',
-                    as: 'producto_info'
-                }
-            },
-            { $unwind: { path: '$producto_info', preserveNullAndEmptyArrays: true } },
+            // No lookup needed if we rely on snapshot name, which is safer for history
             {
                 $project: {
-                    _id: 1,
-                    nombre: { $ifNull: ['$producto_info.nombre', '$nombre_snapshot', 'Producto Desconocido'] },
+                    _id: 0,
+                    nombre: '$_id',
                     unidades: 1,
                     ingresos: 1
                 }
@@ -184,16 +182,96 @@ export class ReportsService {
         };
     }
 
-    async getRecentOrders(limit: number = 20) {
+    async getRecentOrders(page: number = 1, limit: number = 20, status?: string, customerType?: string, paymentStatus?: string) {
         try {
-            return await this.pedidoModel.find()
-                .sort({ _id: -1 })
-                .limit(limit)
-                .populate('usuario_id', 'nombre apellido email')
-                .exec();
+            const skip = (page - 1) * limit;
+            const matchStage: any = {};
+
+            // Filter by Logistic Status
+            if (status && status !== 'Todos') {
+                matchStage.estado_pedido = status;
+            }
+
+            // Filter by Payment Status (New)
+            if (paymentStatus && paymentStatus !== 'Todos') {
+                matchStage.estado_pago = paymentStatus;
+            }
+
+            // Aggregation Pipeline
+            const pipeline: any[] = [
+                { $match: matchStage },
+                { $sort: { fecha_compra: -1 } }, // Newest first
+                {
+                    $lookup: {
+                        from: 'usuarios',
+                        localField: 'usuario_id',
+                        foreignField: '_id',
+                        as: 'usuario_info'
+                    }
+                },
+                { $unwind: { path: '$usuario_info', preserveNullAndEmptyArrays: true } }
+            ];
+
+            // Filter by Customer Type (Requires Lookup first)
+            if (customerType && customerType !== 'Todos') {
+                pipeline.push({
+                    $match: { 'usuario_info.tipo_cliente': customerType }
+                });
+            }
+
+            // Count Total (for Pagination)
+            // We need a separate count query or use facet. Facet is cleaner here.
+            const facetPipeline = [
+                ...pipeline,
+                {
+                    $facet: {
+                        metadata: [{ $count: "total" }],
+                        data: [
+                            { $skip: skip },
+                            { $limit: limit },
+                            // Clean up the output to match previous structure or enhanced one
+                            {
+                                $project: {
+                                    numero_pedido_web: 1,
+                                    fecha_compra: 1,
+                                    estado_pedido: 1,
+                                    estado_pago: 1,
+                                    estado_devolucion: 1,
+                                    resumen_financiero: 1,
+                                    'usuario_id.nombre': '$usuario_info.nombre',
+                                    'usuario_id.apellido': '$usuario_info.apellido',
+                                    'usuario_id.email': '$usuario_info.email',
+                                    'usuario_id.telefono': '$usuario_info.telefono',
+                                    'usuario_id.razon_social': '$usuario_info.datos_fiscales.razon_social',
+                                    'usuario_id.identificacion': '$usuario_info.datos_fiscales.identificacion',
+                                    'usuario_id.direccion_fiscal': '$usuario_info.datos_fiscales.direccion_matriz',
+                                    'usuario_id.tipo_cliente': '$usuario_info.tipo_cliente',
+                                    items: 1,
+                                    datos_envio: 1
+                                }
+                            }
+                        ]
+                    }
+                }
+            ];
+
+            const result = await this.pedidoModel.aggregate(facetPipeline);
+
+            const metadata = result[0].metadata[0];
+            const total = metadata ? metadata.total : 0;
+            const data = result[0].data;
+
+            return {
+                data,
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            };
+
         } catch (err) {
             this.logger.error(`ERROR in getRecentOrders: ${err.message}`);
-            return [];
+            return { data: [], total: 0, page: 1, limit, totalPages: 0 };
         }
     }
 
@@ -210,7 +288,8 @@ export class ReportsService {
                 { header: 'Estado', key: 'estado', width: 15 }
             ];
 
-            const orders = await this.getRecentOrders(100); // Export last 100 orders for now
+            const result = await this.getRecentOrders(1, 1000); // Export last 1000 orders
+            const orders = result.data;
 
             orders.forEach(order => {
                 worksheet.addRow({

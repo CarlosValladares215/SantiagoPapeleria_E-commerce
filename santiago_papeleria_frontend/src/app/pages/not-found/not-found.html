@@ -1,1 +1,36 @@
-<p>not-found works!</p>
+<div class="min-h-[80vh] bg-brand-gray-light flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div class="max-w-max mx-auto text-center">
+        <div class="relative items-center justify-center flex mb-8">
+            <!-- Icono grande de archivo perdido -->
+            <lucide-icon [img]="FileQuestion" class="w-32 h-32 text-brand-blue opacity-20 absolute"></lucide-icon>
+            <span class="relative z-10 text-9xl font-extrabold text-brand-blue tracking-tight">404</span>
+        </div>
+
+        <div class="sm:flex sm:justify-center">
+            <div class="text-center">
+                <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
+                    ¡Página no encontrada!
+                </h1>
+                <p class="mt-4 text-base text-gray-500 font-medium">
+                    Parece que esta página se ha perdido en nuestro almacén.
+                </p>
+                <p class="mt-2 text-base text-brand-blue-dark">
+                    Lo sentimos, no pudimos encontrar lo que buscabas.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-10 flex justify-center gap-4">
+            <a routerLink="/"
+                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-brand-blue hover:bg-brand-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue transition-colors duration-200">
+                <lucide-icon [img]="Home" class="w-5 h-5 mr-2"></lucide-icon>
+                Volver al Inicio
+            </a>
+            <a routerLink="/products"
+                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-brand-blue bg-brand-yellow hover:bg-brand-yellow-pale focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-yellow transition-colors duration-200">
+                <lucide-icon [img]="Search" class="w-5 h-5 mr-2"></lucide-icon>
+                Ver Productos
+            </a>
+        </div>
+    </div>
+</div>

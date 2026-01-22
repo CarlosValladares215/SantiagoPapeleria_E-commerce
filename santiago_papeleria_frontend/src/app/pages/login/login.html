@@ -1,7 +1,14 @@
 <div class="min-h-screen bg-gradient-to-br from-brand-gray-light to-white">
 
-  <main class="container mx-auto px-4 py-12">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <div class="max-w-md mx-auto">
+
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 mb-6 text-xs text-[#104D73]/80">
+        <a routerLink="/" class="hover:text-[#F2CB07] transition-colors">Inicio</a>
+        <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+        <span class="text-[#104D73] font-bold">Iniciar Sesión</span>
+      </nav>
 
       <!-- Section Header -->
       <div class="text-center mb-8">
@@ -50,7 +57,7 @@
           <!-- Remember + Forgot -->
           <div class="flex items-center justify-between">
             <label class="flex items-center cursor-pointer">
-              <input type="checkbox"
+              <input type="checkbox" [(ngModel)]="rememberMe" name="rememberMe"
                 class="w-4 h-4 text-brand-blue bg-gray-100 border-gray-300 rounded focus:ring-brand-blue" />
               <span class="ml-2 text-sm text-gray-600">Recordarme</span>
             </label>
@@ -64,13 +71,17 @@
           <!-- Submit Button -->
           <button type="submit" [disabled]="isLoading"
             class="w-full bg-brand-yellow text-brand-blue-dark py-3 rounded-xl hover:bg-yellow-500 transition-colors flex justify-center items-center font-medium">
-            <ng-container *ngIf="!isLoading">
+            @if (!isLoading) {
+            <ng-container>
               <i class="ri-login-circle-line mr-2"></i> Iniciar Sesión
             </ng-container>
+            }
 
-            <ng-container *ngIf="isLoading">
+            @if (isLoading) {
+            <ng-container>
               <i class="ri-loader-4-line animate-spin mr-2"></i> Iniciando Sesión...
             </ng-container>
+            }
           </button>
         </form>
 

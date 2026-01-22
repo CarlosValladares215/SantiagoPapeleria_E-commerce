@@ -76,7 +76,7 @@ export class ProductMergerService {
      */
     toPublicResponse(product: ResolvedProduct): any {
         return {
-            _id: product._enrichedData?._id || null,
+            _id: product._enrichedData?._id ? String(product._enrichedData._id) : null,
             internal_id: product.sku,
             codigo_interno: product.sku,
             name: product.webName || product.erpName,
@@ -148,7 +148,7 @@ export class ProductMergerService {
     toDetailResponse(product: ResolvedProduct): any {
         return {
             ...product,
-            _id: product._enrichedData?._id || null,
+            _id: product._enrichedData?._id ? String(product._enrichedData._id) : null,
             codigo_interno: product.sku,
             slug: product._enrichedData?.slug || product.sku,
             descripcion_extendida: product._enrichedData?.descripcion_extendida,

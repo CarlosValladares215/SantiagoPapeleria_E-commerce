@@ -16,7 +16,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             <!-- Retail Card -->
-            <label class="relative block cursor-pointer group">
+            <label class="relative block cursor-pointer group" (click)="scrollToButton()">
                 <input type="radio" formControlName="tipo_cliente" value="MINORISTA" class="peer sr-only">
                 <div
                     class="h-full p-8 rounded-xl border-2 border-gray-100 bg-white transition-all duration-300 peer-checked:border-brand-yellow peer-checked:bg-yellow-50 group-hover:border-brand-yellow/50 flex flex-col items-center text-center">
@@ -48,7 +48,7 @@
             </label>
 
             <!-- Wholesale Card -->
-            <label class="relative block cursor-pointer group">
+            <label class="relative block cursor-pointer group" (click)="scrollToButton()">
                 <input type="radio" formControlName="tipo_cliente" value="MAYORISTA" class="peer sr-only">
                 <div
                     class="h-full p-8 rounded-xl border-2 border-gray-100 bg-white transition-all duration-300 peer-checked:border-brand-yellow peer-checked:bg-yellow-50 group-hover:border-brand-yellow/50 flex flex-col items-center text-center">
@@ -80,7 +80,7 @@
             </label>
         </div>
 
-        <div class="flex flex-col items-center gap-6 border-t border-gray-100 pt-8">
+        <div class="flex flex-col items-center gap-6 border-t border-gray-100 pt-8" #continueBtn>
             <button (click)="onNext()" [disabled]="isSubmitting"
                 class="w-full max-w-md py-4 bg-brand-yellow text-brand-blue-dark font-extrabold text-lg rounded-xl shadow-md hover:shadow-lg hover:brightness-95 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                 <span *ngIf="!isSubmitting">Continuar</span>

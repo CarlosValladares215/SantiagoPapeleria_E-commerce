@@ -16,13 +16,19 @@ export class ReportsController {
     }
 
     @Get('productos-mas-vendidos')
-    async getProductosMasVendidos(@Query('limit') limit: number) {
-        return this.reportsService.getProductosMasVendidos(Number(limit) || 10);
+    async getProductosMasVendidos(@Query('limit') limit: number, @Query('fecha') fecha: string) {
+        return this.reportsService.getProductosMasVendidos(Number(limit) || 10, 'Todas', fecha);
     }
 
     @Get('recent-orders')
-    async getRecentOrders(@Query('limit') limit: number) {
-        return this.reportsService.getRecentOrders(Number(limit) || 20);
+    async getRecentOrders(
+        @Query('page') page: number,
+        @Query('limit') limit: number,
+        @Query('status') status: string,
+        @Query('paymentStatus') paymentStatus: string, // New Param
+        @Query('customerType') customerType: string
+    ) {
+        return this.reportsService.getRecentOrders(Number(page) || 1, Number(limit) || 20, status, customerType, paymentStatus);
     }
 
     @Post('exportar')

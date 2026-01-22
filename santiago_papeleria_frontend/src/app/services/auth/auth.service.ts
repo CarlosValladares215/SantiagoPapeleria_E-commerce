@@ -42,9 +42,13 @@ export class AuthService {
         return sessionStorage.getItem(this.ADMIN_TOKEN_KEY);
       }
     }
-    // Client session lives in localStorage (persists)
+    // Client session: Check localStorage first, then sessionStorage
     if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem(this.CLIENT_TOKEN_KEY);
+      const dbToken = localStorage.getItem(this.CLIENT_TOKEN_KEY);
+      if (dbToken) return dbToken;
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      return sessionStorage.getItem(this.CLIENT_TOKEN_KEY);
     }
     return null;
   }
@@ -74,6 +78,10 @@ export class AuthService {
     return this.http.post<{ exists: boolean }>(`${this.apiUrl}/check-email`, { email });
   }
 
+  checkCedulaAvailability(cedula: string): Observable<{ exists: boolean }> {
+    return this.http.post<{ exists: boolean }>(`${this.apiUrl}/check-cedula`, { cedula });
+  }
+
   forgotPassword(email: string): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
   }
@@ -100,7 +108,7 @@ export class AuthService {
   }
 
   // Login contra el backend calling /login then /me
-  login(credentials: { email: string, password: string }): Observable<{ user: Usuario, token: string }> {
+  login(credentials: { email: string, password: string }, rememberMe: boolean = true): Observable<{ user: Usuario, token: string }> {
     return this.http.post<{ access_token: string }>(`${this.apiUrl}/login`, credentials).pipe(
       switchMap(response => {
         // Fetch User first to determine Role, passing token explicitly
@@ -109,9 +117,18 @@ export class AuthService {
             if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
               if (user.role === 'admin' || user.role === 'warehouse') {
                 // We do NOT save admin token here. We pass it to the new tab via URL.
-                // sessionStorage.setItem(this.ADMIN_TOKEN_KEY, response.access_token);
               } else {
-                localStorage.setItem(this.CLIENT_TOKEN_KEY, response.access_token);
+                // Client Logic
+                // 1. Clear both to be safe
+                localStorage.removeItem(this.CLIENT_TOKEN_KEY);
+                sessionStorage.removeItem(this.CLIENT_TOKEN_KEY);
+
+                // 2. Save where requested
+                if (rememberMe) {
+                  localStorage.setItem(this.CLIENT_TOKEN_KEY, response.access_token);
+                } else {
+                  sessionStorage.setItem(this.CLIENT_TOKEN_KEY, response.access_token);
+                }
               }
             }
           }),
@@ -127,7 +144,7 @@ export class AuthService {
         if (user.role !== 'admin' && user.role !== 'warehouse') {
           this.setUserState(user);
         } else {
-          // For admin/warehouse, check if we are ALREADY in admin context (e.g. re-login inside admin)
+          // Admin/Warehouse logic (unchanged)
           const path = typeof window !== 'undefined' ? window.location.pathname : '';
           if (path.startsWith('/admin') || path.startsWith('/warehouse')) {
             if (typeof sessionStorage !== 'undefined') {
@@ -135,13 +152,14 @@ export class AuthService {
             }
             this.setUserState(user);
           } else {
-            // If we are on the client side login page and logged in as admin:
-            // 1. CLEAR any client session remnants to prevent "logged in as admin on client"
+            // Client side cleanup
             if (typeof localStorage !== 'undefined') {
               localStorage.removeItem(this.CLIENT_TOKEN_KEY);
               localStorage.removeItem('user');
             }
-            // 2. Ensure the local state signal is empty
+            if (typeof sessionStorage !== 'undefined') {
+              sessionStorage.removeItem(this.CLIENT_TOKEN_KEY);
+            }
             this.user.set(null);
           }
         }
@@ -181,7 +199,9 @@ export class AuthService {
       if (path.startsWith('/admin') || path.startsWith('/warehouse')) {
         if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(this.ADMIN_TOKEN_KEY);
       } else {
+        // Client logout: clear everything
         if (typeof localStorage !== 'undefined') localStorage.removeItem(this.CLIENT_TOKEN_KEY);
+        if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(this.CLIENT_TOKEN_KEY);
       }
       if (typeof localStorage !== 'undefined') localStorage.removeItem('user');
     }

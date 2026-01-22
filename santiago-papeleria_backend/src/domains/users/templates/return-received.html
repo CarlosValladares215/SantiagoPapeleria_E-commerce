@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Devolución Recibida - Santiago Papelería</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #F2F2F2; font-family: 'Inter', Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F2F2F2; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0"
+                    style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e5e5e5;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: #104D73; padding: 30px; text-align: center;">
+                            <div
+                                style="width: 60px; height: 60px; background-color: rgba(255,255,255,0.1); border-radius: 50%; margin: 0 auto 15px; line-height: 60px; font-size: 28px;">
+                                📦</div>
+                            <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #ffffff;">Santiago Papelería
+                            </h1>
+                            <p
+                                style="margin: 5px 0 0; font-size: 12px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px;">
+                                Estatus de Logística</p>
+                        </td>
+                    </tr>
+
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 15px; font-size: 22px; font-weight: 700; color: #104D73;">Hemos
+                                recibido tu devolución</h2>
+                            <p style="margin: 0 0 25px; font-size: 15px; color: #6b7280; line-height: 1.7;">
+                                Hola, te confirmamos que los artículos de tu solicitud de devolución han llegado
+                                correctamente a nuestra bodega central. Nuestro equipo de calidad está revisando el
+                                estado de los productos.
+                            </p>
+
+                            <!-- Info Box -->
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #f9fafb; border-left: 4px solid #104D73; border-radius: 0 8px 8px 0; padding: 20px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="width: 30px; vertical-align: top;">
+                                        <span style="font-size: 18px;">ℹ️</span>
+                                    </td>
+                                    <td>
+                                        <p style="margin: 0 0 5px; font-size: 14px; font-weight: 600; color: #111827;">
+                                            ¿Qué sigue ahora?</p>
+                                        <p style="margin: 0; font-size: 13px; color: #6b7280; line-height: 1.6;">
+                                            Una vez finalizada la inspección (normalmente toma de 24 a 48 horas),
+                                            iniciaremos el proceso de reembolso a tu método de pago original. Te
+                                            enviaremos otro correo en cuanto el reembolso haya sido procesado.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Product Summary -->
+                            <h3
+                                style="margin: 0 0 15px; font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">
+                                Resumen de devolución</h3>
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                                <tr>
+                                    <td style="width: 80px; vertical-align: top;">
+                                        <div
+                                            style="width: 70px; height: 70px; background-color: #f3f4f6; border-radius: 8px; border: 1px solid #e5e5e5; text-align: center; line-height: 70px; font-size: 28px;">
+                                            📦</div>
+                                    </td>
+                                    <td style="vertical-align: top; padding-left: 15px;">
+                                        <p
+                                            style="margin: 0 0 3px; font-size: 10px; color: #104D73; font-weight: 700; text-transform: uppercase;">
+                                            Pedido #{{numero_pedido}}</p>
+                                        <p style="margin: 0 0 3px; font-size: 14px; font-weight: 600; color: #111827;">
+                                            {{items_resumen}}</p>
+                                        <p style="margin: 0; font-size: 13px; color: #6b7280;">Cantidad: {{cantidad}}
+                                            artículos</p>
+                                    </td>
+                                    <td style="text-align: right; vertical-align: top;">
+                                        <p style="margin: 0; font-size: 16px; font-weight: 700; color: #104D73;">
+                                            {{monto_reembolso}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Totals Box -->
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #f9fafb; border: 1px solid #e5e5e5; border-radius: 10px; padding: 20px;">
+                                <tr>
+                                    <td style="font-size: 13px; color: #6b7280; padding: 5px 0;">Subtotal devuelto</td>
+                                    <td style="text-align: right; font-size: 13px; color: #111827; font-weight: 500;">
+                                        {{subtotal}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 13px; color: #6b7280; padding: 5px 0;">Impuestos</td>
+                                    <td style="text-align: right; font-size: 13px; color: #111827; font-weight: 500;">
+                                        {{impuestos}}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-top: 10px; border-top: 1px solid #e5e5e5;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="font-size: 15px; font-weight: 700; color: #111827;">Total
+                                                    Reembolso Estimado</td>
+                                                <td
+                                                    style="text-align: right; font-size: 18px; font-weight: 700; color: #104D73;">
+                                                    {{total_reembolso}}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- CTA -->
+                    <tr>
+                        <td style="padding: 0 40px 40px; text-align: center;">
+                            <a href="{{tracking_url}}"
+                                style="display: inline-block; background-color: #104D73; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 15px 35px; border-radius: 50px; box-shadow: 0 4px 12px rgba(16,77,115,0.3);">
+                                Rastrear Reembolso
+                            </a>
+                            <p style="margin: 15px 0 0; font-size: 12px; color: #9ca3af;">
+                                ¿Tienes dudas? <a href="{{support_url}}" style="color: #104D73;">Contacta a nuestro
+                                    equipo de soporte</a>.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="background-color: #f3f4f6; padding: 30px 40px; text-align: center; border-top: 1px solid #e5e5e5;">
+                            <table cellpadding="0" cellspacing="0" style="margin: 0 auto 15px;">
+                                <tr>
+                                    <td
+                                        style="width: 36px; height: 36px; background-color: #e5e5e5; border-radius: 50%; text-align: center; margin: 0 5px;">
+                                        <a href="#"
+                                            style="line-height: 36px; text-decoration: none; font-size: 14px;">📘</a>
+                                    </td>
+                                    <td style="width: 10px;"></td>
+                                    <td
+                                        style="width: 36px; height: 36px; background-color: #e5e5e5; border-radius: 50%; text-align: center; margin: 0 5px;">
+                                        <a href="#"
+                                            style="line-height: 36px; text-decoration: none; font-size: 14px;">📷</a>
+                                    </td>
+                                    <td style="width: 10px;"></td>
+                                    <td
+                                        style="width: 36px; height: 36px; background-color: #e5e5e5; border-radius: 50%; text-align: center; margin: 0 5px;">
+                                        <a href="#"
+                                            style="line-height: 36px; text-decoration: none; font-size: 14px;">✉️</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p
+                                style="margin: 0 0 5px; font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">
+                                Santiago Papelería S.A.<br />Loja, Ecuador
+                            </p>
+                            <p style="margin: 10px 0 0; font-size: 10px; color: #9ca3af;">
+                                <a href="#" style="color: #6b7280;">Aviso de Privacidad</a> • <a href="#"
+                                    style="color: #6b7280;">Términos y Condiciones</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

@@ -5,7 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 // Subdomain Modules
 import { SharedProductsModule } from './shared';
 import { CatalogModule } from './catalog';
-import { CategoriesModule } from './categories';
+import { CategoriesModule } from './categories/categories.module';
 import { AdminModule } from './admin';
 import { InventoryModule } from './inventory';
 import { ReviewsModule } from './reviews';

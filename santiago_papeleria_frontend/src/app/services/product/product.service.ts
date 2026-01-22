@@ -72,6 +72,7 @@ export class ProductService {
   products = signal<Product[]>([]);
   paginationMeta = signal<PaginationMeta>({ total: 0, page: 1, limit: 12, totalPages: 0 });
   selectedProduct = signal<Product | null>(null);
+  isLoading = signal<boolean>(false);
   error = signal<string | null>(null);
 
   private apiURL = environment.apiUrl;
@@ -81,6 +82,7 @@ export class ProductService {
   // Traer todos los productos con filtros
   // Traer todos los productos con filtros (Paginado)
   fetchProducts(filters: FilterState): void {
+    this.isLoading.set(true);
     this.error.set(null);
     let params = new HttpParams();
 
@@ -116,12 +118,14 @@ export class ProductService {
       next: (res) => {
         this.products.set(res.data);
         this.paginationMeta.set(res.meta);
+        this.isLoading.set(false);
         console.log('ProductService: Fetched products', res.meta);
       },
       error: (error) => {
         console.error('Error fetching products:', error);
         this.error.set('Error al cargar los productos. Por favor intente nuevamente.');
         this.products.set([]); // Clear on error
+        this.isLoading.set(false);
       }
     });
   }
@@ -159,6 +163,35 @@ export class ProductService {
       .set('limit', '3');
 
     // Backend returns PaginatedResponse
+    return this.http.get<PaginatedResponse<ProductResponse>>(this.apiURL, { params }).pipe(
+      map(response => response.data.map(r => this.mapProduct(r)))
+    );
+  }
+
+  // Get Products by IDs (Stateless for specific components like Best Sellers)
+  getProductsByIds(ids: string[]): Observable<Product[]> {
+    let params = new HttpParams();
+    ids.forEach(id => params = params.append('ids', id));
+
+    return this.http.get<PaginatedResponse<ProductResponse>>(this.apiURL, { params }).pipe(
+      map(response => response.data.map(r => this.mapProduct(r)))
+    );
+  }
+
+  // Get Latest Products (Fallback for Best Sellers)
+  /**
+   * Get featured products (Best Sellers) from public catalog endpoint
+   * Avoids 403 Forbidden from ReportsService
+   */
+  getFeaturedProducts(limit: number = 6): Observable<Product[]> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<ProductResponse[]>(`${this.apiURL}/mas-vendidos`, { params }).pipe(
+      map(responses => responses.map(response => this.mapProduct(response)))
+    );
+  }
+
+  getLatestProducts(limit: number = 6): Observable<Product[]> {
+    const params = new HttpParams().set('limit', limit.toString());
     return this.http.get<PaginatedResponse<ProductResponse>>(this.apiURL, { params }).pipe(
       map(response => response.data.map(r => this.mapProduct(r)))
     );

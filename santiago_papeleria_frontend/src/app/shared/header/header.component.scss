@@ -28,24 +28,25 @@
 
     /* Layout */
     /* Layout Fluid Scaling */
-    --container-max: 1400px;
+    /* Updated to match max-w-7xl which is 1280px */
+    --container-max: 1280px;
 
-    /* Fluid Typography & Spacing using Clamp */
-    /* Clamp(min, ideal, max) - scales between 1024px and 1400px viewports */
-    --header-padding-x: clamp(10px, 2vw, 20px);
+    /* Spacing that mimics px-4 sm:px-6 lg:px-8 */
+    --header-padding-x: clamp(1rem, 5vw, 2rem);
 
-    --logo-height: clamp(32px, 3.5vw, 45px);
-    --logo-title-size: clamp(1.15rem, 1.3vw, 1.5rem);
-    --logo-subtitle-size: clamp(0.7rem, 0.7vw, 0.875rem);
+    --logo-height: clamp(36px, 4vw, 50px);
+    --logo-title-size: clamp(1.2rem, 1.4vw, 1.6rem);
+    --logo-subtitle-size: clamp(0.75rem, 0.8vw, 0.9rem);
 
-    --search-height: clamp(40px, 3.5vw, 48px);
-    --search-font-size: clamp(0.85rem, 1vw, 0.9375rem);
+    /* Búsqueda */
+    --search-height: clamp(42px, 3.5vw, 50px);
+    --search-font-size: clamp(0.9rem, 1vw, 1rem);
 
-    --nav-link-padding-x: clamp(12px, 1.5vw, 24px);
-    --nav-link-padding-y: clamp(12px, 1.2vw, 16px);
-    --nav-font-size: clamp(0.8rem, 0.9vw, 0.9375rem);
+    --nav-link-padding-x: clamp(14px, 1.6vw, 26px);
+    --nav-link-padding-y: clamp(14px, 1.3vw, 18px);
+    --nav-font-size: clamp(0.85rem, 0.95vw, 1rem);
 
-    --icon-size-large: clamp(1rem, 1.2vw, 1.25rem);
+    --icon-size-large: clamp(1.1rem, 1.3vw, 1.35rem);
     --icon-size-small: clamp(0.75rem, 0.9vw, 0.875rem);
 
     --gap-main: clamp(16px, 2vw, 30px);
@@ -154,4 +155,14 @@
     color: var(--primary-blue);
     letter-spacing: 1.5px;
     white-space: nowrap;
-}@media (max-width: 1024px) { app-navigation { display: none; } app-user-actions { display: none; } }
+}
+
+@media (max-width: 1024px) {
+    app-navigation {
+        display: none;
+    }
+
+    app-user-actions {
+        display: none;
+    }
+}

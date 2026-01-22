@@ -1,0 +1,140 @@
+<div>
+    <div
+        class="bg-white rounded-lg shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-[#0f4c75] mb-1">Información Personal</h1>
+            <p class="text-gray-500 text-sm">Administra tus datos de cuenta y facturación</p>
+        </div>
+        <button (click)="toggleEdit()"
+            class="bg-[#f2cb07] hover:bg-[#e0bc06] text-[#012e40] font-bold py-2.5 px-6 rounded-md shadow-sm transition-all flex items-center gap-2">
+            <i class="ri-edit-line"></i> {{ isEditing ? 'Cancelar Edición' : 'Editar Información' }}
+        </button>
+    </div>
+
+    <!-- Botón para cambiar contraseña -->
+    @if (!isEditing) {
+    <div class="mb-6">
+        <button (click)="toggleChangePassword()"
+            class="text-[#0f4c75] font-medium underline hover:text-[#0b3a5a] text-sm">
+            <i class="ri-lock-password-line mr-1"></i> {{ isChangingPassword ? 'Cancelar cambio de contraseña' :
+            '¿Quieres cambiar tu contraseña?' }}
+        </button>
+
+        @if (isChangingPassword) {
+        <div class="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-6 max-w-lg animate-fade-in">
+            <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Contraseña Actual</label>
+                    <input type="password" formControlName="currentPassword"
+                        class="w-full bg-white border border-gray-300 rounded-md py-2 px-3 text-sm focus:border-[#0f4c75]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Nueva Contraseña</label>
+                    <input type="password" formControlName="newPassword"
+                        class="w-full bg-white border border-gray-300 rounded-md py-2 px-3 text-sm focus:border-[#0f4c75]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Confirmar Nueva Contraseña</label>
+                    <input type="password" formControlName="confirmPassword"
+                        class="w-full bg-white border border-gray-300 rounded-md py-2 px-3 text-sm focus:border-[#0f4c75]">
+                    @if (passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched) {
+                    <div class="text-red-500 text-xs mt-1">Las contraseñas no coinciden</div>
+                    }
+                </div>
+                <div class="flex justify-end mt-4">
+                    <button type="submit" [disabled]="passwordForm.invalid || isLoading"
+                        class="bg-[#0f4c75] text-white font-bold py-2 px-6 rounded-md hover:bg-[#0b3a5a] text-sm disabled:opacity-50">
+                        {{ isLoading ? 'Actualizando...' : 'Actualizar Contraseña' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+        }
+    </div>
+    }
+
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmitPersonal()"
+        class="bg-white rounded-lg shadow-sm border border-gray-100 p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Nombre -->
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1.5">Nombre Completo</label>
+                <input type="text" formControlName="nombres"
+                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+            </div>
+            <!-- Email -->
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1.5">Correo Electrónico</label>
+                <input type="email" formControlName="email"
+                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+            </div>
+            <!-- Telefono -->
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono Personal</label>
+                <input type="tel" formControlName="telefono"
+                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+            </div>
+            <!-- RUC/Cedula (Identificación Personal) -->
+            @if (!isMayorista) {
+            <div>
+                <label class="block text-xs font-bold text-gray-600 mb-1.5">Cédula</label>
+                <input type="text" formControlName="identificacion"
+                    class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+            </div>
+            }
+        </div>
+
+        <!-- SECCIÓN DATOS DEL NEGOCIO (SOLO MAYORISTAS) -->
+        @if (isMayorista) {
+        <div class="mt-8 border-t border-gray-100 pt-6">
+            <h3 class="text-lg font-bold text-[#0f4c75] mb-4 flex items-center gap-2">
+                <i class="ri-store-2-line"></i> Información del Negocio
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Nombre del Negocio</label>
+                    <input type="text" formControlName="nombre_negocio"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">RUC</label>
+                    <input type="text" formControlName="ruc"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Dirección del Negocio</label>
+                    <input type="text" formControlName="direccion_negocio"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Ciudad</label>
+                    <input type="text" formControlName="ciudad_negocio"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5">Teléfono del Negocio</label>
+                    <input type="text" formControlName="telefono_negocio"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-md py-2.5 px-4 text-gray-700 text-sm focus:outline-none focus:bg-white focus:border-[#f2cb07] disabled:opacity-70 disabled:cursor-not-allowed">
+                </div>
+            </div>
+        </div>
+        }
+
+        @if (isEditing) {
+        <div class="mt-8 flex justify-end">
+            <button type="submit" [disabled]="isLoading"
+                class="bg-[#0f4c75] text-white font-bold py-3 px-8 rounded-md hover:bg-[#0b3a5a] transition-colors flex items-center gap-2">
+                <i class="ri-save-line"></i> {{ isLoading ? 'Guardando...' : 'Guardar Cambios' }}
+            </button>
+        </div>
+        }
+    </form>
+</div>
+
+<!-- Shared Feedback -->
+@if (successMessage) {
+<p class="fixed bottom-8 right-8 z-50 bg-green-600 text-white px-6 py-4 rounded shadow-lg animate-bounce">
+    <i class="ri-checkbox-circle-line mr-2"></i> {{ successMessage }}
+</p>
+}

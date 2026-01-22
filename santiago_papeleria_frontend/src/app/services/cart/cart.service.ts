@@ -300,7 +300,7 @@ export class CartService {
     private resolveImage(product: any): string {
         if (typeof product.image === 'string' && product.image) return product.image;
         if (Array.isArray(product.images) && product.images.length > 0) return product.images[0];
-        return 'assets/images/placeholder.png';
+        return 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768924502/placeholder_ni9blz.png';
     }
 
     removeFromCart(itemId: string) {

@@ -99,10 +99,10 @@ class IntegracionDobranet {
 
 // 6. Datos Devolución
 class DatosDevolucion {
-  @Prop({ required: true })
+  @Prop({ required: false, default: '' })
   motivo: string;
 
-  @Prop({ required: true, default: Date.now })
+  @Prop({ required: false, default: Date.now })
   fecha_solicitud: Date;
 
   @Prop({ type: [{ codigo: String, nombre: String, cantidad: Number }], default: [] })
@@ -125,8 +125,14 @@ export class Pedido {
   @Prop({ type: Types.ObjectId, ref: 'Usuario', required: true })
   usuario_id: Types.ObjectId; // Corresponde a "usuario_id"
 
-  @Prop({ required: true })
-  estado_pedido: string; // Ejemplo: 'PAGADO', 'PENDIENTE', 'ENVIADO'
+  @Prop({ required: true, default: 'PENDIENTE' })
+  estado_pedido: string; // Logística: 'PENDIENTE', 'PREPARADO', 'ENVIADO', 'ENTREGADO', 'CANCELADO'
+
+  @Prop({ required: true, default: 'NO_PAGADO' })
+  estado_pago: string; // Financiero: 'NO_PAGADO', 'PENDIENTE_CONFIRMACION', 'PAGADO', 'RECHAZADO', 'REEMBOLSADO'
+
+  @Prop({ required: true, default: 'NINGUNA' })
+  estado_devolucion: string; // Devolución: 'NINGUNA', 'PENDIENTE', 'APROBADA', 'RECHAZADA', 'RECIBIDA', 'REEMBOLSADA'
 
   @Prop({ type: [Item], required: true })
   items: Item[]; // Corresponde a "items"
@@ -150,6 +156,8 @@ export class Pedido {
   datos_devolucion: DatosDevolucion;
 }
 
-export type PedidoStatus = 'PAGADO' | 'PENDIENTE' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO';
+export type PedidoStatus = 'PENDIENTE' | 'PREPARADO' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO';
+export type PaymentStatus = 'NO_PAGADO' | 'PENDIENTE_CONFIRMACION' | 'PAGADO' | 'RECHAZADO' | 'REEMBOLSADO';
+export type ReturnStatus = 'NINGUNA' | 'PENDIENTE' | 'APROBADA' | 'RECHAZADA' | 'RECIBIDA' | 'REEMBOLSADA';
 
 export const PedidoSchema = SchemaFactory.createForClass(Pedido);

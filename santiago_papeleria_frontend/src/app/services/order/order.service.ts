@@ -17,7 +17,9 @@ export interface Order {
     numero_pedido_web: number;
     usuario_id: any; // Specify type if User interface available
     estado_pedido: string;
+    estado_devolucion?: string; // Added for return handling
     items: OrderItem[];
+    estado_pago: string;
     resumen_financiero: {
         subtotal_sin_impuestos: number;
         total_impuestos: number;

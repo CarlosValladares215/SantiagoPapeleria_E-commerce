@@ -17,8 +17,15 @@ import { UnifiedFeedbackModalComponent, ModalType } from '../../../shared/compon
     <div class="min-h-screen bg-gradient-to-br from-[#F2F2F2] to-white flex flex-col">
       <app-header />
       
-      <main class="flex-grow container mx-auto px-4 py-12">
+      <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="max-w-md mx-auto">
+          <!-- Breadcrumb -->
+          <nav class="flex items-center gap-2 mb-6 text-xs text-[#104D73]/80 justify-center">
+              <a routerLink="/" class="hover:text-[#F2CB07] transition-colors">Inicio</a>
+              <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+              <span class="text-[#104D73] font-bold">Verificar Correo</span>
+          </nav>
+
           <!-- Header -->
           <div class="text-center mb-8">
             <div class="bg-gradient-to-br from-[#104D73] to-[#012E40] p-4 rounded-2xl w-20 h-20 mx-auto mb-4 shadow-lg flex items-center justify-center">

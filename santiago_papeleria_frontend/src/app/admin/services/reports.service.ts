@@ -38,11 +38,10 @@ export class ReportsService {
         return this.http.get<SalesData[]>(`${this.apiUrl}/sales/range`, { params });
     }
 
-    getTopSellingProducts(start: string, end: string, limit: number = 5): Observable<TopProduct[]> {
+    getTopSellingProducts(range: string = 'hoy', limit: number = 5): Observable<TopProduct[]> {
         let params = new HttpParams()
-            .set('start', start)
-            .set('end', end)
+            .set('fecha', range)
             .set('limit', limit.toString());
-        return this.http.get<TopProduct[]>(`${this.apiUrl}/products/top`, { params });
+        return this.http.get<TopProduct[]>(`${environment.apiUrl}/reportes/productos-mas-vendidos`, { params });
     }
 }

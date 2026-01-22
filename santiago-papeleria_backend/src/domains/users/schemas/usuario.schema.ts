@@ -123,7 +123,7 @@ export class Usuario {
   @Prop({ required: true })
   nombres: string;
 
-  @Prop()
+  @Prop({ unique: true }) // Added unique constraint
   cedula: string;
 
   @Prop()
@@ -173,6 +173,9 @@ export class Usuario {
 
   @Prop({ type: [CartItem], default: [] })
   carrito: CartItem[];
+
+  @Prop({ type: [String], default: [] })
+  favorites: string[]; // Generic Array of Product IDs
 }
 
 export const UsuarioSchema = SchemaFactory.createForClass(Usuario);

@@ -41,9 +41,11 @@ export class EnrichmentService {
         const erpQuery: any = { activo: true };
 
         if (searchTerm) {
+            // Normalize accents: lápiz → lapiz, café → cafe
+            const normalizedTerm = searchTerm.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             erpQuery.$or = [
-                { codigo: { $regex: searchTerm, $options: 'i' } },
-                { nombre: { $regex: searchTerm, $options: 'i' } },
+                { codigo: { $regex: normalizedTerm, $options: 'i' } },
+                { nombre: { $regex: normalizedTerm, $options: 'i' } },
             ];
         }
 
@@ -209,6 +211,60 @@ export class EnrichmentService {
 
         const resolved = this.mergerService.merge(erpDoc, enrichedDoc);
         return this.mergerService.toDetailResponse(resolved);
+    }
+
+    /**
+     * Get random product recommendations for chatbot fallback
+     */
+    async getRecommendations(limit = 3): Promise<any[]> {
+        const query = { stock: { $gt: 5 }, activo: true };
+        const count = await this.productErpModel.countDocuments(query);
+        const randomSkip = Math.floor(Math.random() * Math.max(1, count - limit));
+
+        const erpProducts = await this.productErpModel
+            .find(query)
+            .skip(Math.max(0, randomSkip))
+            .limit(limit)
+            .lean()
+            .exec();
+
+        const merged = await this.mergeWithEnrichedData(erpProducts);
+        return merged.map(p => this.mergerService.toAdminResponse(p));
+    }
+
+    /**
+     * Get products by SuperCategory name for semantic fallback
+     * Maps SuperCategory names to categoria_g1 values
+     */
+    async getProductsBySuperCategory(superCategoryName: string, limit = 4): Promise<any[]> {
+        // Map SuperCategory to actual G2 category values from Dobranet
+        const categoryMap: Record<string, string[]> = {
+            'Escolar & Oficina': ['ESCOLAR', 'OFICINA', 'BOLSOS'],
+            'Arte & Diseño': ['PAPELERIA ARTISTICA'],
+            'Tecnología': ['ELECTRONICA Y TECNOLOGIA'],
+            'Hogar & Decoración': ['DECORACION', 'ASEO'],
+            'Regalos & Variedades': ['JUGUETES', 'FIESTAS Y CUMPLEAÑOS', 'COMIDA', 'BISUTERIA', 'ACCESORIOS DE MODA', 'ACCESORIOS DE CABELLO'],
+        };
+
+        const g1Patterns = categoryMap[superCategoryName] || ['ESCOLAR'];
+
+        // Build regex pattern to match any of these G1 values (exact match)
+        const regexPattern = g1Patterns.map(p => `^${p}$`).join('|');
+
+        const query = {
+            activo: true,
+            stock: { $gt: 0 },
+            categoria_g1: { $regex: regexPattern, $options: 'i' },
+        };
+
+        const erpProducts = await this.productErpModel
+            .find(query)
+            .limit(limit)
+            .lean()
+            .exec();
+
+        const merged = await this.mergeWithEnrichedData(erpProducts);
+        return merged.map(p => this.mergerService.toAdminResponse(p));
     }
 
     // --- Private helpers ---

@@ -9,7 +9,7 @@ import {
   ArrayUnique,
   IsIn,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class ProductFilterDto {
   @IsOptional()
@@ -75,5 +75,15 @@ export class ProductFilterDto {
   @IsArray()
   @IsString({ each: true })
   @Type(() => String)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try { return JSON.parse(trimmed); } catch { return [trimmed]; }
+      }
+      return [trimmed];
+    }
+    return value;
+  })
   ids?: string[]; // Filtrar por lista de IDs/SKUs
 }

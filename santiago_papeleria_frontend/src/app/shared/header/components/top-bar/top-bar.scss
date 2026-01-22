@@ -1,4 +1,10 @@
 /* TOP BAR */
+.header-container {
+    max-width: var(--container-max, 1280px);
+    margin: 0 auto;
+    padding: 0 var(--header-padding-x, 1rem);
+}
+
 .header-top-bar {
     width: 100%;
     background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));

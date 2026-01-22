@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pedido Enviado - Santiago Papelería</title>
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #F2F2F2; font-family: 'Inter', Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F2F2F2; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0"
+                    style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e5e5e5;">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 25px 30px; border-bottom: 1px solid #e5e5e5;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td
+                                                    style="width: 36px; height: 36px; background-color: #104D73; border-radius: 8px; text-align: center; vertical-align: middle;">
+                                                    <span style="color: #ffffff; font-size: 18px;">✎</span>
+                                                </td>
+                                                <td style="padding-left: 10px;">
+                                                    <span
+                                                        style="font-size: 16px; font-weight: 700; color: #104D73; text-transform: uppercase; letter-spacing: 1px;">Santiago
+                                                        Papelería</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span
+                                            style="font-size: 11px; font-weight: 500; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">Envío
+                                            #{{numero_pedido}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Hero Section with Truck Animation Representation -->
+                    <tr>
+                        <td style="background-color: #f9fafb; padding: 50px 40px; text-align: center;">
+                            <!-- Progress Line -->
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="max-width: 350px; margin: 0 auto 30px;">
+                                <tr>
+                                    <td style="width: 40px; text-align: center;">
+                                        <div
+                                            style="width: 40px; height: 40px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); line-height: 40px; font-size: 16px; color: #9ca3af;">
+                                            🏪</div>
+                                    </td>
+                                    <td style="position: relative;">
+                                        <div
+                                            style="height: 4px; background-color: #e5e5e5; border-radius: 2px; position: relative;">
+                                            <div
+                                                style="position: absolute; top: 0; left: 0; width: 66%; height: 100%; background-color: #F2CB07; border-radius: 2px;">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 56px; text-align: center;">
+                                        <div
+                                            style="width: 56px; height: 56px; background-color: #104D73; border-radius: 50%; box-shadow: 0 4px 12px rgba(16,77,115,0.4); line-height: 56px; font-size: 28px; color: #ffffff;">
+                                            🚚</div>
+                                    </td>
+                                    <td style="position: relative;">
+                                        <div style="height: 4px; background-color: #e5e5e5; border-radius: 2px;"></div>
+                                    </td>
+                                    <td style="width: 40px; text-align: center;">
+                                        <div
+                                            style="width: 40px; height: 40px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); line-height: 40px; font-size: 16px; color: #9ca3af;">
+                                            🏠</div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #104D73;">¡Tu pedido ya va
+                                en camino!</h1>
+                            <p
+                                style="margin: 15px auto 0; font-size: 15px; color: #6b7280; max-width: 400px; line-height: 1.6;">
+                                Buenas noticias, hemos entregado tu paquete a la transportadora y llegará a tus manos
+                                muy pronto.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Shipping Info Cards -->
+                    <tr>
+                        <td style="padding: 30px 40px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="width: 48%; vertical-align: top;">
+                                        <table width="100%" cellpadding="0" cellspacing="0"
+                                            style="background-color: #f9fafb; border: 1px solid #e5e5e5; border-radius: 10px; padding: 18px;">
+                                            <tr>
+                                                <td>
+                                                    <p
+                                                        style="margin: 0 0 5px; font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">
+                                                        Empresa de Envío</p>
+                                                    <p
+                                                        style="margin: 0; font-size: 14px; font-weight: 600; color: #111827;">
+                                                        🏢 {{empresa_envio}}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td style="width: 4%;"></td>
+                                    <td style="width: 48%; vertical-align: top;">
+                                        <table width="100%" cellpadding="0" cellspacing="0"
+                                            style="background-color: #f9fafb; border: 1px solid #e5e5e5; border-radius: 10px; padding: 18px;">
+                                            <tr>
+                                                <td>
+                                                    <p
+                                                        style="margin: 0 0 5px; font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px;">
+                                                        Número de Guía</p>
+                                                    <p
+                                                        style="margin: 0; font-size: 14px; font-weight: 700; color: #104D73; font-family: monospace; letter-spacing: 1px;">
+                                                        {{numero_guia}}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- CTA Button -->
+                    <tr>
+                        <td style="padding: 0 40px 20px; text-align: center;">
+                            <a href="{{tracking_url}}"
+                                style="display: inline-block; background-color: #104D73; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 18px 45px; border-radius: 12px; box-shadow: 0 4px 12px rgba(16,77,115,0.3);">
+                                📍 Seguir pedido
+                            </a>
+                            <p style="margin: 15px 0 0; font-size: 12px; color: #9ca3af;">
+                                El seguimiento puede tardar hasta 24 horas en actualizarse después del despacho.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Package Summary -->
+                    <tr>
+                        <td style="padding: 20px 40px 30px; border-top: 1px solid #e5e5e5;">
+                            <h3 style="margin: 0 0 15px; font-size: 14px; font-weight: 600; color: #111827;">Resumen del
+                                paquete</h3>
+                            <table width="100%" cellpadding="0" cellspacing="0"
+                                style="background-color: #f9fafb; border-radius: 10px; padding: 12px;">
+                                <tr>
+                                    <td style="width: 60px; vertical-align: middle;">
+                                        <div
+                                            style="width: 50px; height: 50px; background-color: #ffffff; border-radius: 8px; border: 1px solid #e5e5e5; text-align: center; line-height: 50px; font-size: 24px;">
+                                            📦</div>
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                        <p style="margin: 0; font-size: 13px; font-weight: 500; color: #111827;">
+                                            {{resumen_items}}</p>
+                                        <p style="margin: 3px 0 0; font-size: 12px; color: #6b7280;">Y
+                                            {{cantidad_items_extra}} artículos más...</p>
+                                    </td>
+                                    <td style="text-align: right; vertical-align: middle;">
+                                        <span
+                                            style="font-size: 14px; font-weight: 700; color: #104D73;">{{total}}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f3f4f6; padding: 30px 40px; border-top: 1px solid #e5e5e5;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <p style="margin: 0; font-size: 14px; font-weight: 700; color: #104D73;">
+                                            Santiago Papelería</p>
+                                        <p style="margin: 3px 0 0; font-size: 12px; color: #6b7280;">Creatividad en cada
+                                            trazo.</p>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <a href="#"
+                                            style="display: inline-block; width: 36px; height: 36px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; line-height: 36px; text-decoration: none; margin-left: 8px;">❓</a>
+                                        <a href="#"
+                                            style="display: inline-block; width: 36px; height: 36px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; line-height: 36px; text-decoration: none; margin-left: 8px;">✉</a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p
+                                style="margin: 25px 0 0; font-size: 10px; color: #9ca3af; text-align: center; text-transform: uppercase; letter-spacing: 1px; line-height: 1.8;">
+                                Loja, Ecuador<br />
+                                © 2024 Santiago Papelería. Todos los derechos reservados.<br />
+                                Has recibido este correo porque realizaste una compra en nuestro sitio.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
