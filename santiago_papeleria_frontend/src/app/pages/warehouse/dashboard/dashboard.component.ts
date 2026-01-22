@@ -6,6 +6,7 @@ import { delay, timeout, finalize } from 'rxjs/operators';
 import { ErpService } from '../../../services/erp/erp.service';
 import { OrderService, Order as BackendOrder } from '../../../services/order/order.service';
 import { ProductService } from '../../../services/product/product.service';
+import { environment } from '../../../../environments/environment';
 
 interface Order {
     _id: string; // Mongo ID
@@ -187,7 +188,7 @@ export class WarehouseDashboardComponent implements OnInit {
             total: backendOrder.resumen_financiero.total_pagado,
             shippingCost: backendOrder.resumen_financiero.costo_envio || 0,
             paymentMethod: backendOrder.resumen_financiero.metodo_pago,
-            paymentProofUrl: backendOrder.resumen_financiero.comprobante_pago ? `http://localhost:3000${backendOrder.resumen_financiero.comprobante_pago}` : undefined,
+            paymentProofUrl: backendOrder.resumen_financiero.comprobante_pago ? `${environment.baseApiUrl.replace('/api', '')}${backendOrder.resumen_financiero.comprobante_pago}` : undefined,
             status: displayStatus,
             products: backendOrder.items.map(item => ({
                 code: item.codigo_dobranet || 'GEN',

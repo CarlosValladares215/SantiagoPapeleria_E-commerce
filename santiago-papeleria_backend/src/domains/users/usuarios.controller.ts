@@ -244,7 +244,7 @@ export class UsuariosController {
       message: 'Cuenta verificada exitosamente',
       access_token: jwtToken, // Return token for auto-login
       user: {
-        id: user._id,
+        _id: user._id,
         email: user.email,
         nombres: user.nombres,
         cedula: user.cedula,

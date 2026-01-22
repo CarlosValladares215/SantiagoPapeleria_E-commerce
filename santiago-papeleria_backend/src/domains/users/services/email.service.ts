@@ -61,7 +61,18 @@ export class EmailService {
 
     private getTemplate(templateName: string, data: Record<string, string>): string {
         try {
-            const templatePath = path.join(__dirname, '..', 'templates', templateName);
+            const templateDir = path.join(__dirname, '..', 'templates');
+            const templatePath = path.join(templateDir, templateName);
+
+            this.logger.log(`[DEBUG] __dirname: ${__dirname}`);
+            this.logger.log(`[DEBUG] Looking for template in: ${templatePath}`);
+
+            if (fs.existsSync(templateDir)) {
+                this.logger.log(`[DEBUG] Template directory exists. Contents: ${fs.readdirSync(templateDir).join(', ')}`);
+            } else {
+                this.logger.error(`[DEBUG] Template directory NOT FOUND at: ${templateDir}`);
+            }
+
             let content = fs.readFileSync(templatePath, 'utf-8');
 
             // Replace placeholders {{key}} with value

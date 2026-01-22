@@ -17,8 +17,7 @@ import { AuthService } from '../../services/auth/auth.service';
     providedIn: 'root'
 })
 export class ChatbotService {
-    // private apiUrl = `${environment.apiUrl}/chatbot`; // TODO: Uncomment when backend is ready
-    private apiUrl = 'http://localhost:3000/api/chatbot'; // Temporary URL
+    private apiUrl = `${environment.baseApiUrl}/chatbot`;
 
     messages = signal<ChatMessage[]>([]);
     isOpen = signal<boolean>(false);

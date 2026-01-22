@@ -152,7 +152,7 @@ export class Cart {
 
             // Build Payload matching CreatePedidoDto
             const orderPayload = {
-                usuario_id: user._id,
+                usuario_id: user._id || (user as any).id,
                 estado_pedido: payment === 'transfer' ? 'PENDIENTE_PAGO' : 'PENDIENTE',
                 fecha_compra: new Date().toISOString(),
                 items: items,
