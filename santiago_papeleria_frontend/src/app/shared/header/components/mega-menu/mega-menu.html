@@ -35,8 +35,10 @@
                             </li>
                         </ul>
                         <!-- View All Link if more items exist -->
+                        <!-- View All Link if more items exist -->
                         <a *ngIf="(cat.hijos?.length || 0) > VISIBLE_ITEMS_LIMIT" [routerLink]="['/products']"
-                            [queryParams]="{category: cat.slug || cat.nombre}" class="view-all-link">
+                            [queryParams]="{category: cat.slug || cat.nombre}" class="view-all-link" aria-hidden="true"
+                            tabindex="-1">
                             Ver todo ({{ cat.hijos?.length }}) <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>

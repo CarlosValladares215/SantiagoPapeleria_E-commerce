@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { ToastContainerComponent } from '../../../../shared/components/toast/toast.component';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../services/auth/auth.service';
@@ -11,7 +12,7 @@ import { CartService } from '../../../../services/cart/cart.service';
 @Component({
   selector: 'app-featured-products',
   standalone: true,
-  imports: [RouterModule, CommonModule, ProductCard],
+  imports: [RouterModule, CommonModule, ProductCard, ToastContainerComponent],
   templateUrl: './featured-products.html',
   styleUrl: './featured-products.scss',
 })
@@ -23,6 +24,7 @@ export class FeaturedProducts implements OnInit {
   private router = inject(Router);
 
   @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild(ToastContainerComponent) toast!: ToastContainerComponent;
 
   products = signal<Product[]>([]);
   loading = signal<boolean>(true);
@@ -84,6 +86,13 @@ export class FeaturedProducts implements OnInit {
   }
 
   handleAddToCart(product: Product) {
-    this.cartService.addToCart(product, 1);
+    const success = this.cartService.addToCart(product, 1);
+    if (this.toast) {
+      if (success) {
+        this.toast.add(`${product.name} agregado al carrito`, 'success');
+      } else {
+        this.toast.add('Stock insuficiente', 'error');
+      }
+    }
   }
 }

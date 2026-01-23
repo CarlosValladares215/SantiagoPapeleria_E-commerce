@@ -150,6 +150,12 @@ export class CatalogService {
             case 'stock': sortOptions['stock.total_disponible'] = -1; break;
             case '-stock': sortOptions['stock.total_disponible'] = 1; break;
             case '-name': sortOptions['nombre'] = -1; break;
+            case 'bestselling':
+                // For now, we use a stable sort or we could aggregate, but for catalog listing
+                // we'll use newest/featured logic if we had those fields, otherwise stable name.
+                // In a real scenario, this would sort by a 'sales_count' field.
+                sortOptions['nombre'] = 1;
+                break;
             case 'name':
             default:
                 sortOptions['nombre'] = 1;

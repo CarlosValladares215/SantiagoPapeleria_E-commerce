@@ -1,125 +1,132 @@
-<div [class]="'bg-white rounded-3xl overflow-hidden shadow-md border transition-all duration-300 flex flex-col ' +
-    (product.stock === 0 ? 'border-slate-200 opacity-75 grayscale-[30%]' : 'border-slate-100 hover:shadow-xl')">
+<!-- Layout Responsive: Horizontal en móvil, Vertical en desktop -->
+<!-- Contenedor clickeable para ir a detalles (en móvil) -->
+<div [class]="'bg-white rounded-2xl overflow-hidden shadow-sm border transition-all duration-300 cursor-pointer ' +
+    (product.stock === 0 ? 'border-slate-200 opacity-75 grayscale-[30%]' : 'border-slate-100 hover:shadow-xl') + 
+    ' flex flex-row md:flex-col'" (click)="onViewDetails()">
 
-    <!-- Image Section -->
-    <div class="relative bg-slate-50 p-6 flex justify-center items-center aspect-square">
+    <!-- Image Section - Centrada verticalmente -->
+    <div class="relative bg-slate-50 flex-shrink-0 flex justify-center items-center
+                w-32 h-36 md:w-full md:h-auto md:aspect-square md:p-6">
         <img [src]="getMainImage()" [alt]="product.name"
-            class="object-contain max-h-48 max-w-full mix-blend-multiply" />
+            class="object-contain w-full h-full p-3 md:p-0 md:max-h-48 md:max-w-full mix-blend-multiply" />
 
-        <!-- Flash Sale Badge with Countdown - Top Left -->
+        <!-- Discount Badge - Top Left of Image -->
         @if ((product.promocion_activa || product.discount) && product.stock > 0) {
-        <div class="absolute top-4 left-4 z-20 flex flex-col gap-2">
+        <div class="absolute top-2 left-2 z-20">
             <span
-                class="bg-red-600 text-white font-black text-sm px-4 py-2 rounded-xl shadow-lg shadow-red-500/30 flex items-center gap-1">
-                -{{ product.promocion_activa ? product.promocion_activa.valor_descuento : product.discount }}
-                {{ product.promocion_activa?.tipo_descuento === 'valor_fijo' ? '$' : '%' }}
-                <span class="text-[10px] opacity-80 font-bold uppercase tracking-widest ml-1">Oferta</span>
+                class="bg-red-600 text-white font-black text-[10px] md:text-sm px-1.5 py-0.5 md:px-4 md:py-2 rounded md:rounded-xl shadow-lg shadow-red-500/30">
+                -{{ product.promocion_activa ? product.promocion_activa.valor_descuento : product.discount }}{{
+                product.promocion_activa?.tipo_descuento === 'valor_fijo' ? '$' : '%' }}
             </span>
-            <!-- Countdown Timer - Only show if promotion has end date -->
-            @if (product.promocion_activa?.fecha_fin && countdownDisplay()) {
-            <div
-                class="bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-lg flex items-center gap-2 border border-white/10">
-                <i class="ri-timer-line text-red-400 text-sm"></i>
-                <span class="text-[11px] font-bold">Termina:</span>
-                <span class="font-mono text-[11px] font-bold tracking-wide ml-0.5">{{ countdownDisplay() }}</span>
-            </div>
-            }
         </div>
         }
 
-        <!-- Favorite Button - Top Right -->
-        <div class="absolute top-4 right-4">
-            <button (click)="toggleFavorite($event)"
-                class="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white hover:scale-110 transition-all">
-                <i
-                    [class]="'text-xl ' + (isFavorite() ? 'ri-heart-fill text-rose-500' : 'ri-heart-line text-slate-400')"></i>
-            </button>
-        </div>
+        <!-- Favorite Button - Detiene propagación del click -->
+        <button (click)="toggleFavorite($event)"
+            [attr.aria-label]="isFavorite() ? 'Quitar de favoritos' : 'Agregar a favoritos'"
+            class="absolute top-2 right-2 md:top-4 md:right-4 z-10 w-8 h-8 md:w-10 md:h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md hover:bg-white hover:scale-110 transition-all">
+            <i aria-hidden="true"
+                [class]="'text-base md:text-xl ' + (isFavorite() ? 'ri-heart-fill text-rose-500' : 'ri-heart-line text-slate-400')"></i>
+        </button>
 
         <!-- Out of Stock Overlay -->
         @if (product.stock === 0) {
         <div class="absolute inset-0 bg-slate-900/20 z-10 pointer-events-none"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
             <span
-                class="bg-slate-800 text-white font-black text-xs px-4 py-2 rounded-lg shadow-xl tracking-widest uppercase">
+                class="bg-slate-800 text-white font-bold text-[10px] md:text-xs px-2 py-1 md:px-4 md:py-2 rounded-lg shadow-xl tracking-wider uppercase">
                 AGOTADO
             </span>
         </div>
         }
     </div>
 
-    <!-- Product Info -->
-    <div class="p-5 flex flex-col flex-1">
-        <!-- Category -->
-        <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">
-            {{ product.category }}
-        </span>
-
-        <!-- Product Name -->
-        <h3 class="text-lg font-bold text-slate-800 leading-tight mb-3 line-clamp-2 min-h-[3rem]">
-            {{ product.name }}
-        </h3>
-
-        <!-- Price Section -->
-        <div class="flex items-baseline gap-3 mb-2">
-            <!-- Final Price -->
-            <span [class]="'text-2xl font-black ' + 
-                (product.promocion_activa || product.discount ? 'text-red-600' : 'text-slate-900')">
-                ${{ (product.promocion_activa ? product.promocion_activa.precio_descuento : product) |
-                displayPrice | number:'1.2-2' }}
-            </span>
-            <!-- Original Price (struck through) -->
-            @if (product.promocion_activa) {
-            <span class="text-lg font-medium text-slate-400 line-through decoration-slate-400/50 decoration-2">
-                ${{ product.promocion_activa.precio_original.toFixed(2) }}
-            </span>
-            } @else if (product.originalPrice || product.discount) {
-            <span class="text-lg font-medium text-slate-400 line-through decoration-slate-400/50 decoration-2">
-                ${{ getOriginalPrice().toFixed(2) }}
-            </span>
-            }
-        </div>
-
-        <!-- Stock Status Badge -->
-        <div class="flex items-center gap-2 mb-4">
-            @if (product.stock === 0) {
+    <!-- Product Info - Right side on mobile, below on desktop -->
+    <div class="flex-grow p-3 md:p-5 flex flex-col justify-center md:justify-between">
+        <!-- Top Info Section -->
+        <div>
+            <!-- Category -->
             <span
-                class="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                <i class="ri-close-circle-fill text-xs"></i>
-                Agotado
+                class="text-[10px] md:text-xs uppercase tracking-wider font-bold text-slate-400 md:text-slate-700 leading-none">
+                {{ product.category }}
             </span>
-            } @else if (product.stock < 10) { <span
-                class="bg-red-50 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 border border-red-100">
-                <i class="ri-error-warning-fill text-xs"></i>
-                Solo {{ product.stock }} disponibles
+
+            <!-- Product Name -->
+            <h3
+                class="text-sm md:text-lg font-bold text-slate-800 leading-tight mt-0.5 md:mt-1 line-clamp-2 md:min-h-[3rem]">
+                {{ product.name }}
+            </h3>
+
+            <!-- Price Section -->
+            <div class="flex items-center gap-2 mt-1.5 md:mt-3 md:mb-2">
+                <!-- Final Price -->
+                <span [class]="'text-lg md:text-2xl font-black ' + 
+                    (product.promocion_activa || product.discount ? 'text-red-600' : 'text-slate-900')">
+                    ${{ (product.promocion_activa ? product.promocion_activa.precio_descuento : product) |
+                    displayPrice | number:'1.2-2' }}
                 </span>
-                } @else if (product.stock < 20) { <span
-                    class="bg-amber-50 text-amber-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 border border-amber-100">
-                    <i class="ri-alert-fill text-xs"></i>
-                    Últimas unidades
+                <!-- Original Price (struck through) -->
+                @if (product.promocion_activa) {
+                <span class="text-xs md:text-lg text-slate-400 line-through">
+                    ${{ product.promocion_activa.precio_original.toFixed(2) }}
+                </span>
+                } @else if (product.originalPrice || product.discount) {
+                <span class="text-xs md:text-lg text-slate-400 line-through">
+                    ${{ getOriginalPrice().toFixed(2) }}
+                </span>
+                }
+            </div>
+
+            <!-- Stock Status Badge - Compact on mobile -->
+            <div class="flex items-center mt-1 md:mt-3 md:mb-4">
+                @if (product.stock === 0) {
+                <span
+                    class="bg-slate-100 text-slate-600 text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full flex items-center gap-1">
+                    <i class="ri-close-circle-fill text-[10px] md:text-xs"></i>
+                    Agotado
+                </span>
+                } @else if (product.stock < 10) { <span
+                    class="bg-red-50 text-red-700 text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full flex items-center gap-1 border border-red-100">
+                    <i class="ri-error-warning-fill text-[10px] md:text-xs"></i>
+                    <span class="hidden md:inline">Solo {{ product.stock }} disponibles</span>
+                    <span class="md:hidden">{{ product.stock }} uds</span>
                     </span>
-                    } @else {
-                    <span
-                        class="bg-green-50 text-green-600 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 border border-green-100">
-                        <i class="ri-checkbox-circle-fill text-xs"></i>
-                        En Stock
-                    </span>
-                    }
+                    } @else if (product.stock < 20) { <span
+                        class="bg-amber-50 text-amber-700 text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full flex items-center gap-1 border border-amber-100">
+                        <i class="ri-alert-fill text-[10px] md:text-xs"></i>
+                        <span class="hidden md:inline">Últimas unidades</span>
+                        <span class="md:hidden">Últimas</span>
+                        </span>
+                        } @else {
+                        <span
+                            class="bg-green-50 text-green-700 text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full flex items-center gap-1 border border-green-100">
+                            <i class="ri-checkbox-circle-fill text-[10px] md:text-xs"></i>
+                            En Stock
+                        </span>
+                        }
+            </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="grid grid-cols-2 gap-3 mt-auto">
-            <button (click)="onViewDetails()"
-                class="py-3 px-4 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors">
+        <!-- Action Button - Single button on mobile, grid on desktop -->
+        <div class="flex justify-end mt-2 md:grid md:grid-cols-2 md:gap-3 md:mt-auto">
+            <!-- View Details - Hidden on mobile, visible on desktop -->
+            <button (click)="onViewDetails(); $event.stopPropagation()"
+                class="hidden md:block py-3 px-4 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors">
                 Ver Detalles
             </button>
-            <button (click)="onAddToCart()" [disabled]="product.stock === 0"
-                [class]="'py-3 px-4 rounded-xl font-bold text-sm transition-all ' +
+
+            <!-- Add to Cart Button - Detiene propagación -->
+            <button (click)="onAddToCart(); $event.stopPropagation()" [disabled]="product.stock === 0"
+                [class]="'py-2 px-4 md:py-3 md:px-4 rounded-xl font-bold text-xs md:text-sm transition-all flex items-center gap-1.5 ' +
                 (product.stock === 0 
                     ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
                     : 'bg-[#F2CB07] text-slate-900 shadow-lg shadow-yellow-500/20 hover:scale-[1.02] active:scale-[0.98]')">
+                @if (product.stock > 0) {
+                <i class="ri-shopping-cart-2-line text-sm md:hidden"></i>
+                }
                 {{ product.stock === 0 ? 'Agotado' : 'Agregar' }}
             </button>
         </div>
     </div>
+
 </div>

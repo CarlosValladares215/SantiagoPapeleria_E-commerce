@@ -1,4 +1,4 @@
-// Trigger Restart
+// Trigger Restart - Environment Refresh
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
@@ -28,8 +28,14 @@ async function bootstrap() {
   });
 
   // Habilitar CORS para permitir peticiones desde el frontend (Angular)
-  app.enableCors();
+  // Configuración explícita para DevTunnels y desarrollo
+  app.enableCors({
+    origin: true, // Permite CUALQUIER origen
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'X-Tunnel-Skip-Anti-Phishing-Page'],
+  });
 
-  await app.listen(3000, '0.0.0.0');
+  await app.listen(process.env.PORT || 3000, '0.0.0.0');
 }
 bootstrap();

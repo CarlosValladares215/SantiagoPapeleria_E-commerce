@@ -6,35 +6,6 @@ import * as path from 'path';
 
 // Force recompile after .env UTF-8 fix
 
-// Helper to load env vars directly from .env file
-function loadEnvFile(): Record<string, string> {
-    const envPath = path.resolve(__dirname, '..', '..', '..', '..', '.env');
-    console.log('[EmailService] Loading .env from:', envPath);
-    console.log('[EmailService] __dirname is:', __dirname);
-    try {
-        const content = fs.readFileSync(envPath, 'utf-8');
-        console.log('[EmailService] File content length:', content.length);
-        const vars: Record<string, string> = {};
-        content.split('\n').forEach(line => {
-            const trimmed = line.trim();
-            if (trimmed && !trimmed.startsWith('#')) {
-                const eqIndex = trimmed.indexOf('=');
-                if (eqIndex > 0) {
-                    const key = trimmed.substring(0, eqIndex).trim();
-                    const value = trimmed.substring(eqIndex + 1).trim();
-                    vars[key] = value;
-                }
-            }
-        });
-        console.log('[EmailService] Loaded env keys:', Object.keys(vars));
-        return vars;
-    } catch (error) {
-        console.error('[EmailService] Failed to load .env file:', error.message);
-        return {};
-    }
-}
-
-const ENV_VARS = loadEnvFile();
 
 @Injectable()
 export class EmailService {
@@ -45,10 +16,9 @@ export class EmailService {
     private readonly BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
     constructor(private configService: ConfigService) {
-        // Read from our manually loaded vars first, then fallback to ConfigService
-        this.apiKey = ENV_VARS['BREVO_API_KEY'] || this.configService.get<string>('BREVO_API_KEY') || '';
-        this.senderName = ENV_VARS['BREVO_SENDER_NAME'] || this.configService.get<string>('BREVO_SENDER_NAME') || 'Santiago Papeleria';
-        this.senderEmail = ENV_VARS['BREVO_SENDER_EMAIL'] || this.configService.get<string>('BREVO_SENDER_EMAIL') || 'noreply@santiagopapeleria.com';
+        this.apiKey = this.configService.get<string>('BREVO_API_KEY') || process.env.BREVO_API_KEY || '';
+        this.senderName = this.configService.get<string>('BREVO_SENDER_NAME') || process.env.BREVO_SENDER_NAME || 'Santiago Papeleria';
+        this.senderEmail = this.configService.get<string>('BREVO_SENDER_EMAIL') || process.env.BREVO_SENDER_EMAIL || 'noreply@santiagopapeleria.com';
 
         if (!this.apiKey) {
             this.logger.warn('BREVO_API_KEY is not configured. Email sending will fail.');
@@ -57,6 +27,31 @@ export class EmailService {
         }
 
         this.logger.log('EmailService initialized with Brevo API configuration');
+    }
+
+    private getFrontendUrl(): string {
+        // Log all possible sources for debugging
+        const envUrl = process.env.FRONTEND_URL;
+        const configUrl = this.configService.get<string>('FRONTEND_URL');
+
+        this.logger.debug(`[Debug] process.env.FRONTEND_URL: ${envUrl}`);
+        this.logger.debug(`[Debug] configService.get('FRONTEND_URL'): ${configUrl}`);
+
+        // Priority for explicit URL
+        const explicitUrl = configUrl || envUrl;
+        if (explicitUrl) {
+            this.logger.log(`Using explicit frontend URL: ${explicitUrl}`);
+            return explicitUrl;
+        }
+
+        // Granular fallbacks
+        const protocol = this.configService.get<string>('FRONTEND_PROTOCOL') || process.env.FRONTEND_PROTOCOL || 'http';
+        const host = this.configService.get<string>('FRONTEND_HOST') || process.env.FRONTEND_HOST || 'localhost';
+        const port = this.configService.get<string>('FRONTEND_PORT') || process.env.FRONTEND_PORT || '4200';
+
+        const constructed = `${protocol}://${host}:${port}`;
+        this.logger.log(`Using constructed frontend URL: ${constructed}`);
+        return constructed;
     }
 
     private getTemplate(templateName: string, data: Record<string, string>): string {
@@ -105,7 +100,7 @@ export class EmailService {
     }
 
     async sendVerificationEmail(email: string, token: string, userName: string = 'Usuario'): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
         const appName = 'Santiago Papelería';
 
         const verificationLink = `${frontendUrl}/verify-email?token=${token}`;
@@ -150,7 +145,7 @@ Tu aliado en útiles escolares y de oficina
     }
 
     async sendPasswordResetEmail(email: string, token: string, userName: string = 'Usuario'): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
         const appName = 'Santiago Papelería';
 
         const resetLink = `${frontendUrl}/reset-password?token=${token}`;
@@ -183,7 +178,7 @@ Si no solicitaste esto, ignora este mensaje.
 
     async sendOrderConfirmation(email: string, order: any): Promise<void> {
         const appName = 'Santiago Papelería';
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const orderDate = new Date(order.fecha_compra).toLocaleDateString('es-ES', {
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -359,7 +354,7 @@ Si no solicitaste esto, ignora este mensaje.
         }
 
         const appName = 'Santiago Papelería';
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const config = {
             success: {
@@ -459,7 +454,7 @@ Si no solicitaste esto, ignora este mensaje.
 
     async sendReturnDecision(email: string, order: any, decision: 'APPROVE' | 'REJECT', observations: string): Promise<void> {
         const appName = 'Santiago Papelería';
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const isApproved = decision === 'APPROVE';
         const decisionText = isApproved ? 'APROBADA' : 'RECHAZADA';
@@ -510,7 +505,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send order received confirmation email (when order is created)
      */
     async sendOrderReceived(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         // Extract financials from order (handle both old and new schema)
         const resumen = order.resumen_financiero || {};
@@ -556,7 +551,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send payment confirmed / invoice email
      */
     async sendPaymentConfirmed(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         // Extract financials from order (handle both old and new schema)
         const resumen = order.resumen_financiero || {};
@@ -615,7 +610,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send order preparing email (estado_pedido -> PREPARADO)
      */
     async sendOrderPreparing(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const itemsSummaryHtml = (order.items || []).slice(0, 3).map((item: any) => `
             <div style="margin-bottom: 10px;">
@@ -644,7 +639,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send order shipped email (estado_pedido -> ENVIADO)
      */
     async sendOrderShipped(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
         const firstItem = order.items?.[0];
         const extraCount = Math.max(0, (order.items?.length || 1) - 1);
 
@@ -673,7 +668,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send order delivered email (estado_pedido -> ENTREGADO)
      */
     async sendOrderDelivered(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
         const datosEnvio = order.datos_envio || {};
         const direccion = datosEnvio.direccion_destino || order.direccionEnvio || {};
 
@@ -696,7 +691,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send return requested email (estado_devolucion -> PENDIENTE)
      */
     async sendReturnRequested(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const htmlContent = this.getTemplate('return-requested.html', {
             nombre: order.cliente?.nombre || order.nombre_cliente || 'Cliente',
@@ -717,7 +712,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send return approved email (estado_devolucion -> APROBADA)
      */
     async sendReturnApproved(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const htmlContent = this.getTemplate('return-approved.html', {
             nombre: order.cliente?.nombre || order.nombre_cliente || 'Cliente',
@@ -739,7 +734,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send return rejected email (estado_devolucion -> RECHAZADA)
      */
     async sendReturnRejected(email: string, order: any, observations: string): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const htmlContent = this.getTemplate('return-rejected.html', {
             numero_pedido: order.numero_pedido_web || order._id,
@@ -760,7 +755,7 @@ Si no solicitaste esto, ignora este mensaje.
  * Send return received email (estado_devolucion -> RECIBIDA)
  */
     async sendReturnReceived(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         // Calculate refund amount based on returned items
         const returnedItems = order.datos_devolucion?.items || [];
@@ -808,7 +803,7 @@ Si no solicitaste esto, ignora este mensaje.
      * Send refund processed email (estado_pago -> REEMBOLSADO)
      */
     async sendRefundProcessed(email: string, order: any): Promise<void> {
-        const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:4200');
+        const frontendUrl = this.getFrontendUrl();
 
         const htmlContent = this.getTemplate('refund-processed.html', {
             numero_pedido: order.numero_pedido_web || order._id,

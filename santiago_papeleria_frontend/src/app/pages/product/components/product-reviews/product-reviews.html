@@ -1,149 +1,229 @@
-<div class="max-w-5xl mx-auto space-y-8">
-  <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+<div class="space-y-8 animate-fade-in">
+  <section class="bg-white rounded-xl shadow-lg border border-slate-100 p-6 lg:p-8">
 
     <!-- REVIEWS EXIST -->
     <div *ngIf="reviews && reviews.length > 0; else emptyState">
-      <div class="flex flex-col md:flex-row justify-between items-start mb-10">
+      <div class="flex flex-col md:flex-row justify-between items-start mb-10 gap-6">
         <div>
-          <h2 class="text-2xl font-bold text-slate-900">Reseñas de Clientes</h2>
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <i class="ri-discuss-line text-blue-600"></i> Reseñas de Clientes
+          </h2>
+          <p class="text-slate-500 mt-1">Lo que otros compradores opinan sobre este producto.</p>
         </div>
-        <div class="mt-4 md:mt-0 text-right">
-          <div class="text-5xl font-extrabold text-blue-900">{{ avgRating() | number:'1.1-1' }}</div>
-          <div class="flex items-center justify-end text-yellow-400 my-1 text-2xl">
+        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-100 min-w-[200px] text-center shadow-sm">
+          <div class="text-5xl font-black text-blue-900 leading-none mb-2">{{ avgRating() | number:'1.1-1' }}</div>
+          <div class="flex items-center justify-center text-yellow-400 mb-2 text-2xl">
             <ng-container *ngFor="let s of getStarsArray(5); let i = index">
               <i [class]="i < avgRating() ? 'ri-star-fill' : 'ri-star-line'"></i>
             </ng-container>
           </div>
-          <div class="text-sm text-slate-500">{{ reviews.length }} reseñas</div>
+          <div class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ reviews.length }} valoraciones
+          </div>
         </div>
       </div>
 
       <!-- BARS -->
-      <div class="space-y-4 max-w-4xl mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-12">
         <div class="flex items-center gap-4 group" *ngFor="let star of [5,4,3,2,1]">
-          <span class="w-20 text-sm font-medium text-slate-700">{{ star }} estrellas</span>
-          <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div class="h-full bg-blue-600 transition-all duration-500" [style.width.%]="ratingPercent(star)"></div>
+          <span class="w-20 text-xs font-bold text-slate-500 uppercase tracking-tighter">{{ star }} estrellas</span>
+          <div class="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+            <div class="h-full bg-gradient-to-r from-blue-500 to-blue-700 transition-all duration-700 ease-out"
+              [style.width.%]="ratingPercent(star)"></div>
           </div>
-          <span class="w-10 text-right text-sm font-medium text-slate-500">{{ ratingPercent(star) }}%</span>
+          <span class="w-10 text-right text-sm font-black text-slate-700">{{ ratingPercent(star) }}%</span>
         </div>
       </div>
 
       <!-- FILTERS -->
-      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 px-2 mb-6">
-        <h3 class="text-xl font-semibold text-slate-900">Opiniones más recientes</h3>
-        <select (change)="setSort($event)"
-          class="bg-white border-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
-          <option value="newest">Más recientes</option>
-          <option value="highest">Mejor puntuación</option>
-          <option value="lowest">Peor puntuación</option>
-        </select>
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 py-4 border-y border-slate-50 mb-8">
+        <h3 class="text-lg font-bold text-slate-800">Opiniones Relevantes</h3>
+        <div class="relative min-w-[200px]">
+          <select (change)="setSort($event)"
+            class="w-full appearance-none bg-slate-50 border border-slate-200 text-sm font-bold text-slate-700 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 p-3 pr-10 outline-none transition-all">
+            <option value="newest">Más recientes</option>
+            <option value="highest">Mejor puntuación</option>
+            <option value="lowest">Peor puntuación</option>
+          </select>
+          <i
+            class="ri-arrow-down-s-line absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xl"></i>
+        </div>
       </div>
 
       <!-- LIST -->
       <div class="space-y-6">
         <article *ngFor="let r of sortedReviews()"
-          class="bg-white p-8 rounded-xl border border-slate-200 shadow-sm transition-transform hover:scale-[1.005]">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-            <div class="flex items-center gap-3">
+          class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-blue-100">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+            <div class="flex items-center gap-4">
               <div
-                class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold uppercase">
+                class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-700 font-black text-xl shadow-sm uppercase">
                 {{ r.user_name.charAt(0) }}
               </div>
               <div>
-                <p class="font-semibold text-slate-900">{{ r.user_name }}</p>
-                <div class="flex items-center gap-2">
+                <p class="text-lg font-bold text-slate-900 leading-tight">{{ r.user_name }}</p>
+                <div class="flex items-center gap-2 mt-1">
                   <span
-                    class="bg-green-100 text-green-700 text-[10px] uppercase font-bold px-2 py-0.5 rounded flex items-center">
-                    <i class="ri-checkbox-circle-line mr-1"></i> Compra verificada
+                    class="bg-green-50 text-green-700 text-[10px] uppercase font-black px-2 py-0.5 rounded-lg border border-green-100 flex items-center shadow-sm">
+                    <i class="ri-verified-badge-fill mr-1 text-xs"></i> Compra verificada
                   </span>
                 </div>
               </div>
             </div>
             <div class="flex flex-col items-start md:items-end">
-              <div class="flex text-yellow-400 text-lg">
+              <div class="flex text-yellow-400 text-xl gap-0.5">
                 <ng-container *ngFor="let s of getStarsArray(5); let i = index">
                   <i [class]="i < r.rating ? 'ri-star-fill' : 'ri-star-line'"></i>
                 </ng-container>
               </div>
-              <span class="text-xs text-slate-400 mt-1">{{ r.date | date:'mediumDate' }}</span>
+              <span class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">{{ r.date | date:'mediumDate'
+                }}</span>
             </div>
           </div>
-          <p class="text-slate-600 leading-relaxed">
-            {{ r.comment }}
+          <p class="text-slate-600 leading-relaxed text-base italic">
+            "{{ r.comment }}"
           </p>
         </article>
       </div>
     </div>
 
-    <!-- EMPTY STATE TEMPLATE -->
+    <!-- EMPTY STATE & ELIGIBILITY COMBINED -->
     <ng-template #emptyState>
-      <div class="text-center py-12">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 mb-4">
-          <i class="ri-chat-1-line text-3xl"></i>
+      <div class="text-center py-16">
+        <div
+          class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-blue-50 text-blue-600 mb-6 shadow-sm">
+          <i class="ri-chat-smile-3-line text-4xl"></i>
         </div>
-        <h3 class="text-lg font-bold text-slate-900 mb-2">Aún no hay reseñas escritas</h3>
-        <p class="text-slate-500 max-w-sm mx-auto mb-8">Sé el primero en compartir tu experiencia con el resto de la
-          comunidad.</p>
+        <h3 class="text-2xl font-black text-slate-900 mb-3">Sé el primero en opinar</h3>
+        <p class="text-slate-500 max-w-sm mx-auto mb-10 text-lg">Este producto aún no tiene reseñas. ¡Comparte tu
+          experiencia y ayuda a otros compradores!</p>
       </div>
     </ng-template>
 
     <!-- WRITE REVIEW SECTION -->
-    <div class="mt-12 border-t border-gray-100 pt-8">
-      <div *ngIf="!isWriting()" class="text-center">
-        <button (click)="toggleWrite()"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold inline-flex items-center gap-2 transition-all shadow-lg hover:shadow-blue-500/30">
-          <i class="ri-edit-line text-xl"></i>
-          Escribir una reseña
-        </button>
+    <div class="mt-12 border-t border-slate-50 pt-10">
+      <!-- Loading Eligibility -->
+      <div *ngIf="loadingEligibility()" class="flex justify-center py-10">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+      </div>
+
+      <!-- Unauthorized / Not Eligible Messages -->
+      <div *ngIf="!loadingEligibility() && !isWriting()" class="max-w-xl mx-auto">
+        @if (!authService.isAuthenticated()) {
+        <div
+          class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border border-blue-100 text-center shadow-sm">
+          <div class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-md">
+            <i class="ri-user-heart-line text-3xl text-blue-600"></i>
+          </div>
+          <h4 class="text-xl font-black text-slate-900 mb-2">¡Queremos escucharte!</h4>
+          <p class="text-slate-600 font-medium mb-8">Inicia sesión con tu cuenta para dejar una reseña de tus compras.
+          </p>
+          <a routerLink="/login"
+            class="inline-flex items-center gap-2 bg-blue-600 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/30 hover:scale-[1.02] active:scale-95">
+            Iniciar Sesión <i class="ri-arrow-right-line text-xl"></i>
+          </a>
+        </div>
+        } @else if (!isEligible()) {
+        <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 text-center">
+          <div
+            class="bg-white w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-50">
+            <i class="ri-lock-password-line text-3xl text-amber-500"></i>
+          </div>
+          <h4 class="text-xl font-black text-slate-900 mb-2">Acceso exclusivo</h4>
+          <p class="text-slate-500 font-medium mb-2">Solo disponible para compradores verificados.</p>
+          <p class="text-slate-400 text-sm max-w-xs mx-auto">Debes haber adquirido este producto para poder calificarlo
+            y comentarlo.</p>
+        </div>
+        } @else {
+        <div class="text-center">
+          <button (click)="toggleWrite()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-2xl font-black inline-flex items-center gap-3 transition-all shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95">
+            <i class="ri-quill-pen-line text-2xl"></i>
+            Escribir Reseña
+          </button>
+        </div>
+        }
       </div>
 
       <!-- FORM -->
-      <div *ngIf="isWriting()" class="bg-slate-50 p-6 rounded-2xl border border-slate-200 animate-fade-in">
-        <h3 class="text-lg font-bold text-slate-900 mb-4">Escribe tu opinión</h3>
+      <div *ngIf="isWriting()"
+        class="bg-slate-50 p-6 md:p-10 rounded-3xl border border-slate-200 animate-fade-in shadow-inner">
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <h3 class="text-2xl font-black text-slate-900">Escribe tu opinión</h3>
+            <p class="text-slate-500 font-medium">Ayuda a otros con tu experiencia honesta.</p>
+          </div>
+          <button (click)="toggleWrite()"
+            class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-slate-600 shadow-sm border border-slate-100 transition-all">
+            <i class="ri-close-line text-2xl"></i>
+          </button>
+        </div>
 
         <form (ngSubmit)="submitReview()" #f="ngForm">
-          <div class="space-y-4">
-            <!-- Name -->
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
-              <input type="text" [(ngModel)]="newReview().user_name" name="user_name" required
-                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="Tu nombre">
-            </div>
+          <div class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <!-- Name (Readonly if logged in) -->
+              <div>
+                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Tu
+                  Identidad</label>
+                <div class="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black">
+                    {{ newReview().user_name.charAt(0) }}
+                  </div>
+                  <input type="text" [(ngModel)]="newReview().user_name" name="user_name" required readonly
+                    class="bg-transparent border-none text-slate-700 font-bold p-0 focus:ring-0 w-full cursor-not-allowed">
+                </div>
+              </div>
 
-            <!-- Rating -->
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Calificación</label>
-              <div class="flex gap-1 text-2xl text-yellow-400 cursor-pointer">
-                <ng-container *ngFor="let s of [1,2,3,4,5]">
-                  <i [class]="s <= newReview().rating ? 'ri-star-fill' : 'ri-star-line'" (click)="setRating(s)"
-                    class="hover:scale-110 transition-transform"></i>
-                </ng-container>
+              <!-- Rating -->
+              <div>
+                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Tu
+                  Valoración</label>
+                <div class="flex items-center h-[58px] bg-white border border-slate-200 rounded-2xl px-6 shadow-sm">
+                  <div class="flex gap-2 text-3xl text-yellow-400 cursor-pointer">
+                    <ng-container *ngFor="let s of [1,2,3,4,5]">
+                      <i [class]="s <= newReview().rating ? 'ri-star-fill' : 'ri-star-line'" (click)="setRating(s)"
+                        class="hover:scale-120 transition-transform active:scale-90"></i>
+                    </ng-container>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- Comment -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Comentario</label>
-              <textarea [(ngModel)]="newReview().comment" name="comment" required rows="4"
-                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                placeholder="¿Qué te pareció el producto?"></textarea>
+              <div class="flex justify-between items-end mb-2">
+                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest">Tu Comentario</label>
+                <span
+                  [class]="'text-xs font-black px-2 py-0.5 rounded-lg ' + (newReview().comment.length > maxCommentLength ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500')">
+                  {{ newReview().comment.length }} / {{ maxCommentLength }}
+                </span>
+              </div>
+              <textarea [(ngModel)]="newReview().comment" name="comment" required rows="5"
+                class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-8 focus:ring-blue-500/5 transition-all p-5 text-slate-700 font-medium shadow-sm"
+                placeholder="¿Qué te pareció el producto? ¿Era lo que esperabas?"></textarea>
+              <div *ngIf="newReview().comment.length > 0 && newReview().comment.length < minCommentLength"
+                class="mt-3 flex items-center gap-2 text-xs text-amber-600 font-bold bg-amber-50 p-3 rounded-xl border border-amber-100">
+                <i class="ri-error-warning-fill text-base"></i> Escribe al menos {{ minCommentLength }} caracteres más
+                para poder publicar.
+              </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex gap-3 justify-end pt-2">
+            <div class="flex gap-4 justify-end pt-6 border-t border-slate-100">
               <button type="button" (click)="toggleWrite()"
-                class="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium">Cancelar</button>
-              <button type="submit" [disabled]="!f.valid || isSubmitting()"
-                class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                {{ isSubmitting() ? 'Enviando...' : 'Publicar Reseña' }}
+                class="px-8 py-3 text-slate-400 hover:text-slate-600 font-black uppercase text-xs tracking-widest transition-colors">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="!isCommentValid || isSubmitting()"
+                class="px-12 py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-blue-500/20 transition-all flex items-center gap-2 active:scale-95">
+                <i *ngIf="isSubmitting()" class="ri-loader-4-line animate-spin text-xl"></i>
+                {{ isSubmitting() ? 'Enviando Reseña...' : 'Publicar Ahora' }}
               </button>
             </div>
           </div>
         </form>
       </div>
     </div>
-
   </section>
 </div>

@@ -1,11 +1,28 @@
-<div class="header-center">
+<!-- Overlay backdrop para móvil -->
+<div class="search-overlay" *ngIf="isExpanded()" (click)="closeSearch()">
+</div>
+
+<!-- Botón trigger para móvil (solo icono) -->
+<button type="button" class="search-trigger-mobile" (click)="toggleSearch()" aria-label="Abrir búsqueda">
+    <i class="fas fa-search"></i>
+</button>
+
+<!-- Contenedor de búsqueda -->
+<div class="header-center" [class.expanded]="isExpanded()">
     <form class="search-container" (submit)="performSearch()" role="search" autocomplete="off">
         <div class="search-input-wrapper">
+            <!-- Botón cerrar (X) para móvil -->
+            <button type="button" class="search-close-btn" (click)="closeSearch()" aria-label="Cerrar búsqueda">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <input #searchInput type="search" class="search-input" [(ngModel)]="searchQuery" name="search"
+                placeholder="¿Qué estás buscando?" aria-label="Buscar productos" maxlength="100"
+                pattern="[a-zA-Z0-9\s\u00C0-\u017F]*">
+
             <button type="submit" class="search-submit" aria-label="Buscar">
                 <i class="fas fa-search"></i>
             </button>
-            <input type="search" class="search-input" [(ngModel)]="searchQuery" name="search" placeholder="Buscar..."
-                aria-label="Buscar productos" maxlength="100" pattern="[a-zA-Z0-9\s\u00C0-\u017F]*">
         </div>
     </form>
 </div>

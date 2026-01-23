@@ -23,8 +23,8 @@
             "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1768418928/prod_003734_lslla5.jpg",
             "MRK": "TOTTO",
             "GAL": [
-                "prod_003734_1.png",
-                "prod_003734_2.png"
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1768418928/prod_003734_lslla5.jpg",
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1768418928/prod_003734_lslla5.jpg"
             ],
             "PES": 0.45,
             "DIM": {
@@ -64,8 +64,8 @@
             "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1768418929/prod_001281_yu2nas.jpg",
             "MRK": "TOTTO",
             "GAL": [
-                "prod_001281_1.png",
-                "prod_001281_2.png"
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1768418929/prod_001281_yu2nas.jpg",
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1768418929/prod_001281_yu2nas.jpg"
             ],
             "PES": 0.65,
             "DIM": {

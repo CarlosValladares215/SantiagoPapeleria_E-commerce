@@ -1,4 +1,5 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CategoryClassifierService } from '../classification/category-classifier.service';
@@ -17,7 +18,7 @@ import { Categoria, CategoriaDocument } from '../../products/schemas/categoria.s
 export class ErpSyncService {
     private readonly logger = new Logger(ErpSyncService.name);
     // Default to localhost, will be overridden by env in module or constructor (simplified here)
-    private erpUrl = process.env.ERP_URL || 'http://localhost:4000/matrix/ports/acme/af58yz';
+    private erpUrl = (process.env.ERP_HOST || 'http://localhost:4000') + (process.env.ERP_PATH || '/matrix/ports/acme/af58yz');
 
     constructor(
         @InjectModel(ProductERP.name) private productERPModel: Model<ProductERP>,
@@ -29,7 +30,8 @@ export class ErpSyncService {
         @Inject(forwardRef(() => EmailService))
         private emailService: EmailService,
         private movimientosService: MovimientosService,
-        private readonly classifierService: CategoryClassifierService
+        private readonly classifierService: CategoryClassifierService,
+        private configService: ConfigService
     ) { }
 
     // ... existing code ...
@@ -233,6 +235,7 @@ export class ErpSyncService {
                             nombre: product.NOM,
                             descripcion: product.NOT || '',
                             imagen: product.FOT || '',
+                            galeria_erp: product.GAL || [],
                             linea_codigo: product.LIN || '',
                             row_id: product.ROW || 0,
                             marca: product.MRK || '',
@@ -284,9 +287,14 @@ export class ErpSyncService {
                 codigo_interno: erpProduct.codigo,
             });
 
+            const erpHost = this.configService.get<string>('ERP_HOST') || 'http://localhost:4000';
             const imageUrl = erpProduct.imagen?.startsWith('http')
                 ? erpProduct.imagen
-                : (erpProduct.imagen ? `http://localhost:4000/data/photos/${erpProduct.imagen}` : '');
+                : (erpProduct.imagen ? `${erpHost}/data/photos/${erpProduct.imagen}` : '');
+
+            const galleryUrls = (erpProduct.galeria_erp || []).map(img =>
+                img.startsWith('http') ? img : `${erpHost}/data/photos/${img}`
+            );
 
             if (!existingProduct) {
                 // CREATE new enriched product
@@ -331,7 +339,7 @@ export class ErpSyncService {
 
                         multimedia: {
                             principal: imageUrl,
-                            galeria: [],
+                            galeria: galleryUrls,
                         },
 
                         auditoria: {
@@ -379,6 +387,7 @@ export class ErpSyncService {
                     'nombre': erpProduct.nombre,
                     'descripcion_extendida': erpProduct.descripcion || '',
                     'multimedia.principal': imageUrl,
+                    'multimedia.galeria': galleryUrls,
 
                     // Category ObjectId references (robust)
                     'categoria_linea_id': categoryIds.linea_id,

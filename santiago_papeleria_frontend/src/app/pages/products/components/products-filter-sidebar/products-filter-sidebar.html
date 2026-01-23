@@ -1,4 +1,129 @@
-<div [class]="'lg:w-80 ' + (showFilters ? 'block' : 'hidden lg:block')">
+<!-- ========================================
+     MOBILE FILTER TRIGGER BUTTON (Sticky)
+     ======================================== -->
+<button (click)="openDrawer()"
+    class="md:hidden fixed bottom-6 left-4 z-40 bg-white/95 backdrop-blur-md border border-slate-200 text-slate-700 px-3.5 py-2.5 rounded-full shadow-lg shadow-slate-200/50 flex items-center gap-2 active:scale-95 transition-all hover:bg-slate-50">
+    <i class="ri-filter-3-line text-lg text-[#104D73]"></i>
+    <span class="font-bold text-xs tracking-wide">Filtros</span>
+    @if (getActiveFiltersCount() > 0) {
+    <span
+        class="bg-[#104D73] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center -mr-1">
+        {{ getActiveFiltersCount() }}
+    </span>
+    }
+</button>
+
+<!-- ========================================
+     MOBILE DRAWER OVERLAY
+     ======================================== -->
+<div *ngIf="isDrawerOpen()" class="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+    (click)="closeDrawer()">
+</div>
+
+<!-- ========================================
+     MOBILE DRAWER (Bottom Sheet Style)
+     ======================================== -->
+<div *ngIf="isDrawerOpen()"
+    class="md:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl z-50 max-h-[85vh] flex flex-col animate-slide-up">
+
+    <!-- Drawer Handle -->
+    <div class="flex justify-center pt-3 pb-2">
+        <div class="w-12 h-1.5 bg-slate-300 rounded-full"></div>
+    </div>
+
+    <!-- Drawer Header -->
+    <div class="px-5 py-3 flex items-center justify-between border-b border-slate-100">
+        <div class="flex items-center gap-3">
+            <i class="ri-filter-3-line text-xl text-[#104D73]"></i>
+            <h2 class="text-lg font-bold text-[#104D73]">Filtros</h2>
+        </div>
+        <div class="flex items-center gap-3">
+            <button (click)="onClearFilters()"
+                class="text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors">
+                Limpiar
+            </button>
+            <button (click)="closeDrawer()"
+                class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+                <i class="ri-close-line text-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Drawer Content (Scrollable) -->
+    <div class="flex-1 overflow-y-auto px-5 py-4">
+
+        <!-- Categorías -->
+        <div class="mb-6">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Categorías
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                @for (cat of categories; track cat.name) {
+                <button (click)="onCategorySelect(cat.name)" [class]="'px-3 py-2 rounded-full text-xs font-bold transition-all ' +
+                        (filters.category === cat.name 
+                            ? 'bg-[#104D73] text-white shadow-md' 
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200')">
+                    {{ getCategoryLabel(cat.name) }}
+                    <span class="ml-1 opacity-70">({{ cat.count }})</span>
+                </button>
+                }
+            </div>
+        </div>
+
+        <!-- Rango de Precio -->
+        <div class="mb-6">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Rango de Precio
+            </h3>
+            <input type="range" [min]="0" [max]="1000" [value]="filters.priceRange[1]"
+                (input)="onSliderChange($any($event.target).value)"
+                class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#104D73]" />
+            <div class="flex justify-between mt-2 text-xs font-medium text-slate-500">
+                <span class="bg-slate-100 px-2 py-1 rounded">$0</span>
+                <span class="bg-[#104D73] text-white px-2 py-1 rounded font-bold">
+                    {{ filters.priceRange[1] === 1000 ? '$1000+' : '$' + filters.priceRange[1] }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Stock Filter -->
+        <div class="mb-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                Disponibilidad
+            </h3>
+            <button (click)="onStockToggle(!filters.inStock)" [class]="'w-full flex items-center gap-3 p-3 rounded-xl transition-all ' +
+                    (filters.inStock 
+                        ? 'bg-green-50 border border-green-200' 
+                        : 'bg-slate-50 border border-transparent')">
+                <div [class]="'w-5 h-5 rounded border-2 flex items-center justify-center transition-all ' +
+                    (filters.inStock 
+                        ? 'border-green-500 bg-green-500' 
+                        : 'border-slate-300')">
+                    @if (filters.inStock) {
+                    <i class="ri-check-line text-white text-xs"></i>
+                    }
+                </div>
+                <span [class]="'font-medium text-sm ' +
+                    (filters.inStock ? 'text-green-700' : 'text-slate-700')">
+                    Solo productos en stock
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="px-5 py-4 border-t border-slate-100 bg-white">
+        <button (click)="onApplyFilters()"
+            class="w-full py-3.5 bg-[#F2CB07] text-slate-900 font-bold rounded-xl shadow-lg shadow-yellow-500/20 hover:bg-yellow-400 active:scale-[0.98] transition-all">
+            Aplicar Filtros
+        </button>
+    </div>
+</div>
+
+<!-- ========================================
+     DESKTOP SIDEBAR (lg and up)
+     ======================================== -->
+<div class="hidden lg:block lg:w-80">
     <div class="bg-white rounded-2xl shadow-xl overflow-hidden sticky top-24">
         <!-- Header -->
         <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100">
@@ -58,18 +183,17 @@
                     Rango de Precio
                 </h3>
                 <div class="px-2">
-                    <input type="range" [min]="0" [max]="100" [value]="filters.priceRange[1]"
+                    <input type="range" [min]="0" [max]="1000" [value]="filters.priceRange[1]"
                         (input)="onSliderChange($any($event.target).value)"
                         class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#104D73]" />
                     <div class="flex justify-between mt-3 text-xs font-medium text-slate-500">
                         <span class="bg-slate-100 px-2 py-1 rounded">$0</span>
                         <span class="bg-[#104D73] text-white px-2 py-1 rounded font-bold">
-                            {{ filters.priceRange[1] === 100 ? '$100+' : '$' + filters.priceRange[1] }}
+                            {{ filters.priceRange[1] === 1000 ? '$1000+' : '$' + filters.priceRange[1] }}
                         </span>
                     </div>
                 </div>
             </div>
-
 
             <!-- Stock Filter -->
             <div class="mb-4">

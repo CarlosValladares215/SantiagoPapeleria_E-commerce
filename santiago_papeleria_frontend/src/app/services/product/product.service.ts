@@ -278,6 +278,10 @@ export class ProductService {
     );
   }
 
+  checkReviewEligibility(productId: string): Observable<{ canReview: boolean }> {
+    return this.http.get<{ canReview: boolean }>(`${this.apiURL}/${productId}/review-eligibility`);
+  }
+
   // ✅ MAPPER CORREGIDO: Backend DTO Response -> Frontend Product Model
   private mapProduct(raw: ProductResponse): Product {
     console.log('🔍 Mapping product:', raw.name, 'Stock:', raw.stock);
