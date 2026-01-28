@@ -1,6 +1,6 @@
 
 // Si usas Dev Tunnels, pega tu URL aquí. Si no, déjalo vacío string vacía ''.
-const TUNNEL_URL = 'https://78q1252s-3001.use2.devtunnels.ms';
+const TUNNEL_URL = ''//'https://78q1252s-3001.use2.devtunnels.ms';
 
 const PORT = 3001;
 const HOST = 'localhost';

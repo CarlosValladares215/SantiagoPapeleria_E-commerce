@@ -9,6 +9,7 @@ import { ChatbotController } from './chatbot.controller';
 
 // Core Services
 import { ChatbotOrchestrator } from './orchestrator/chatbot-orchestrator.service';
+import { SemanticOrchestrator } from './orchestrator/semantic-orchestrator.service';
 import { NlpService } from './nlp/nlp.service';
 
 // NLP Adapters
@@ -34,6 +35,8 @@ import { GratitudeHandler } from './handlers/gratitude.handler';
 import { ViewOffersHandler } from './handlers/view-offers.handler';
 import { NavigationHelpHandler } from './handlers/navigation-help.handler';
 import { ReturnsHandler } from './handlers/returns.handler';
+import { OrderTrackingHandler } from './handlers/order-tracking.handler';
+import { OrderProcessHandler } from './handlers/order-process.handler';
 
 // External Modules
 import { ProductosModule } from '../products/productos.module';
@@ -64,6 +67,9 @@ import { ClassificationModule } from '../erp/classification/classification.modul
         // NLP Orchestrator Service
         NlpService,
 
+        // Brain
+        SemanticOrchestrator,
+
         // Memory Service
         ChatMemoryService,
 
@@ -83,6 +89,8 @@ import { ClassificationModule } from '../erp/classification/classification.modul
         ViewOffersHandler,
         NavigationHelpHandler,
         ReturnsHandler,
+        OrderTrackingHandler,
+        OrderProcessHandler,
     ],
     exports: [ChatbotOrchestrator],
 })

@@ -34,51 +34,35 @@ export class NlpService {
     }
 
     /**
-     * Classify user message with hybrid approach
+     * Classify user message (Guardrail / Fast Path)
      */
     async classify(message: string): Promise<IntentResultDto> {
         const startTime = Date.now();
 
         try {
-            // Step 1: Try NLP.js first (fast, local)
+            // Step 1: NLP.js (Fast, Local, Guardrail)
             const nlpResult = await this.nlpJsAdapter.complete(message);
             const parsed = this.validateAndParse(nlpResult.parsed, message);
 
-            if (parsed && parsed.intent !== ChatIntent.UNCLEAR && parsed.confidence >= this.MIN_CONFIDENCE) {
-                this.logger.debug(
-                    `NLP.js success: ${parsed.intent} (${(parsed.confidence * 100).toFixed(1)}%) in ${Date.now() - startTime}ms`
-                );
-                return parsed;
-            }
+            // Log performance
+            this.logger.debug(
+                `Guardrail (NLP.js): ${parsed?.intent} (${((parsed?.confidence || 0) * 100).toFixed(1)}%) in ${Date.now() - startTime}ms`
+            );
 
-            // Step 2: NLP.js unclear - try Ollama fallback if available
-            if (this.ollamaAvailable && this.ollamaAdapter) {
-                this.logger.debug('NLP.js unclear, trying Ollama fallback...');
-
-                const ollamaResult = await this.ollamaAdapter.complete(message);
-                const ollamaParsed = this.validateAndParse(ollamaResult.parsed, message);
-
-                if (ollamaParsed && ollamaParsed.intent !== ChatIntent.UNCLEAR) {
-                    this.logger.debug(
-                        `Ollama fallback: ${ollamaParsed.intent} (${(ollamaParsed.confidence * 100).toFixed(1)}%) in ${Date.now() - startTime}ms`
-                    );
-                    return ollamaParsed;
-                }
-            }
-
-            // Step 3: Return NLP.js result (even if unclear)
+            // Directly return NLP.js result. 
+            // The Logic/Orchestrator will decide if this is enough or if it needs the Brain.
             return parsed || {
                 intent: ChatIntent.UNCLEAR,
-                confidence: 0.3,
+                confidence: 0,
                 entities: nlpResult.parsed?.entities || {},
                 originalText: message,
             };
 
         } catch (error) {
-            this.logger.error(`Classification error: ${error.message}`);
+            this.logger.error(`Guardrail error: ${error.message}`);
             return {
                 intent: ChatIntent.UNCLEAR,
-                confidence: 0.3,
+                confidence: 0,
                 entities: {},
                 originalText: message,
             };

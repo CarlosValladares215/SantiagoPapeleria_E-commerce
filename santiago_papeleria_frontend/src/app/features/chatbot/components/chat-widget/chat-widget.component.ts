@@ -72,9 +72,28 @@ export class ChatWidgetComponent {
     }
 
     /**
-     * Handle product click - navigate to product page
+     * Handle product click - navigate to product page or return URL
      */
     handleProductClick(product: ChatProduct): void {
+        // Check if product has a return URL (for return product carousel)
+        if ((product as any).returnUrl) {
+            const returnUrl = (product as any).returnUrl;
+            const [path, queryString] = returnUrl.split('?');
+            const queryParams: Record<string, string> = {};
+
+            if (queryString) {
+                queryString.split('&').forEach((param: string) => {
+                    const [key, value] = param.split('=');
+                    if (key) queryParams[key] = value || '';
+                });
+            }
+
+            this.router.navigate([path], { queryParams });
+            this.state.closeChat();
+            return;
+        }
+
+        // Default: navigate to product detail
         const identifier = product.slug || product.sku || product._id;
         if (identifier) {
             this.router.navigate(['/product', identifier]);

@@ -73,8 +73,13 @@ export class NavigationHelpHandler extends BaseHandler {
     }
 
     private showNavigationMenu(): ChatResponseDto {
+        const message =
+            '🧭 **¿A dónde te gustaría ir?**\n\n' +
+            '---\n\n' +
+            'Puedo llevarte a cualquier sección:';
+
         return ChatResponseDto.actions(
-            '¿A dónde te gustaría ir? Puedo ayudarte a navegar:',
+            message,
             [
                 { text: '🛒 Ver catálogo', url: '/products', type: 'navigate' },
                 { text: '🏷️ Ver ofertas', url: '/offers', type: 'navigate' },

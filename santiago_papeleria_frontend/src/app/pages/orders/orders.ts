@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth/auth.service';
 import { OrderService, Order as BackendOrder } from '../../services/order/order.service';
@@ -60,6 +60,7 @@ export class Orders implements OnInit {
     authService = inject(AuthService);
     orderService = inject(OrderService);
     router = inject(Router);
+    route = inject(ActivatedRoute);
 
     activeFilter = signal<string>('Todos');
     expandedOrderId = signal<string | null>(null);
@@ -112,10 +113,37 @@ export class Orders implements OnInit {
                 this.orders.set(sorted.map(order => this.mapBackendOrder(order)));
                 this.updateFilters();
                 this.isLoading.set(false);
+
+                // Check query params AFTER orders are loaded
+                this.checkQueryParams();
             },
             error: (err) => {
                 console.error('Error fetching user orders', err);
                 this.isLoading.set(false);
+            }
+        });
+    }
+
+    /**
+     * Check for query params to auto-open return modal (from chatbot)
+     */
+    private checkQueryParams(): void {
+        this.route.queryParams.subscribe(params => {
+            if (params['action'] === 'return' && params['order']) {
+                const orderNumber = parseInt(params['order'], 10);
+                const order = this.orders().find(o => o.orderNumber === orderNumber);
+
+                if (order && this.canReturn(order)) {
+                    // Small delay to ensure page is rendered
+                    setTimeout(() => {
+                        this.initiateReturn(order);
+                        // Clear query params
+                        this.router.navigate([], {
+                            queryParams: {},
+                            replaceUrl: true
+                        });
+                    }, 300);
+                }
             }
         });
     }

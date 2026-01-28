@@ -10,10 +10,19 @@ export class OutOfScopeHandler extends BaseHandler {
     readonly intent = ChatIntent.OUT_OF_SCOPE;
 
     async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+        const message =
+            '🤔 **Hmm, eso está fuera de mi alcance**\n\n' +
+            '---\n\n' +
+            'Solo puedo ayudarte con temas de **Santiago Papelería**:\n\n' +
+            '🛒 Productos y catálogo\n' +
+            '📦 Pedidos y entregas\n' +
+            '💰 Precios y promociones\n' +
+            '📍 Sucursales y horarios\n\n' +
+            '¿Te ayudo con algo de esto?';
+
         return ChatResponseDto.options(
-            'Lo siento, solo puedo ayudarte con consultas relacionadas a Santiago Papelería. ' +
-            '¿Hay algo sobre nuestros productos, pedidos o servicios en lo que pueda asistirte?',
-            ['Buscar productos', 'Estado de pedido', 'Precios', 'Ayuda']
+            message,
+            ['🔍 Buscar productos', '📦 Estado de pedido', '💰 Precios', '❓ Ayuda']
         );
     }
 }

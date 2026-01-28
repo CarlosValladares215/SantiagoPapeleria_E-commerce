@@ -88,11 +88,16 @@
 <div class="chat-input-area">
     <form class="chat-input-form" (submit)="handleSend($event)">
         <input type="text" class="chat-input" [(ngModel)]="inputText" name="message" placeholder="Escribe tu mensaje..."
-            autocomplete="off" [disabled]="state.isLoading()">
+            autocomplete="off" [disabled]="state.isLoading()" maxlength="500">
         <button type="submit" class="send-button" [disabled]="!inputText.trim() || state.isLoading()">
             <lucide-icon name="send" [size]="18"></lucide-icon>
         </button>
     </form>
+    @if (inputText.length > 400) {
+    <div class="char-counter" [class.warning]="inputText.length > 450">
+        {{ inputText.length }}/500
+    </div>
+    }
 </div>
 </div>
 }

@@ -365,6 +365,42 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             this.manager.addDocument('es', ex, ChatIntent.RETURNS)
         );
 
+        // ============== ORDER_TRACKING ==============
+        const trackingExamples = [
+            'cual es mi codigo de envio',
+            'como rastreo mi pedido',
+            'numero de seguimiento',
+            'guia de envio',
+            'como uso el tracking',
+            'donde veo mi envio',
+            'no se como rastrear',
+            'como funciona el rastreo',
+            'quiero rastrear mi paquete',
+            'donde pongo el codigo de rastreo',
+            'mi guia de transporte',
+        ];
+        trackingExamples.forEach(ex =>
+            this.manager.addDocument('es', ex, ChatIntent.ORDER_TRACKING)
+        );
+
+        // ============== ORDER_PROCESS ==============
+        const processExamples = [
+            'como es el proceso de compra',
+            'que pasa despues de comprar',
+            'me notifican del pedido',
+            'como se cuando llega',
+            'me avisan del envio',
+            'recibo notificaciones',
+            'como funciona el envio',
+            'que pasa despues de pagar',
+            'me llegan correos del pedido',
+            'como me entero del estado',
+            'proceso de despacho',
+        ];
+        processExamples.forEach(ex =>
+            this.manager.addDocument('es', ex, ChatIntent.ORDER_PROCESS)
+        );
+
         // ============== Named Entity Recognition (NER) ==============
         // Product types
         const productEntities = [

@@ -12,20 +12,32 @@ export class UnclearHandler extends BaseHandler {
     async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
         // Check if user clicked "Buscar productos" without a specific term
         if (entities?.needsProductClarification) {
+            const message =
+                '🔍 **¡Perfecto! ¿Qué producto buscas?**\n\n' +
+                '---\n\n' +
+                'Escribe el nombre directamente, por ejemplo:\n\n' +
+                '• **mochilas**\n' +
+                '• **cuadernos universitarios**\n' +
+                '• **lápices de colores**\n' +
+                '• **carpetas A4**\n\n' +
+                'O elige una categoría popular:';
+
             return ChatResponseDto.options(
-                '¡Perfecto! 🔍 ¿Qué producto te gustaría buscar?\n\n' +
-                'Puedes escribir el nombre del producto directamente, por ejemplo:\n' +
-                '• "mochilas"\n' +
-                '• "cuadernos universitarios"\n' +
-                '• "lápices de colores"',
-                ['Mochilas', 'Cuadernos', 'Lápices', 'Carpetas', 'Ver ofertas']
+                message,
+                ['🎒 Mochilas', '📓 Cuadernos', '✏️ Lápices', '📁 Carpetas', '🏷️ Ver ofertas']
             );
         }
 
         // Generic unclear response
+        const message =
+            '🤔 **No estoy seguro de entenderte**\n\n' +
+            '---\n\n' +
+            '¿Puedes ser más específico?\n' +
+            'O elige una de estas opciones:';
+
         return ChatResponseDto.options(
-            'No estoy seguro de entenderte. ¿Puedes ser más específico o elegir una de estas opciones?',
-            ['Buscar productos', 'Estado de mi pedido', 'Precios mayoristas', 'Hablar con un agente']
+            message,
+            ['🔍 Buscar productos', '📦 Estado de pedido', '💰 Precios', '💬 Hablar con agente']
         );
     }
 }

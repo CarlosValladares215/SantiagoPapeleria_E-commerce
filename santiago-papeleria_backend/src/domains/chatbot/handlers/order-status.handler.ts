@@ -20,9 +20,20 @@ export class OrderStatusHandler extends BaseHandler {
 
         // User must be authenticated to check orders
         if (!userId) {
-            return ChatResponseDto.options(
-                'Para consultar el estado de tu pedido, por favor inicia sesión primero.',
-                ['Iniciar sesión', 'Hablar con un agente']
+            const message =
+                '🔐 **Inicia sesión para ver tus pedidos**\n\n' +
+                '---\n\n' +
+                'Necesitas iniciar sesión para:\n\n' +
+                '📦 Ver el estado de tus pedidos\n' +
+                '🚚 Rastrear envíos\n' +
+                '📋 Ver historial de compras';
+
+            return ChatResponseDto.actions(
+                message,
+                [
+                    { text: '🔑 Iniciar sesión', url: '/login', type: 'navigate' },
+                    { text: '💬 Hablar con un agente', type: 'message' },
+                ]
             );
         }
 
@@ -48,18 +59,32 @@ export class OrderStatusHandler extends BaseHandler {
             }
 
             // No specific order, direct to orders page
+            const message =
+                '📦 **Consulta tus pedidos**\n\n' +
+                '---\n\n' +
+                'En "**Mis Pedidos**" puedes ver:\n\n' +
+                '✅ Estado actual del pedido\n' +
+                '🚚 Seguimiento de envío\n' +
+                '📋 Línea de tiempo detallada\n' +
+                '🧾 Detalles de la compra';
+
             return ChatResponseDto.actions(
-                'Puedes ver el estado detallado y la línea de tiempo de todos tus pedidos en la sección "Mis Pedidos":',
+                message,
                 [
                     { text: '📦 Ver mis pedidos', url: '/profile/orders', type: 'navigate' },
-                    { text: 'Buscar con número de pedido', type: 'message' }
+                    { text: '🔍 Buscar con número de pedido', type: 'message' }
                 ]
             );
         } catch (error) {
             this.logger.error(`Order status error: ${error.message}`);
-            return ChatResponseDto.options(
-                'Hubo un error al consultar tus pedidos. ¿Puedo ayudarte de otra forma?',
-                ['Intentar de nuevo', 'Hablar con un agente']
+            return ChatResponseDto.actions(
+                '⚠️ **Hubo un problema**\n\n' +
+                'No pude consultar tus pedidos.\n' +
+                '¿Puedo ayudarte de otra forma?',
+                [
+                    { text: '🔄 Intentar de nuevo', type: 'message' },
+                    { text: '💬 Hablar con un agente', type: 'message' },
+                ]
             );
         }
     }

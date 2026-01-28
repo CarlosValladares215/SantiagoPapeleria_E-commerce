@@ -8,8 +8,15 @@ export class GratitudeHandler extends BaseHandler {
     readonly intent = ChatIntent.GRATITUDE;
 
     async execute(): Promise<ChatResponseDto> {
-        return ChatResponseDto.text(
-            '¡De nada! Aquí estoy si necesitas algo más. 😊'
+        const message =
+            '😊 **¡Con mucho gusto!**\n\n' +
+            '---\n\n' +
+            'Estoy aquí para ayudarte.\n' +
+            '¿Necesitas algo más?';
+
+        return ChatResponseDto.options(
+            message,
+            ['🔍 Buscar productos', '🏷️ Ver ofertas', '❓ Otra consulta']
         );
     }
 }

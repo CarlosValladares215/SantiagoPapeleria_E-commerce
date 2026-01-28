@@ -13,6 +13,8 @@ export enum ChatIntent {
     UNCLEAR = 'unclear',
     NAVIGATION_HELP = 'navigation_help',
     RETURNS = 'returns',  // Product returns and refunds
+    ORDER_TRACKING = 'order_tracking', // Specific tracking inquiries
+    ORDER_PROCESS = 'order_process', // Purchase process and notifications
 }
 
 export const VALID_INTENTS = Object.values(ChatIntent);

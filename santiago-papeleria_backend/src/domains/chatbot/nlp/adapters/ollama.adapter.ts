@@ -9,12 +9,12 @@ import { firstValueFrom, timeout, catchError } from 'rxjs';
 import { of } from 'rxjs';
 
 /**
- * Ollama Adapter - For fallback when NLP.js can't classify.
+ * Ollama Adapter - The Brain Interface
  * 
- * Used as a secondary classifier for:
- * - Complex messages NLP.js doesn't understand
- * - Potential RAG queries
- * - Edge cases
+ * Responsibilities:
+ * 1. Generate Embeddings for Semantic Search
+ * 2. Structured JSON Output for Intent Classification
+ * 3. Specialized Generation for specific tasks (RAG synthesis)
  */
 @Injectable()
 export class OllamaAdapter implements ILlmAdapter {
@@ -29,38 +29,39 @@ export class OllamaAdapter implements ILlmAdapter {
     ) {
         this.ollamaUrl = this.configService.get<string>('OLLAMA_URL', 'http://localhost:11434');
         this.model = this.configService.get<string>('OLLAMA_MODEL', 'llama3.2');
-        this.timeoutMs = parseInt(this.configService.get<string>('OLLAMA_TIMEOUT_MS', '30000'));
+        this.timeoutMs = parseInt(this.configService.get<string>('OLLAMA_TIMEOUT_MS', '60000')); // Increased timeout for "deep thinking"
 
-        this.logger.log(`Ollama configured: ${this.ollamaUrl}, model: ${this.model}`);
+        this.logger.log(`Ollama Brain configured: ${this.ollamaUrl}, model: ${this.model}`);
     }
 
     getName(): string {
-        return 'ollama';
+        return 'ollama-brain';
     }
 
     /**
-     * Classify message using Ollama
+     * Generate structured completion (JSON)
      */
     async complete(prompt: string): Promise<LlmResponse> {
         const startTime = Date.now();
 
         try {
-            // Build classification prompt
-            const systemPrompt = this.buildClassificationPrompt(prompt);
+            // Force JSON format in system prompt if not present
+            const systemPrompt = prompt.includes('JSON') ? prompt : `${prompt}\nRESPOND ONLY IN JSON.`;
 
             const response = await firstValueFrom(
                 this.httpService.post(`${this.ollamaUrl}/api/generate`, {
                     model: this.model,
                     prompt: systemPrompt,
+                    format: 'json', // Native Ollama JSON mode
                     stream: false,
                     options: {
-                        temperature: 0.1,
-                        num_predict: 100,
+                        temperature: 0.1, // Low temp for logic/classification
+                        num_predict: 256,
                     },
                 }).pipe(
                     timeout(this.timeoutMs),
                     catchError(error => {
-                        this.logger.warn(`Ollama request failed: ${error.message}`);
+                        this.logger.warn(`Ollama brain freeze: ${error.message}`);
                         return of({ data: { response: null } });
                     })
                 )
@@ -68,9 +69,7 @@ export class OllamaAdapter implements ILlmAdapter {
 
             const latencyMs = Date.now() - startTime;
             const rawResponse = response.data?.response || '';
-
-            // Parse JSON from response
-            const parsed = this.parseResponse(rawResponse, prompt);
+            const parsed = this.safeJsonParse(rawResponse, prompt);
 
             return {
                 raw: rawResponse,
@@ -79,15 +78,10 @@ export class OllamaAdapter implements ILlmAdapter {
             };
 
         } catch (error) {
-            this.logger.error(`Ollama error: ${error.message}`);
+            this.logger.error(`Ollama fatal error: ${error.message}`);
             return {
                 raw: '',
-                parsed: {
-                    intent: ChatIntent.UNCLEAR,
-                    confidence: 0.3,
-                    entities: {},
-                    originalText: prompt,
-                },
+                parsed: this.getErrorIntent(prompt),
                 latencyMs: Date.now() - startTime,
                 error: error.message,
             };
@@ -95,115 +89,92 @@ export class OllamaAdapter implements ILlmAdapter {
     }
 
     /**
-     * Build a classification prompt for Ollama
+     * Generate Embeddings for Semantic Search
      */
-    private buildClassificationPrompt(message: string): string {
-        return `Eres un experto en clasificación de intenciones para un e-commerce.
-
-INTENCIONES VÁLIDAS:
-- product_search: Buscar productos. EJEMPLOS: "busco mochilas", "tienen cuadernos?", "venden lapices", "precio de carpetas", "hay goma?".
-- order_status: Estado de pedido. EJEMPLOS: "donde esta mi pedido", "tracking", "status de orden".
-- pricing_info: Preguntar precios generales o mayoristas. EJEMPLOS: "precios al por mayor", "cuanto cuesta".
-- view_offers: Ver ofertas o promociones. EJEMPLOS: "ver ofertas", "promociones", "descuentos", "rebajas".
-- human_escalation: Hablar con humano. EJEMPLOS: "asesor", "persona real".
-- general_help: Ayuda. EJEMPLOS: "ayuda", "que puedes hacer".
-- greeting: Saludo. EJEMPLOS: "hola", "buenos dias".
-- out_of_scope: Fuera de contexto. EJEMPLOS: "clima", "chiste", "capital de francia".
-- unclear: No se entiende o no es ninguna de las anteriores. EJEMPLOS: "no", "si", "entonces no?", "ok".
-
-REGLAS DE EXTRACCIÓN DE ENTIDADES (CRÍTICO):
-1. 'searchTerm' debe ser SOLO el PRODUCTO (sustantivo + adjetivo).
-2. ELIMINA verbos (quiero, busco, venderan, tienen), conectores (y, el, la, los), y preguntas.
-3. EJEMPLO: "venderan tambien huevos kinder?" -> {"intent": "product_search", "entities": {"searchTerm": "huevos kinder"}}
-4. EJEMPLO: "entonces no los venden?" -> {"intent": "unclear"} (NO ES BÚSQUEDA)
-
-RESPONDE SOLO EL JSON:
-{"intent": "INTENT", "confidence": 0.0-1.0, "entities": {"searchTerm": "SOLO_PRODUCTO_LIMPIO"}}
-
-MENSAJE: "${message}"
-
-JSON:`;
-    }
-
-    /**
-     * Parse Ollama response to extract intent
-     */
-    private parseResponse(raw: string, originalMessage: string): any {
+    async getEmbedding(text: string): Promise<number[]> {
         try {
-            // Try to extract JSON from response
-            const jsonMatch = raw.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
+            const response = await firstValueFrom(
+                this.httpService.post(`${this.ollamaUrl}/api/embeddings`, {
+                    model: this.model, // Ideally use an embedding model like 'nomic-embed-text'
+                    prompt: text,
+                }).pipe(
+                    timeout(5000),
+                    catchError(() => of({ data: { embedding: [] } }))
+                )
+            );
 
-                // Validate intent
-                let intent = parsed.intent as string;
-                if (!VALID_INTENTS.includes(intent as ChatIntent)) {
-                    intent = ChatIntent.UNCLEAR;
-                }
-
-                return {
-                    intent,
-                    confidence: parsed.confidence || 0.7,
-                    entities: parsed.entities || {},
-                    originalText: originalMessage,
-                };
-            }
-        } catch (e) {
-            this.logger.warn(`Failed to parse Ollama response: ${e.message}`);
+            return response.data?.embedding || [];
+        } catch (error) {
+            this.logger.warn(`Embedding failed: ${error.message}`);
+            return [];
         }
-
-        return {
-            intent: ChatIntent.UNCLEAR,
-            confidence: 0.3,
-            entities: {},
-            originalText: originalMessage,
-        };
     }
 
     /**
-     * Generate a natural language response
+     * Generate natural response with context
      */
     async generateResponse(query: string, context?: string): Promise<string> {
+        return this.generateText(query, context);
+    }
+
+    /**
+     * Generic text generation
+     */
+    async generateText(prompt: string, context?: string): Promise<string> {
         try {
-            const prompt = `Eres Asistente Santiago, un empleado amable de "Santiago Papelería".
-CONTEXTO: ${context || 'El usuario está buscando un producto.'}
-USUARIO DICE: "${query}"
-
-Tu tarea: Responder amablemente al usuario.
-- Si el contexto es que no hay stock, NO digas "no encontré resultados". Dilo más natural: "Lo siento, por ahora no contamos con X, pero tenemos..."
-- Sé breve y servicial.
-- Usa emojis moderados.
-
-RESPUESTA:`;
+            const fullPrompt = context
+                ? `SYSTEM: ${context}\nUSER: ${prompt}`
+                : prompt;
 
             const response = await firstValueFrom(
                 this.httpService.post(`${this.ollamaUrl}/api/generate`, {
                     model: this.model,
-                    prompt: prompt,
+                    prompt: fullPrompt,
                     stream: false,
-                    options: { temperature: 0.7, num_predict: 150 },
+                    options: { temperature: 0.7, num_predict: 300 },
                 }).pipe(
                     timeout(this.timeoutMs),
                     catchError(() => of({ data: { response: null } }))
                 )
             );
 
-            return response.data?.response?.trim() || 'Lo siento, no pude procesar tu solicitud en este momento.';
+            return response.data?.response?.trim() || 'Lo siento, mi cerebro está desconectado temporalmente.';
         } catch (error) {
-            this.logger.error(`Ollama generation error: ${error.message}`);
-            return 'Disculpa, tuve un problema técnico.';
+            this.logger.error(`Generation error: ${error.message}`);
+            return 'Error procesando tu solicitud.';
         }
     }
 
-    /**
-     * Check if Ollama is available
-     */
-    async healthCheck(): Promise<boolean> {
+    private safeJsonParse(jsonString: string, originalMessage: string): any {
+        try {
+            const parsed = JSON.parse(jsonString);
+            return {
+                intent: parsed.intent || ChatIntent.UNCLEAR,
+                confidence: parsed.confidence || 0.8,
+                entities: parsed.entities || {},
+                reasoning: parsed.reasoning || 'No reasoning provided',
+                originalText: originalMessage
+            };
+        } catch (e) {
+            this.logger.warn(`JSON Parse failed. Raw response: "${jsonString}"`);
+            return this.getErrorIntent(originalMessage);
+        }
+    }
 
+    private getErrorIntent(msg: string): any {
+        return {
+            intent: ChatIntent.UNCLEAR,
+            confidence: 0,
+            entities: {},
+            originalText: msg
+        };
+    }
+
+    async healthCheck(): Promise<boolean> {
         try {
             const response = await firstValueFrom(
                 this.httpService.get(`${this.ollamaUrl}/api/tags`).pipe(
-                    timeout(3000),
+                    timeout(2000),
                     catchError(() => of({ data: null }))
                 )
             );

@@ -50,13 +50,15 @@ export class NotificationsService {
     }
 
     fetchNotifications(userId: string) {
+        console.log('🔔 [Front] Fetching notifications for User:', userId);
         this.http.get<Notification[]>(`${this.apiUrl}/user/${userId}`).subscribe({
             next: (data) => {
+                console.log('✅ [Front] Notifications loaded:', data.length);
                 setTimeout(() => {
                     this.notifications.set(data);
                 });
             },
-            error: (err) => { }
+            error: (err) => console.error('❌ [Front] Error fetching notifications', err)
         });
     }
 
@@ -67,7 +69,10 @@ export class NotificationsService {
         );
 
         this.http.patch(`${this.apiUrl}/${id}/read`, {}).subscribe({
-            error: () => { }
+            error: () => {
+                // Revert if error (optional, skipping for simplicity)
+                console.error('Error marking as read');
+            }
         });
     }
 
@@ -76,7 +81,7 @@ export class NotificationsService {
         this.notifications.update(list => list.map(n => ({ ...n, leido: true })));
 
         this.http.patch(`${this.apiUrl}/user/${userId}/read-all`, {}).subscribe({
-            error: () => { }
+            error: () => console.error('Error marking all as read')
         });
     }
 }

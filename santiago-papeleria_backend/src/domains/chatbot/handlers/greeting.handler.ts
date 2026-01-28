@@ -10,17 +10,31 @@ export class GreetingHandler extends BaseHandler {
     readonly intent = ChatIntent.GREETING;
 
     async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
-        const greetings = [
-            '¡Hola! 👋 Bienvenido a Santiago Papelería. ¿En qué puedo ayudarte hoy?',
-            '¡Buenos días! Soy el asistente de Santiago Papelería. ¿Qué necesitas?',
-            '¡Hola! Es un gusto atenderte. ¿Cómo puedo asistirte?',
-        ];
+        const hour = new Date().getHours();
+        let timeGreeting = '¡Hola!';
 
-        const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+        if (hour >= 5 && hour < 12) {
+            timeGreeting = '¡Buenos días!';
+        } else if (hour >= 12 && hour < 19) {
+            timeGreeting = '¡Buenas tardes!';
+        } else {
+            timeGreeting = '¡Buenas noches!';
+        }
+
+        const message =
+            `${timeGreeting} 👋\n\n` +
+            `Soy el **asistente virtual** de **Santiago Papelería**.\n\n` +
+            `---\n\n` +
+            `Puedo ayudarte con:\n` +
+            `🔍 Buscar productos\n` +
+            `📦 Estado de pedidos\n` +
+            `🏷️ Ver ofertas\n` +
+            `❓ Resolver dudas\n\n` +
+            `¿En qué puedo ayudarte hoy?`;
 
         return ChatResponseDto.options(
-            randomGreeting,
-            ['Buscar productos', 'Ver ofertas', 'Estado de pedido', 'Ayuda']
+            message,
+            ['🔍 Buscar productos', '🏷️ Ver ofertas', '📦 Estado de pedido', '❓ Ayuda']
         );
     }
 }
