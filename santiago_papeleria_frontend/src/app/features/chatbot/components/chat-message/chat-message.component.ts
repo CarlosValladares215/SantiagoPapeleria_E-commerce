@@ -22,7 +22,7 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
       <!-- Bot Avatar -->
       @if (message.sender === 'bot' && !message.isLoading) {
         <div class="avatar">
-          <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768923352/bot_avatar_h4ftod.jpg" alt="Bot">
+          <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1769628496/BOTFinal_kvbfdq.png" alt="Bot">
         </div>
       }
 
@@ -85,7 +85,11 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
               @for (action of actions; track action.text) {
                 <button class="action-button" 
                         [class.navigate-action]="action.type === 'navigate'"
+                        [class.whatsapp-btn]="action.style === 'whatsapp'"
                         (click)="actionSelected.emit(action)">
+                  @if (action.icon === 'whatsapp') {
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="action-icon">
+                  }
                   {{ action.text }}
                 </button>
               }
@@ -391,6 +395,26 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
           border-color: #93c5fd;
         }
       }
+
+      &.whatsapp-btn {
+        background: #25D366;
+        color: white;
+        border-color: #128C7E;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &:hover {
+          background: #128C7E;
+          border-color: #075E54;
+        }
+      }
+    }
+
+    .action-icon {
+      width: 1.25rem;
+      height: 1.25rem;
     }
   `]
 })

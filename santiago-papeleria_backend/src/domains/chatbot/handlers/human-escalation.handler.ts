@@ -44,7 +44,14 @@ export class HumanEscalationHandler extends BaseHandler {
         return ChatResponseDto.actions(
             message,
             [
-                { text: '💬 Escribir por WhatsApp', url: 'https://api.whatsapp.com/send/?phone=593987667459&text=Hola+%2ASantiago+Papeleria%2A.+Necesito+m%C3%A1s+informaci%C3%B3n+sobre+Santiago+Papeleria+https%3A%2F%2Fmegasantiago.com%2F&type=phone_number&app_absent=0', type: 'navigate' },
+                {
+                    text: 'WhatsApp (más rápido)',
+                    url: 'https://api.whatsapp.com/send/?phone=593987667459&text=Hola+%2ASantiago+Papeleria%2A.+Necesito+m%C3%A1s+informaci%C3%B3n+sobre+Santiago+Papeleria+https%3A%2F%2Fmegasantiago.com%2F&type=phone_number&app_absent=0',
+                    type: 'navigate',
+                    icon: 'whatsapp',
+                    style: 'whatsapp',
+                    external: true
+                },
                 { text: '📧 Enviar email', url: 'mailto:ventas@santiagopapeleria.com', type: 'navigate' },
                 { text: '🏠 Volver al menú', type: 'message' },
             ]

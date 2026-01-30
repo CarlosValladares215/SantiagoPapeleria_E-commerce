@@ -94,8 +94,14 @@ RESPONDE SOLO JSON:
         }
 
         // 3. Execute Action based on Decision (Routing)
-        // Ensure decision.intent is valid
-        const intent = decision.intent || ChatIntent.UNCLEAR;
+        // Ensure decision.intent is valid and normalized
+        let intent = (decision.intent || ChatIntent.UNCLEAR).toLowerCase();
+
+        // Validate against enum
+        if (!Object.values(ChatIntent).includes(intent as ChatIntent)) {
+            this.logger.warn(`Brain returned invalid intent: ${intent}. Fallback to UNCLEAR.`);
+            intent = ChatIntent.UNCLEAR;
+        }
 
         // This method should ideally return the classification result to the main orchestrator
         // But to make it compatible with the current flow, we might need a way to integrate it back.
@@ -108,7 +114,7 @@ RESPONDE SOLO JSON:
         return {
             type: 'thought_process',
             text: decision.reasoning,
-            intent: intent,
+            intent: intent as ChatIntent,
             entities: decision.entities
         } as any; // Using 'any' briefly to bypass strict DTO for internal passing
     }

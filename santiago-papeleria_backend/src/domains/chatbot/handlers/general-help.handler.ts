@@ -26,7 +26,14 @@ export class GeneralHelpHandler extends BaseHandler {
         return ChatResponseDto.actions(
             message,
             [
-                { text: '💬 WhatsApp', url: 'https://api.whatsapp.com/send/?phone=593987667459&text=Hola+%2ASantiago+Papeleria%2A.+Necesito+m%C3%A1s+informaci%C3%B3n+sobre+Santiago+Papeleria+https%3A%2F%2Fmegasantiago.com%2F&type=phone_number&app_absent=0', type: 'navigate' },
+                {
+                    text: '💬 WhatsApp',
+                    url: 'https://api.whatsapp.com/send/?phone=593987667459&text=Hola+%2ASantiago+Papeleria%2A.+Necesito+m%C3%A1s+informaci%C3%B3n+sobre+Santiago+Papeleria+https%3A%2F%2Fmegasantiago.com%2F&type=phone_number&app_absent=0',
+                    type: 'navigate',
+                    icon: 'whatsapp',
+                    style: 'whatsapp',
+                    external: true
+                },
                 { text: '🔍 Buscar productos', type: 'message' },
                 { text: '📦 Estado de mi pedido', type: 'message' },
                 { text: '💰 Precios mayoristas', type: 'message' },

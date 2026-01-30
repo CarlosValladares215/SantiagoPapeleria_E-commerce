@@ -1,17 +1,19 @@
-// src/domains/chatbot/handlers/order-tracking.handler.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { BaseHandler } from './base.handler';
 import { ChatIntent } from '../enums/chat-intent.enum';
 import { ChatResponseDto } from '../dto/chat-response.dto';
 import { PedidosService } from '../../orders/pedidos.service';
+import { CatalogService } from '../../products/catalog/catalog.service';
 
 @Injectable()
 export class OrderTrackingHandler extends BaseHandler {
     private readonly logger = new Logger(OrderTrackingHandler.name);
     readonly intent = ChatIntent.ORDER_TRACKING;
 
-    constructor(private readonly pedidosService: PedidosService) {
+    constructor(
+        private readonly pedidosService: PedidosService,
+        private readonly catalogService: CatalogService
+    ) {
         super();
     }
 
@@ -57,28 +59,46 @@ export class OrderTrackingHandler extends BaseHandler {
             }
 
             // 4. Show carousel of orders with tracking
-            const message =
-                '🚚 **Tus envíos**\n\n' +
-                '---\n\n' +
-                'Aquí están tus guías de seguimiento.\n' +
-                'Haz clic para ver el detalle completo:';
-
-            // Limit to 5 most recent
             const recentOrders = trackingOrders
                 .sort((a, b) => new Date(b.fecha_compra).getTime() - new Date(a.fecha_compra).getTime())
                 .slice(0, 5);
 
-            const chatProducts = recentOrders.map(order => ({
-                _id: order._id.toString(),
-                sku: order.datos_envio?.guia_tracking || 'PENDIENTE',
-                nombre: `Pedido #${order.numero_pedido_web}`,
-                price: order.resumen_financiero?.total_pagado,
-                brand: order.datos_envio?.courier || 'Santiago Envíos',
-                multimedia: {
-                    principal: 'https://res.cloudinary.com/dufklhqtz/image/upload/v1769614254/tracking-icon_u4or9n.png' // Generic tracking icon or placeholder
-                },
-                // Custom property for navigation handled by frontend
-                returnUrl: `/tracking?order=${order.numero_pedido_web}`
+            const message = recentOrders.length === 1
+                ? `🚚 **Tu pedido #${recentOrders[0].numero_pedido_web} está en camino**\n\n` +
+                '---\n\n' +
+                'Aquí tienes la guía de seguimiento.\n' +
+                'Haz clic para ver el detalle completo:'
+                : '🚚 **Tus envíos**\n\n' +
+                '---\n\n' +
+                `Encontré ${recentOrders.length} pedidos enviados: **${recentOrders.map(o => '#' + o.numero_pedido_web).join(', ')}**.\n\n` +
+                'Haz clic para ver el detalle completo:';
+
+            const chatProducts = await Promise.all(recentOrders.map(async (order) => {
+                let imageUrl = 'https://res.cloudinary.com/dufklhqtz/image/upload/v1769614254/tracking-icon_u4or9n.png';
+                const firstItem = order.items?.[0];
+
+                if (firstItem?.codigo_dobranet) {
+                    try {
+                        const product = await this.catalogService.findByTerm(firstItem.codigo_dobranet);
+                        if (product && product.images && product.images.length > 0) {
+                            imageUrl = product.images[0];
+                        }
+                    } catch (e) {
+                        this.logger.warn(`Failed to fetch image for SKU ${firstItem.codigo_dobranet}: ${e.message}`);
+                    }
+                }
+
+                return {
+                    _id: order._id.toString(),
+                    sku: order.datos_envio?.guia_tracking || 'PENDIENTE',
+                    nombre: `Pedido #${order.numero_pedido_web}`,
+                    price: order.resumen_financiero?.total_pagado,
+                    brand: order.datos_envio?.courier || 'Santiago Envíos',
+                    multimedia: {
+                        principal: imageUrl
+                    },
+                    returnUrl: `/tracking?id=${order.numero_pedido_web}`
+                };
             }));
 
             return ChatResponseDto.products(message, chatProducts);

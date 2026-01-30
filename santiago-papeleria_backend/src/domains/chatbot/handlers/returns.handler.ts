@@ -127,7 +127,7 @@ export class ReturnsHandler extends BaseHandler {
         return ChatResponseDto.actions(message, [
             { text: '📦 Ver todos mis pedidos', url: '/profile/orders', type: 'navigate' },
             { text: '📜 Política de devoluciones', url: '/cambios-devoluciones', type: 'navigate' },
-            { text: '🏠 Volver al menú', type: 'message' },
+            { text: '✨ Descubrir más funcionalidades', type: 'message' },
         ]);
     }
 
@@ -141,7 +141,7 @@ export class ReturnsHandler extends BaseHandler {
         return ChatResponseDto.actions(message, [
             { text: '📦 Ver mis pedidos', url: '/profile/orders', type: 'navigate' },
             { text: '💬 Hablar con soporte', type: 'message' },
-            { text: '🏠 Volver al menú', type: 'message' },
+            { text: '✨ Descubrir más funcionalidades', type: 'message' },
         ]);
     }
 
@@ -171,7 +171,7 @@ export class ReturnsHandler extends BaseHandler {
         return ChatResponseDto.actions(message, [
             { text: '🔄 Intentar de nuevo', type: 'message' },
             { text: '💬 Hablar con soporte', type: 'message' },
-            { text: '🏠 Volver al menú', type: 'message' },
+            { text: '✨ Descubrir más funcionalidades', type: 'message' },
         ]);
     }
 }

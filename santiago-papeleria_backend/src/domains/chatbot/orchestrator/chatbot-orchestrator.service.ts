@@ -87,8 +87,14 @@ export class ChatbotOrchestrator {
             let usedBrain = false;
 
             // Decision Logic: Fast Path vs Brain Path
-            if (this.isTrivialIntent(finalIntent) && guardrailResult.confidence > 0.8) {
-                this.logger.debug(`🚀 Fast Path (Guardrail): ${finalIntent}`);
+            // Trust NLP.js if:
+            // 1. Confidence is extremely high (> 0.92) regardless of intent
+            // 2. OR Intent is "trivial" and confidence is good (> 0.8)
+            const isHighConfidence = guardrailResult.confidence > 0.92;
+            const isTrivial = this.isTrivialIntent(finalIntent) && guardrailResult.confidence > 0.8;
+
+            if (isHighConfidence || isTrivial) {
+                this.logger.debug(`🚀 Fast Path (Guardrail): ${finalIntent} (${(guardrailResult.confidence * 100).toFixed(1)}%)`);
             } else {
                 // Step 3: The Brain (Semantic Orchestrator)
                 // If it's complex, or NLP.js is unsure, we ask the Brain
@@ -153,7 +159,11 @@ export class ChatbotOrchestrator {
             ChatIntent.GREETING,
             ChatIntent.GRATITUDE,
             ChatIntent.GENERAL_HELP,
-            ChatIntent.OUT_OF_SCOPE
+            ChatIntent.OUT_OF_SCOPE,
+            ChatIntent.PRICING_INFO, // Usually simple questions
+            ChatIntent.NAVIGATION_HELP, // "como entro a mi perfil" is simple
+            ChatIntent.HUMAN_ESCALATION, // "quiero un humano" is simple
+            ChatIntent.ORDER_TRACKING, // "donde esta mi pedido" is simple
         ];
         return trivialIntents.includes(intent);
     }

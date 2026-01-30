@@ -118,6 +118,12 @@ export class ChatWidgetComponent {
      */
     handleActionClick(action: ChatAction): void {
         if (action.type === 'navigate' && action.url) {
+            // Check for external URL
+            if (action.external || action.url.startsWith('http')) {
+                window.open(action.url, '_blank');
+                return;
+            }
+
             // Parse URL and query params separately
             const [path, queryString] = action.url.split('?');
             const queryParams: Record<string, string> = {};
