@@ -28,6 +28,20 @@
             </button>
         </div>
 
+        <!-- Barra de Búsqueda -->
+        <div class="menu-search">
+            <form (submit)="performSearch()" class="search-form" autocomplete="off">
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="search" [(ngModel)]="searchQuery" name="search" placeholder="¿Qué estás buscando?"
+                        class="search-input" maxlength="100">
+                    <button type="submit" class="search-btn" aria-label="Buscar">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
         <!-- Scrollable Content -->
         <div class="menu-content">
 

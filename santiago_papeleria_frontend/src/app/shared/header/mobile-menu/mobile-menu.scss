@@ -42,6 +42,78 @@
     align-items: flex-start;
 }
 
+/* ========================================
+   SEARCH BAR IN MOBILE MENU
+   ======================================== */
+.menu-search {
+    padding: 16px 20px;
+    background: #fff;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.search-form {
+    width: 100%;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--gray-100);
+    border-radius: 25px;
+    padding: 0 4px 0 16px;
+    height: 48px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.search-wrapper:focus-within {
+    background: #fff;
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 3px rgba(242, 203, 7, 0.15);
+}
+
+.search-icon {
+    color: var(--gray-500);
+    font-size: 1rem;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.menu-search .search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--gray-800);
+    outline: none;
+    min-width: 0;
+}
+
+.menu-search .search-input::placeholder {
+    color: var(--gray-500);
+}
+
+.search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--primary-blue);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.search-btn:hover,
+.search-btn:active {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
 .user-profile {
     display: flex;
     align-items: center;

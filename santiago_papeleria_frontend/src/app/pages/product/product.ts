@@ -347,7 +347,10 @@ export class Product implements OnDestroy {
     // Sync to Cart if exists
     const item = untracked(this.cartItem);
     if (item) {
-      this.cartService.updateQuantity(item.id, qty);
+      const success = this.cartService.updateQuantity(item.id, qty);
+      if (!success) {
+        this.onNotify('Stock máximo alcanzado', 'error');
+      }
     }
   }
 
@@ -386,12 +389,22 @@ export class Product implements OnDestroy {
     };
 
     const existing = this.cartItem();
+    let success = false;
     if (existing) {
-      this.cartService.updateQuantity(existing.id, qty);
-      this.onNotify('Carrito actualizado', 'success');
+      success = this.cartService.updateQuantity(existing.id, qty);
+      if (success) {
+        this.onNotify('Carrito actualizado', 'success');
+      } else {
+        // If update failed (capped), implies stock reached
+        this.onNotify('No se puede agregar más cantidad. Stock insuficiente.', 'error');
+      }
     } else {
-      this.cartService.addToCart(cartProduct, qty, options);
-      this.onNotify('Producto agregado al carrito', 'success');
+      success = this.cartService.addToCart(cartProduct, qty, options);
+      if (success) {
+        this.onNotify('Producto agregado al carrito', 'success');
+      } else {
+        this.onNotify('No se pudo agregar todo lo solicitado. Stock insuficiente.', 'error');
+      }
     }
   }
 

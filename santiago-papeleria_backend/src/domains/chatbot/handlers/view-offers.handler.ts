@@ -8,11 +8,22 @@ export class ViewOffersHandler extends BaseHandler {
     readonly intent = ChatIntent.VIEW_OFFERS;
 
     async execute(): Promise<ChatResponseDto> {
+        const message =
+            '🎉 **¡Ofertas y Promociones!**\n\n' +
+            '---\n\n' +
+            'Tenemos **descuentos especiales** en:\n\n' +
+            '📚 Útiles escolares\n' +
+            '🖊️ Artículos de oficina\n' +
+            '🎒 Mochilas y maletas\n' +
+            '✨ Productos marca CREANDO\n\n' +
+            '¡Visita nuestra sección de ofertas!';
+
         return ChatResponseDto.actions(
-            '🎉 ¡Claro! Tenemos excelentes promociones vigentes. Puedes verlas todas en nuestra sección de ofertas:',
+            message,
             [
-                { text: '🏷️ Ver ofertas', url: '/offers', type: 'navigate' },
-                { text: 'Volver al menú', type: 'message' }
+                { text: '🏷️ Ver todas las ofertas', url: '/offers', type: 'navigate' },
+                { text: '🔍 Buscar producto específico', type: 'message' },
+                { text: '🏠 Volver al menú', type: 'message' }
             ]
         );
     }

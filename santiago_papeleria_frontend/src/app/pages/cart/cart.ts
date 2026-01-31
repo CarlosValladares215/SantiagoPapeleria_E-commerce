@@ -1,10 +1,11 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService } from '../../services/cart/cart.service';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
 import { DireccionEntrega } from '../../models/usuario.model';
 import { FormsModule } from '@angular/forms';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
     selector: 'app-cart',
@@ -17,6 +18,7 @@ export class Cart {
     cartService = inject(CartService);
     authService = inject(AuthService);
     router = inject(Router);
+    toastService = inject(ToastService);
 
     addresses = computed(() => this.authService.user()?.direcciones_entrega || []);
 
@@ -53,10 +55,15 @@ export class Cart {
     }
 
     addNewAddress() {
+        if (!this.authService.user()) {
+            this.toastService.info('Debes iniciar sesión para agregar una dirección.');
+            this.router.navigate(['/login'], { queryParams: { returnUrl: '/cart' } });
+            return;
+        }
         this.router.navigate(['/profile'], { queryParams: { tab: 'addresses', action: 'new' } });
     }
 
-    isProcessing = false;
+    isProcessing = signal(false);
 
     setDelivery(method: 'shipping' | 'pickup') {
         this.cartService.setDeliveryMethod(method);
@@ -76,8 +83,8 @@ export class Cart {
     }
 
     selectedFile: File | null = null;
-    showConfirmModal = false; // Modal de pregunta
-    showSuccessModal = false; // Modal de éxito
+    showConfirmModal = signal(false); // Modal de pregunta
+    showSuccessModal = signal(false); // Modal de éxito
 
     onFileSelected(event: any) {
         const file = event.target.files[0];
@@ -96,34 +103,34 @@ export class Cart {
         const user = this.authService.user();
 
         if (!user) {
-            alert('Debes iniciar sesión para realizar un pedido.');
-            this.router.navigate(['/auth/login']);
+            this.toastService.info('Debes iniciar sesión para realizar un pedido.');
+            this.router.navigate(['/login']);
             return;
         }
 
         if (delivery === 'shipping' && !address) {
-            alert('Por favor selecciona una dirección de envío');
+            this.toastService.info('Por favor selecciona una dirección de envío');
             return;
         }
 
         if (!payment) {
-            alert('Por favor selecciona un método de pago');
+            this.toastService.info('Por favor selecciona un método de pago');
             return;
         }
 
         if (payment === 'transfer' && !this.selectedFile) {
-            alert('Por favor sube el comprobante de transferencia para continuar.');
+            this.toastService.info('Por favor sube el comprobante de transferencia para continuar.');
             return;
         }
 
         // 2. Pre-Confirmation
-        this.showConfirmModal = true;
+        this.showConfirmModal.set(true);
     }
 
     // Logic to execute AFTER user confirms in modal
     processOrderConfirmed() {
-        this.showConfirmModal = false;
-        this.isProcessing = true;
+        this.showConfirmModal.set(false);
+        this.isProcessing.set(true);
 
         const delivery = this.cartService.deliveryMethod();
         const payment = this.cartService.paymentMethod();
@@ -131,7 +138,7 @@ export class Cart {
         const user = this.authService.user();
 
         if (!user) { // Should check again just in case
-            this.isProcessing = false;
+            this.isProcessing.set(false);
             return;
         }
 
@@ -177,18 +184,20 @@ export class Cart {
                 }
             };
 
-            console.log('Enviando Pedido:', orderPayload);
-
             this.cartService.createOrder(orderPayload).subscribe({
                 next: (res: any) => {
-                    this.isProcessing = false;
-                    this.showSuccessModal = true;
+                    setTimeout(() => {
+                        this.isProcessing.set(false);
+                        this.showSuccessModal.set(true);
+                    });
                 },
                 error: (err) => {
                     console.error('Error creando pedido', err);
-                    this.isProcessing = false;
-                    const msg = err.error?.message || (Array.isArray(err.error?.message) ? err.error.message.join(', ') : 'Ocurrió un error al procesar tu pedido.');
-                    alert('Error: ' + msg);
+                    setTimeout(() => {
+                        this.isProcessing.set(false);
+                        const msg = err.error?.message || (Array.isArray(err.error?.message) ? err.error.message.join(', ') : 'Ocurrió un error al procesar tu pedido.');
+                        this.toastService.error(msg);
+                    });
                 }
             });
         };
@@ -200,8 +209,10 @@ export class Cart {
                 },
                 error: (err) => {
                     console.error('Upload error', err);
-                    this.isProcessing = false;
-                    alert('Error al subir el comprobante. Inténtalo de nuevo.');
+                    setTimeout(() => {
+                        this.isProcessing.set(false);
+                        this.toastService.error('Error al subir el comprobante. Inténtalo de nuevo.');
+                    });
                 }
             });
         } else {
@@ -210,12 +221,12 @@ export class Cart {
     }
 
     cancelOrder() {
-        this.showConfirmModal = false;
-        this.isProcessing = false;
+        this.showConfirmModal.set(false);
+        this.isProcessing.set(false);
     }
 
     closeModalAndRedirect() {
-        this.showSuccessModal = false;
+        this.showSuccessModal.set(false);
         this.cartService.clearCart();
         this.router.navigate(['/orders']);
     }

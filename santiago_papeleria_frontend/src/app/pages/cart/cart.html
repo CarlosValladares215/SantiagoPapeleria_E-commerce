@@ -163,6 +163,7 @@
                         <!-- Address Selection (Only if Shipping) -->
                         @if (cartService.deliveryMethod() === 'shipping') {
                         <div class="mt-6 pt-6 border-t border-gray-100 animate-fadeIn">
+                            @if (authService.user()) {
                             @if (addresses().length > 0) {
                             <div class="mb-4">
                                 <label class="block text-xs font-bold text-gray-600 mb-2">Selecciona tu dirección de
@@ -187,6 +188,21 @@
                                 class="w-full border border-dashed border-gray-300 text-gray-600 hover:border-[#f2cb07] hover:text-[#012e40] font-semibold py-2 rounded-md transition-colors text-sm flex items-center justify-center gap-2">
                                 <i class="ri-add-line"></i> Agregar Nueva Dirección
                             </button>
+                            } @else {
+                            <div class="bg-blue-50 p-6 rounded-lg border border-blue-100 text-center animate-fadeIn">
+                                <div
+                                    class="w-12 h-12 bg-blue-100 text-[#0f4c75] rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i class="ri-user-received-2-line text-xl"></i>
+                                </div>
+                                <h4 class="font-bold text-[#012e40] text-sm mb-2">¿Quieres envío a domicilio?</h4>
+                                <p class="text-xs text-gray-600 mb-4">Para gestionar tus direcciones de envío y calcular
+                                    costos exactos, necesitas iniciar sesión.</p>
+                                <a routerLink="/login" [queryParams]="{ returnUrl: '/cart' }"
+                                    class="inline-flex items-center gap-2 bg-[#0f4c75] text-white px-6 py-2 rounded-md text-sm font-bold hover:bg-[#0b3a5a] transition-colors shadow-md">
+                                    <i class="ri-login-box-line"></i> Iniciar Sesión Ahora
+                                </a>
+                            </div>
+                            }
                         </div>
                         }
 
@@ -376,9 +392,9 @@
                         </div>
                     </div>
 
-                    <button (click)="confirmOrder()" [disabled]="isProcessing"
+                    <button (click)="confirmOrder()" [disabled]="isProcessing()"
                         class="w-full bg-[#0f4c75] hover:bg-[#0b3a5a] text-white font-bold py-3.5 rounded-md transition-colors flex justify-center items-center gap-2 shadow-lg shadow-blue-900/10 disabled:opacity-70 disabled:cursor-not-allowed">
-                        @if (isProcessing) {
+                        @if (isProcessing()) {
                         <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
                             fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
@@ -406,7 +422,7 @@
         }
 
         <!-- Confirmation Modal -->
-        @if (showConfirmModal) {
+        @if (showConfirmModal()) {
         <div class="modal-overlay">
             <div class="modal-content">
                 <div class="icon-wrapper" style="background-color: #fffbeb;">
@@ -424,9 +440,20 @@
                         class="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition-colors">
                         Cancelar
                     </button>
-                    <button (click)="processOrderConfirmed()"
-                        class="flex-1 px-4 py-3 rounded-lg bg-[#0f4c75] text-white font-bold hover:bg-[#0b3a5a] transition-colors shadow-lg">
+                    <button (click)="processOrderConfirmed()" [disabled]="isProcessing()"
+                        class="flex-1 px-4 py-3 rounded-lg bg-[#0f4c75] text-white font-bold hover:bg-[#0b3a5a] transition-colors shadow-lg disabled:opacity-70 disabled:cursor-not-allowed">
+                        @if (isProcessing()) {
+                        <svg class="animate-spin h-5 w-5 text-white mx-auto" xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        } @else {
                         Sí, Confirmar
+                        }
                     </button>
                 </div>
             </div>
@@ -434,7 +461,7 @@
         }
 
         <!-- Success Modal -->
-        @if (showSuccessModal) {
+        @if (showSuccessModal()) {
         <div class="modal-overlay">
             <div class="modal-content">
                 <div class="icon-wrapper">

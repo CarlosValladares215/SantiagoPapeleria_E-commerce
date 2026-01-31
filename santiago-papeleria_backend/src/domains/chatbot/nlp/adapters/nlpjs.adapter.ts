@@ -108,15 +108,16 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
         );
 
         // ============== ORDER_STATUS ==============
+        // Focused on "Status" (Pending, Paid, etc) not "Location/Tracking"
         const orderStatusExamples = [
             'estado de mi pedido',
-            'donde está mi orden',
-            'rastrear mi envío',
+            // 'donde está mi orden', // moved to tracking
+            // 'rastrear mi envío',   // moved to tracking
             'cuando llega mi compra',
-            'seguimiento de pedido',
-            'mi paquete',
+            // 'seguimiento de pedido', // moved to tracking
+            // 'mi paquete',          // moved to tracking
             'ya enviaron mi orden',
-            'tracking de mi pedido',
+            // 'tracking de mi pedido', // moved to tracking
             'consultar pedido',
             'ver mis pedidos',
             'número de seguimiento',
@@ -176,6 +177,12 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             'qué haces',
             'para qué sirves',
             'cómo te uso',
+            'descubrir más funcionalidades',
+            'volver al menú',
+            'ir al menú',
+            'menú principal',
+            'ver opciones',
+            'inicio',
         ];
         helpExamples.forEach(ex =>
             this.manager.addDocument('es', ex, ChatIntent.GENERAL_HELP)
@@ -289,11 +296,8 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             { text: 'mis compras anteriores', destination: 'orders' },
             { text: 'pedidos realizados', destination: 'orders' },
 
-            // Tracking
-            { text: 'rastrear mi pedido', destination: 'tracking' },
-            { text: 'donde esta mi envio', destination: 'tracking' },
-            { text: 'seguimiento de paquete', destination: 'tracking' },
-            { text: 'tracking de envio', destination: 'tracking' },
+            // Tracking - REMOVED to avoid conflict with ORDER_TRACKING intent
+            // Calls like "rastrear pedido" should go to ORDER_TRACKING handler which handles navigation smartly
 
             // Favorites
             { text: 'ver mis favoritos', destination: 'favorites' },
@@ -363,6 +367,51 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
         ];
         returnsExamples.forEach(ex =>
             this.manager.addDocument('es', ex, ChatIntent.RETURNS)
+        );
+
+        // ============== ORDER_TRACKING ==============
+        const trackingExamples = [
+            'cual es mi codigo de envio',
+            'como rastreo mi pedido',
+            'numero de seguimiento',
+            'guia de envio',
+            'como uso el tracking',
+            'donde veo mi envio',
+            'no se como rastrear',
+            'como funciona el rastreo',
+            'quiero rastrear mi paquete',
+            'donde pongo el codigo de rastreo',
+            'mi guia de transporte',
+            // Specific variations causing issues
+            'donde esta mi pedido',
+            'donde esta mi orden',
+            'donde esta mi paquete',
+            'donde esta mi envio',
+            'ubicación de mi pedido',
+            'saber donde viene mi pedido',
+            'codigo de guia',
+            'dame mi tracking',
+        ];
+        trackingExamples.forEach(ex =>
+            this.manager.addDocument('es', ex, ChatIntent.ORDER_TRACKING)
+        );
+
+        // ============== ORDER_PROCESS ==============
+        const processExamples = [
+            'como es el proceso de compra',
+            'que pasa despues de comprar',
+            'me notifican del pedido',
+            'como se cuando llega',
+            'me avisan del envio',
+            'recibo notificaciones',
+            'como funciona el envio',
+            'que pasa despues de pagar',
+            'me llegan correos del pedido',
+            'como me entero del estado',
+            'proceso de despacho',
+        ];
+        processExamples.forEach(ex =>
+            this.manager.addDocument('es', ex, ChatIntent.ORDER_PROCESS)
         );
 
         // ============== Named Entity Recognition (NER) ==============

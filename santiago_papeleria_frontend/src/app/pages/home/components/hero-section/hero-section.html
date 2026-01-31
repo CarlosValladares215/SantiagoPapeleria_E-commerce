@@ -8,37 +8,39 @@
           <div class="carousel-track-container">
             <div #carouselTrack class="carousel-track">
               <!-- Slide 1 -->
-              <div class="carousel-slide active cursor-pointer" (click)="navigateToProducts()">
+              <a routerLink="/products" class="carousel-slide active cursor-pointer block"
+                aria-label="Ver productos de papelería">
                 <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768921196/slide1_vvjv5p.png"
                   alt="Productos de papelería y oficina - 30,000+ productos disponibles">
-              </div>
+              </a>
 
               <!-- Slide 2 -->
-              <div class="carousel-slide cursor-pointer" (click)="navigateToProducts()">
+              <a routerLink="/products" class="carousel-slide cursor-pointer block" aria-label="Ver material escolar">
                 <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768855084/slide2_g6ct4w.png"
                   alt="Material escolar y educativo para estudiantes">
-              </div>
+              </a>
 
               <!-- Slide 3 -->
-              <div class="carousel-slide cursor-pointer" (click)="navigateToProducts()">
+              <a routerLink="/products" class="carousel-slide cursor-pointer block"
+                aria-label="Ver suministros de oficina">
                 <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768855085/slide4_b5erwh.png"
                   alt="Suministros de oficina moderna y tecnología">
-              </div>
+              </a>
 
               <!-- Slide 4 -->
-              <div class="carousel-slide cursor-pointer" (click)="navigateToProducts()">
+              <a routerLink="/products" class="carousel-slide cursor-pointer block" aria-label="Ver artículos de arte">
                 <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768855085/slide3_ddgrgx.png"
                   alt="Arte y creatividad para proyectos únicos">
-              </div>
+              </a>
             </div>
           </div>
 
           <!-- Botones de navegación simples -->
-          <button class="carousel-nav prev" (click)="prevSlide()">
-            <i class="ri-arrow-left-s-line text-2xl"></i>
+          <button class="carousel-nav prev" (click)="prevSlide()" aria-label="Diapositiva anterior">
+            <i class="ri-arrow-left-s-line text-2xl" aria-hidden="true"></i>
           </button>
-          <button class="carousel-nav next" (click)="nextSlide()">
-            <i class="ri-arrow-right-s-line text-2xl"></i>
+          <button class="carousel-nav next" (click)="nextSlide()" aria-label="Siguiente diapositiva">
+            <i class="ri-arrow-right-s-line text-2xl" aria-hidden="true"></i>
           </button>
         </div>
       </div>

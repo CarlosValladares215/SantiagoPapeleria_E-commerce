@@ -24,6 +24,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/serve-static": "^5.0.4",
+    "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^7.0.11",
     "reflect-metadata": "^0.2.2",

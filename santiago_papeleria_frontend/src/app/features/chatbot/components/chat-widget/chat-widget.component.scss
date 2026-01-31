@@ -355,3 +355,16 @@
         box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
     }
 }
+
+/* Character counter */
+.char-counter {
+    font-size: 0.625rem;
+    color: #9ca3af;
+    text-align: right;
+    padding: 0.25rem 0.5rem 0;
+
+    &.warning {
+        color: #f59e0b;
+        font-weight: 500;
+    }
+}

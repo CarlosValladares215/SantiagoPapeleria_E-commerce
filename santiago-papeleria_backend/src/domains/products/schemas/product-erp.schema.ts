@@ -53,6 +53,9 @@ export class ProductERP extends Document {
     @Prop()
     imagen: string; // From FOT
 
+    @Prop({ type: [String], default: [] })
+    galeria_erp: string[]; // From GAL
+
     @Prop()
     linea_codigo: string; // From LIN
 

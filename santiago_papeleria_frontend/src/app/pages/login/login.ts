@@ -22,12 +22,27 @@ export class Login {
   isLoading = false;
   rememberMe = true;
 
+  emailError: string | null = null;
+
   constructor(
     private router: Router,
     private authService: AuthService
   ) { }
 
+  validateEmail(): boolean {
+    if (!this.formData.email.includes('@')) {
+      this.emailError = 'El correo debe contener un @';
+      return false;
+    }
+    this.emailError = null;
+    return true;
+  }
+
   handleSubmit() {
+    if (!this.validateEmail()) {
+      return;
+    }
+
     this.isLoading = true;
 
     this.authService.login(this.formData, this.rememberMe).subscribe({

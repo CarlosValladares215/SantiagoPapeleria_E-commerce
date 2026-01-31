@@ -1,6 +1,7 @@
 import { Component, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { UiService } from '../../../services/ui/ui.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -9,7 +10,7 @@ import { SuperCategoryGroup } from '../../../models/category.model';
 @Component({
   selector: 'app-mobile-menu',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './mobile-menu.html',
   styleUrl: './mobile-menu.scss',
 })
@@ -22,6 +23,9 @@ export class MobileMenuComponent {
 
   isOpen = toSignal(this.uiService.isMobileMenuOpen$, { initialValue: false });
   expandedGroup = signal<string | null>(null);
+
+  // Búsqueda
+  searchQuery: string = '';
 
   close() {
     this.uiService.closeMobileMenu();
@@ -46,5 +50,18 @@ export class MobileMenuComponent {
     const names = name.split(' ');
     if (names.length === 0) return '';
     return names[0].charAt(0).toUpperCase();
+  }
+
+  // Realizar búsqueda
+  performSearch() {
+    const q = this.searchQuery.trim();
+    if (!q) return;
+
+    this.router.navigate(['/products'], {
+      queryParams: { search: q }
+    });
+
+    this.searchQuery = '';
+    this.close();
   }
 }

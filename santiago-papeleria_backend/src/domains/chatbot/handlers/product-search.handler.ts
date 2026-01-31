@@ -26,13 +26,19 @@ export class ProductSearchHandler extends BaseHandler {
         // GUARD: If no real search criteria, ask for clarification
         if (!searchTerm && !category && !brand) {
             this.logger.debug('No search criteria provided, asking for clarification');
+            const message =
+                '🔍 **¿Qué producto buscas?**\n\n' +
+                '---\n\n' +
+                'Escribe el nombre del producto, por ejemplo:\n\n' +
+                '• **mochilas escolares**\n' +
+                '• **cuadernos universitarios**\n' +
+                '• **lápices de colores**\n' +
+                '• **resmas de papel**\n\n' +
+                'O elige una categoría:';
+
             return ChatResponseDto.options(
-                '🔍 ¿Qué producto te gustaría buscar?\n\n' +
-                'Escribe el nombre del producto, por ejemplo:\n' +
-                '• "mochilas"\n' +
-                '• "cuadernos universitarios"\n' +
-                '• "lápices de colores"',
-                ['Mochilas', 'Cuadernos', 'Lápices', 'Carpetas']
+                message,
+                ['🎒 Mochilas', '📓 Cuadernos', '✏️ Lápices', '📁 Carpetas']
             );
         }
 
@@ -103,18 +109,24 @@ export class ProductSearchHandler extends BaseHandler {
             this.logger.warn(`Semantic search also failed. Using static fallback.`);
 
             // Static response - no Ollama dependency = instant response
-            const staticMessage = `Lo siento, no encontré "${searchTerm || 'ese producto'}" en nuestro catálogo. ` +
-                `¿Te gustaría ver nuestras ofertas actuales o buscar otro producto?`;
+            const staticMessage =
+                '😔 **No encontré resultados**\n\n' +
+                '---\n\n' +
+                `No encontré "**${searchTerm || 'ese producto'}**" en nuestro catálogo.\n\n` +
+                '¿Te ayudo con algo más?';
 
             return ChatResponseDto.options(
                 staticMessage,
-                ['Ver ofertas', 'Buscar otra cosa', 'Hablar con un agente']
+                ['🏷️ Ver ofertas', '🔍 Buscar otra cosa', '💬 Hablar con agente']
             );
 
         } catch (error) {
             this.logger.error(`Product search error: ${error.message}`);
-            return ChatResponseDto.text(
-                'Hubo un problema al buscar productos. Por favor intenta de nuevo en un momento.'
+            return ChatResponseDto.options(
+                '⚠️ **Hubo un problema**\n\n' +
+                'No pude buscar productos en este momento.\n' +
+                'Por favor intenta de nuevo.',
+                ['🔄 Intentar de nuevo', '🏷️ Ver ofertas', '💬 Hablar con agente']
             );
         }
     }

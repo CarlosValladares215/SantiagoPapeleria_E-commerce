@@ -29,16 +29,20 @@
         @if (productService.isLoading()) {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           @for (item of [1,2,3,4,5,6]; track item) {
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 animate-pulse">
+          <div
+            class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-row md:flex-col animate-pulse overflow-hidden">
             <!-- Image Skeleton -->
-            <div class="w-full aspect-square bg-gray-200 rounded-xl mb-4"></div>
+            <div class="w-32 h-36 md:w-full md:aspect-square bg-gray-200 flex-shrink-0"></div>
+
             <!-- Content Skeleton -->
-            <div class="space-y-3">
+            <div class="flex-grow p-3 md:p-5 flex flex-col justify-center space-y-3">
+              <div class="h-3 bg-gray-200 rounded w-1/4 mb-1"></div>
               <div class="h-4 bg-gray-200 rounded w-3/4"></div>
               <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div class="flex justify-between items-center pt-2">
-                <div class="h-6 bg-gray-200 rounded w-20"></div>
-                <div class="h-8 bg-gray-200 rounded-full w-8"></div>
+              <div class="flex justify-between items-center pt-2 md:pt-4">
+                <div class="h-6 bg-gray-200 rounded w-24"></div>
+                <div class="h-10 bg-gray-200 rounded-xl w-24 hidden md:block"></div>
+                <div class="h-8 bg-gray-200 rounded-lg w-20 md:hidden"></div>
               </div>
             </div>
           </div>

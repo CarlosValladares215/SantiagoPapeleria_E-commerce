@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Producto, ProductoDocument } from '../schemas/producto.schema';
 import { ProductERP, ProductERPDocument } from '../schemas/product-erp.schema';
+import { Pedido } from '../../orders/schemas/pedido.schema';
 
 /**
  * ReviewsService
@@ -18,6 +19,7 @@ export class ReviewsService {
     constructor(
         @InjectModel(Producto.name) private productoModel: Model<ProductoDocument>,
         @InjectModel(ProductERP.name) private productErpModel: Model<ProductERPDocument>,
+        @InjectModel(Pedido.name) private pedidoModel: Model<Pedido>,
     ) { }
 
     /**
@@ -26,8 +28,15 @@ export class ReviewsService {
      */
     async addReview(
         productId: string,
+        userId: string,
         review: { user_name: string; rating: number; comment: string },
     ): Promise<any> {
+        // 1. Verify Purchase Eligibility
+        const canReview = await this.canUserReviewProduct(userId, productId);
+        if (!canReview) {
+            throw new ForbiddenException('Solo los usuarios que han comprado este producto pueden dejar una reseña.');
+        }
+
         let filter: any;
         let sku = productId;
 
@@ -97,5 +106,27 @@ export class ReviewsService {
         if (reviews.length === 0) return 0;
         const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
         return Math.round((sum / reviews.length) * 10) / 10;
+    }
+
+    /**
+     * Checks if a user has purchased a product at least once.
+     * Logic: Look for orders containing the product SKU where the order belongs to the user.
+     */
+    async canUserReviewProduct(userId: string, productId: string): Promise<boolean> {
+        // 1. Resolve SKU if productId is an ObjectId
+        let sku = productId;
+        if (Types.ObjectId.isValid(productId)) {
+            const product = await this.productoModel.findById(productId).select('codigo_interno').lean().exec();
+            if (!product) return false;
+            sku = product.codigo_interno;
+        }
+
+        // 2. Search for any order by this user that contains this SKU
+        const order = await this.pedidoModel.findOne({
+            usuario_id: new Types.ObjectId(userId),
+            'items.codigo_dobranet': sku
+        }).lean().exec();
+
+        return !!order;
     }
 }

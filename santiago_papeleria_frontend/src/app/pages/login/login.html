@@ -31,8 +31,18 @@
               Correo Electrónico
             </label>
 
-            <input type="email" id="email" name="email" [(ngModel)]="formData.email" placeholder="tucorreo@email.com"
-              required class="w-full border border-gray-300 px-4 py-2 rounded-xl focus:ring-brand-blue" />
+            <input type="email" id="email" name="email" [(ngModel)]="formData.email"
+              (ngModelChange)="emailError ? validateEmail() : null" (blur)="validateEmail()"
+              placeholder="tucorreo@email.com" required
+              class="w-full border border-gray-300 px-4 py-2 rounded-xl focus:ring-brand-blue"
+              [class.border-red-500]="emailError" />
+
+            @if (emailError) {
+            <p class="text-red-500 text-sm mt-1 flex items-center">
+              <i class="ri-error-warning-line mr-1"></i>
+              {{ emailError }}
+            </p>
+            }
           </div>
 
           <!-- Password -->

@@ -60,7 +60,7 @@ export class ProductFilterDto {
   @IsOptional()
   @IsString()
   // Validamos que el valor de ordenación sea uno de los permitidos
-  @IsIn(['name', '-name', 'price', '-price', 'stock', '-stock'])
+  @IsIn(['name', '-name', 'price', '-price', 'stock', '-stock', 'bestselling'])
   sortBy?: string; // Mapea a 'sortBy'
 
   @IsOptional()

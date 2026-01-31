@@ -23,7 +23,7 @@ export class ProductsHeader {
         { value: 'name', label: 'Ordenar por Nombre', icon: 'ri-sort-alphabet-asc' },
         { value: 'price', label: 'Precio: Menor a Mayor', icon: 'ri-arrow-up-line' },
         { value: '-price', label: 'Precio: Mayor a Menor', icon: 'ri-arrow-down-line' },
-        { value: 'newest', label: 'Más Nuevos', icon: 'ri-time-line' }
+        { value: 'bestselling', label: 'Más Vendidos', icon: 'ri-fire-line' }
     ];
 
     get currentSortOption(): SortOption {

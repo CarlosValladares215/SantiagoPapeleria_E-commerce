@@ -1,8 +1,10 @@
 <section class="py-10 bg-[#F2F2F2]">
+  <app-toast-container></app-toast-container>
+
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
     <div class="text-center mb-8">
       <h2 class="text-3xl md:text-4xl font-bold text-[#104D73] mb-6">
-        ¡Productos más <span class="text-[#F2CB07]">Vendidos!</span>
+        ¡Productos más <span class="text-amber-700">Vendidos!</span>
       </h2>
     </div>
 
@@ -15,14 +17,14 @@
     <div *ngIf="!loading() && products().length > 0" class="relative group">
 
       <!-- Navigation Buttons -->
-      <button (click)="scrollLeft()"
+      <button (click)="scrollLeft()" aria-label="Ver productos anteriores"
         class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-[#104D73] hover:bg-[#F2CB07] hover:text-[#012E40] transition-all opacity-0 group-hover:opacity-100 hidden md:flex border border-gray-100">
-        <i class="ri-arrow-left-s-line text-2xl"></i>
+        <i class="ri-arrow-left-s-line text-2xl" aria-hidden="true"></i>
       </button>
 
-      <button (click)="scrollRight()"
+      <button (click)="scrollRight()" aria-label="Ver más productos"
         class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-20 bg-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center text-[#104D73] hover:bg-[#F2CB07] hover:text-[#012E40] transition-all opacity-0 group-hover:opacity-100 hidden md:flex border border-gray-100">
-        <i class="ri-arrow-right-s-line text-2xl"></i>
+        <i class="ri-arrow-right-s-line text-2xl" aria-hidden="true"></i>
       </button>
 
       <!-- Scrollable Area -->
@@ -36,17 +38,15 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="!loading() && products().length === 0" class="text-center py-12 text-gray-500">
+    <div *ngIf="!loading() && products().length === 0" class="text-center py-12 text-gray-600">
       No hay productos destacados en este momento.
     </div>
 
     <!-- View All Button -->
     <div class="text-center mt-8">
-      <a routerLink="/products">
-        <button
-          class="bg-[#F2CB07] text-[#012E40] px-6 py-2 rounded-lg font-semibold text-sm hover:bg-[#F2DF7E] transition shadow-sm hover:shadow">
-          VER TODOS LOS PRODUCTOS
-        </button>
+      <a routerLink="/products"
+        class="bg-[#F2CB07] text-[#012E40] px-6 py-2 rounded-lg font-semibold text-sm hover:bg-[#F2DF7E] transition shadow-sm hover:shadow inline-block">
+        VER TODOS LOS PRODUCTOS
       </a>
     </div>
   </div>

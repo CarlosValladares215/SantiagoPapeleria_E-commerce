@@ -1,6 +1,6 @@
 // src/app/features/chatbot/components/chat-message/chat-message.component.ts
 
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
 
@@ -22,7 +22,7 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
       <!-- Bot Avatar -->
       @if (message.sender === 'bot' && !message.isLoading) {
         <div class="avatar">
-          <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1768923352/bot_avatar_h4ftod.jpg" alt="Bot">
+          <img src="https://res.cloudinary.com/dufklhqtz/image/upload/v1769628496/BOTFinal_kvbfdq.png" alt="Bot">
         </div>
       }
 
@@ -35,23 +35,35 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
             <span></span><span></span><span></span>
           </div>
         } @else {
-          <!-- Text -->
-          <p class="message-text">{{ message.text }}</p>
+          <!-- Text with formatting -->
+          <p class="message-text" [innerHTML]="formatText(message.text)"></p>
 
           <!-- Product Carousel -->
           @if (message.type === 'products' && products.length) {
-            <div class="product-carousel">
-              @for (product of products; track product._id || product.sku) {
-                <div class="product-card" (click)="productSelected.emit(product)">
-                  <div class="product-image">
-                    <img [src]="product.multimedia?.principal || 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768924502/placeholder_ni9blz.png'" [alt]="product.nombre">
+            <div class="carousel-wrapper">
+              @if (products.length > 2) {
+                <button class="carousel-nav carousel-nav-left" (click)="scrollCarousel('left', $event)" type="button">
+                  ‹
+                </button>
+              }
+              <div class="product-carousel" #carouselRef>
+                @for (product of products; track product._id || product.sku) {
+                  <div class="product-card" (click)="productSelected.emit(product)">
+                    <div class="product-image">
+                      <img [src]="product.multimedia?.principal || 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768924502/placeholder_ni9blz.png'" [alt]="product.nombre">
+                    </div>
+                    <div class="product-info">
+                      <span class="product-brand">{{ product.brand || 'Sin marca' }}</span>
+                      <h4 class="product-name">{{ product.nombre }}</h4>
+                      <span class="product-price">$ {{ product.price | number:'1.2-2' }}</span>
+                    </div>
                   </div>
-                  <div class="product-info">
-                    <span class="product-brand">{{ product.brand || 'Sin marca' }}</span>
-                    <h4 class="product-name">{{ product.nombre }}</h4>
-                    <span class="product-price">$ {{ product.price | number:'1.2-2' }}</span>
-                  </div>
-                </div>
+                }
+              </div>
+              @if (products.length > 2) {
+                <button class="carousel-nav carousel-nav-right" (click)="scrollCarousel('right', $event)" type="button">
+                  ›
+                </button>
               }
             </div>
           }
@@ -73,7 +85,11 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
               @for (action of actions; track action.text) {
                 <button class="action-button" 
                         [class.navigate-action]="action.type === 'navigate'"
+                        [class.whatsapp-btn]="action.style === 'whatsapp'"
                         (click)="actionSelected.emit(action)">
+                  @if (action.icon === 'whatsapp') {
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="action-icon">
+                  }
                   {{ action.text }}
                 </button>
               }
@@ -139,6 +155,35 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
       margin: 0;
       line-height: 1.5;
       white-space: pre-wrap;
+      word-wrap: break-word;
+      
+      :host ::ng-deep {
+        strong {
+          font-weight: 700;
+          color: #1e40af;
+        }
+        
+        em {
+          font-style: italic;
+        }
+        
+        .chat-divider {
+          border: none;
+          border-top: 1px solid #e5e7eb;
+          margin: 0.5rem 0;
+        }
+        
+        .chat-list-item {
+          display: block;
+          padding-left: 0.5rem;
+          margin: 0.25rem 0;
+        }
+        
+        .chat-emoji {
+          font-size: 1.1em;
+          margin-right: 0.25rem;
+        }
+      }
     }
 
     .timestamp {
@@ -172,13 +217,67 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
     }
 
     /* Product carousel */
-    .product-carousel {
+    .carousel-wrapper {
+      position: relative;
       margin-top: 0.75rem;
+    }
+    
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: white;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+      transition: all 0.2s;
+      
+      &:hover {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+      }
+      
+      &-left {
+        left: -0.5rem;
+      }
+      
+      &-right {
+        right: -0.5rem;
+      }
+    }
+    
+    .product-carousel {
       display: flex;
       gap: 0.75rem;
       overflow-x: auto;
       padding-bottom: 0.5rem;
       scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      
+      &::-webkit-scrollbar {
+        height: 4px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 2px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 2px;
+      }
     }
 
     .product-card {
@@ -296,6 +395,26 @@ import { ChatMessage, ChatProduct, ChatAction } from '../../models/chat.models';
           border-color: #93c5fd;
         }
       }
+
+      &.whatsapp-btn {
+        background: #25D366;
+        color: white;
+        border-color: #128C7E;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        &:hover {
+          background: #128C7E;
+          border-color: #075E54;
+        }
+      }
+    }
+
+    .action-icon {
+      width: 1.25rem;
+      height: 1.25rem;
     }
   `]
 })
@@ -304,6 +423,24 @@ export class ChatMessageComponent {
   @Output() optionSelected = new EventEmitter<string>();
   @Output() productSelected = new EventEmitter<ChatProduct>();
   @Output() actionSelected = new EventEmitter<ChatAction>();
+  @ViewChild('carouselRef') carouselRef?: ElementRef<HTMLDivElement>;
+
+  /**
+   * Scroll the product carousel left or right
+   */
+  scrollCarousel(direction: 'left' | 'right', event: Event): void {
+    event.stopPropagation();
+    if (!this.carouselRef) return;
+
+    const container = this.carouselRef.nativeElement;
+    const scrollAmount = 160; // Approximate width of one product card
+
+    if (direction === 'left') {
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  }
 
   get products(): ChatProduct[] {
     if (this.message.type === 'products' && Array.isArray(this.message.content)) {
@@ -324,5 +461,37 @@ export class ChatMessageComponent {
       return this.message.content as ChatAction[];
     }
     return [];
+  }
+
+  /**
+   * Format text with markdown-like syntax
+   * Supports: **bold**, *italic*, line breaks, lists, horizontal rules
+   */
+  formatText(text: string): string {
+    if (!text) return '';
+
+    let formatted = text
+      // Escape HTML first to prevent XSS
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Bold: **text** or __text__
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.+?)__/g, '<strong>$1</strong>')
+      // Italic: *text* or _text_ (but not inside words)
+      .replace(/(?<![\w*])\*(?![*\s])(.+?)(?<![\s*])\*(?![\w*])/g, '<em>$1</em>')
+      // Horizontal rule: --- or ===
+      .replace(/^-{3,}$/gm, '<hr class="chat-divider">')
+      .replace(/^={3,}$/gm, '<hr class="chat-divider">')
+      // Bullet lists: lines starting with - or •
+      .replace(/^[•\-]\s+(.+)$/gm, '<span class="chat-list-item">• $1</span>')
+      // Numbered lists: lines starting with 1. 2. etc
+      .replace(/^(\d+)\.\s+(.+)$/gm, '<span class="chat-list-item"><strong>$1.</strong> $2</span>')
+      // Checkmarks and emojis at start of lines
+      .replace(/^(✅|📦|📋|🔑|📜|💬)/gm, '<span class="chat-emoji">$1</span>')
+      // Line breaks
+      .replace(/\n/g, '<br>');
+
+    return formatted;
   }
 }

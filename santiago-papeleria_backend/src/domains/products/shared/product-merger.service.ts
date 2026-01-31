@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
 import { ResolvedProduct } from './interfaces/resolved-product.interface';
 
 /**
@@ -14,6 +16,8 @@ import { ResolvedProduct } from './interfaces/resolved-product.interface';
  */
 @Injectable()
 export class ProductMergerService {
+
+    constructor(private configService: ConfigService) { }
 
     /**
      * Merges ERP product data with enriched product data.
@@ -56,18 +60,49 @@ export class ProductMergerService {
      * Resolves product images with priority: enriched > ERP
      */
     private resolveImages(erpData: any, enrichedData: any): string[] {
+        let images: string[] = [];
+
+        // 1. Try Structured Multimedia (Schema Standard)
         if (enrichedData?.multimedia?.principal) {
-            return [
-                enrichedData.multimedia.principal,
-                ...(enrichedData.multimedia.galeria || []),
-            ];
+            images.push(enrichedData.multimedia.principal);
+        }
+        if (enrichedData?.multimedia?.galeria && Array.isArray(enrichedData.multimedia.galeria)) {
+            images.push(...enrichedData.multimedia.galeria);
         }
 
-        if (erpData.imagen) {
-            return [`http://localhost:4000/data/photos/${erpData.imagen}`];
+        // 2. Try Raw Enrichment Fields (Legacy/Simulator JSON keys: FOT, GAL)
+        // Only if we haven't found images yet, or to augment them?
+        // Usually these are mutually exclusive depending on data stage.
+        if (images.length === 0) {
+            if (enrichedData?.FOT) {
+                images.push(enrichedData.FOT);
+            }
+            if (enrichedData?.GAL && Array.isArray(enrichedData.GAL)) {
+                images.push(...enrichedData.GAL);
+            }
         }
 
-        return [];
+        // 3. Fallback to ERP Image
+        if (images.length === 0 && erpData?.imagen) {
+            images.push(erpData.imagen);
+        }
+
+        // 4. Fallback to ERP Gallery
+        if (erpData?.galeria_erp && Array.isArray(erpData.galeria_erp)) {
+            images.push(...erpData.galeria_erp);
+        }
+
+        // Deduplicate strings just in case
+        const uniqueImages = Array.from(new Set(images));
+
+        // Resolve relative paths
+        const erpHost = this.configService.get<string>('ERP_HOST') || 'http://localhost:4000';
+        return uniqueImages.map(img => {
+            if (img.startsWith('http')) {
+                return img;
+            }
+            return `${erpHost}/data/photos/${img}`;
+        });
     }
 
     /**

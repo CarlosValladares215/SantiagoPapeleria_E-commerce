@@ -36,7 +36,7 @@ export class ProductsComponent implements OnInit {
     filters = signal<FilterState>({
         category: '',
         brand: '',
-        priceRange: [0, 100],
+        priceRange: [0, 1000],
         inStock: false,
         sortBy: 'name',
         searchTerm: ''
@@ -78,7 +78,7 @@ export class ProductsComponent implements OnInit {
             const inStock = params['inStock'] === 'true';
 
             // Price Range Parse
-            let priceRange: [number, number] = [0, 100];
+            let priceRange: [number, number] = [0, 1000];
             if (params['minPrice'] && params['maxPrice']) {
                 priceRange = [Number(params['minPrice']), Number(params['maxPrice'])];
             }
@@ -135,7 +135,7 @@ export class ProductsComponent implements OnInit {
         this.filters.set({
             category: '',
             brand: '',
-            priceRange: [0, 100],
+            priceRange: [0, 1000],
             inStock: false,
             sortBy: 'name',
             searchTerm: ''
@@ -155,8 +155,12 @@ export class ProductsComponent implements OnInit {
             return;
         }
 
-        this.cartService.addToCart(product, 1);
-        this.showToast(`${product.name} agregado al carrito`, 'success');
+        const success = this.cartService.addToCart(product, 1);
+        if (success) {
+            this.showToast(`${product.name} agregado al carrito`, 'success');
+        } else {
+            this.showToast('Stock insuficiente', 'error');
+        }
     }
 
     navigateToProduct(id: string): void {

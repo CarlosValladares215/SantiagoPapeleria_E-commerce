@@ -10,14 +10,34 @@ export class GeneralHelpHandler extends BaseHandler {
     readonly intent = ChatIntent.GENERAL_HELP;
 
     async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
-        return ChatResponseDto.options(
-            '¡Hola! Soy el asistente virtual de Santiago Papelería. Puedo ayudarte con:\n\n' +
-            '🔍 Buscar productos - Cuadernos, lápices, carpetas y más\n' +
-            '📦 Estado de pedidos - Consulta el tracking de tus compras\n' +
-            '💰 Información de precios - PVP y precios mayoristas\n' +
-            '👤 Contactar soporte - Si necesitas ayuda personalizada\n\n' +
-            '¿En qué puedo ayudarte?',
-            ['Buscar productos', 'Estado de mi pedido', 'Precios mayoristas', 'Hablar con un agente']
+        const message =
+            '🤖 **¡Hola! Soy tu asistente virtual**\n\n' +
+            '---\n\n' +
+            '📋 **¿Cómo puedo ayudarte?**\n\n' +
+            '🔍 **Buscar productos** - Cuadernos, lápices, mochilas y más\n' +
+            '📦 **Estado de pedidos** - Consulta el tracking de tus compras\n' +
+            '💰 **Precios mayoristas** - Descuentos desde 12 unidades\n' +
+            '🏷️ **Ofertas** - Promociones vigentes\n' +
+            '📍 **Sucursales** - Ubicación y horarios\n\n' +
+            '---\n\n' +
+            '💬 **¿Necesitas atención personalizada?**\n' +
+            'Contáctanos por WhatsApp o elige una opción:';
+
+        return ChatResponseDto.actions(
+            message,
+            [
+                {
+                    text: '💬 WhatsApp',
+                    url: 'https://api.whatsapp.com/send/?phone=593987667459&text=Hola+%2ASantiago+Papeleria%2A.+Necesito+m%C3%A1s+informaci%C3%B3n+sobre+Santiago+Papeleria+https%3A%2F%2Fmegasantiago.com%2F&type=phone_number&app_absent=0',
+                    type: 'navigate',
+                    icon: 'whatsapp',
+                    style: 'whatsapp',
+                    external: true
+                },
+                { text: '🔍 Buscar productos', type: 'message' },
+                { text: '📦 Estado de mi pedido', type: 'message' },
+                { text: '💰 Precios mayoristas', type: 'message' },
+            ]
         );
     }
 }

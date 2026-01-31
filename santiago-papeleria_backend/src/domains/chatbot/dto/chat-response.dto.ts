@@ -6,6 +6,9 @@ export interface ChatAction {
     text: string;
     url?: string;  // If provided, frontend navigates to this URL
     type?: 'navigate' | 'message';  // 'navigate' opens URL, 'message' sends as chat
+    icon?: string;     // Optional icon name
+    style?: string;    // Optional style class
+    external?: boolean; // If true, opens in new tab
 }
 
 export class ChatResponseDto {

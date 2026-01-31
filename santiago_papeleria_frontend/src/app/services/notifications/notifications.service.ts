@@ -54,7 +54,9 @@ export class NotificationsService {
         this.http.get<Notification[]>(`${this.apiUrl}/user/${userId}`).subscribe({
             next: (data) => {
                 console.log('✅ [Front] Notifications loaded:', data.length);
-                this.notifications.set(data);
+                setTimeout(() => {
+                    this.notifications.set(data);
+                });
             },
             error: (err) => console.error('❌ [Front] Error fetching notifications', err)
         });

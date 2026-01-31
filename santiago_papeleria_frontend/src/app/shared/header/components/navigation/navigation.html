@@ -11,7 +11,8 @@
             <!-- Dynamic 5 Super Categories -->
             @for (group of groupedCategories; track group.name) {
             <li class="nav-item mega-parent" (mouseenter)="onMouseEnter(group.name)" (mouseleave)="onMouseLeave()">
-                <a [routerLink]="['/products']" class="nav-link" [class.active]="activeMenu === group.name">
+                <a [routerLink]="['/products']" [queryParams]="{category: group.name}" class="nav-link"
+                    [class.active]="activeMenu === group.name">
                     <!-- Icons based on name -->
                     <i class="fas" [class.fa-graduation-cap]="group.name.includes('Escolar')"
                         [class.fa-palette]="group.name.includes('Arte')"
