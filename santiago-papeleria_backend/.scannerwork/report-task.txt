@@ -2,5 +2,5 @@ projectKey=santiago-papeleria-backend
 serverUrl=http://localhost:9000
 serverVersion=25.12.0.117093
 dashboardUrl=http://localhost:9000/dashboard?id=santiago-papeleria-backend
-ceTaskId=533b4fed-0ce2-4f1c-93c1-a5e5ddc96bac
-ceTaskUrl=http://localhost:9000/api/ce/task?id=533b4fed-0ce2-4f1c-93c1-a5e5ddc96bac
+ceTaskId=72f28826-8f52-42ba-a973-336d3d1475e0
+ceTaskUrl=http://localhost:9000/api/ce/task?id=72f28826-8f52-42ba-a973-336d3d1475e0
