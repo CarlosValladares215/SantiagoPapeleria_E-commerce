@@ -10,10 +10,10 @@ export class OrderProcessHandler extends BaseHandler {
     private readonly logger = new Logger(OrderProcessHandler.name);
     readonly intent = ChatIntent.ORDER_PROCESS;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         this.logger.debug(`Order process inquiry`);
 
-        const message =
+        const responseMessage =
             '📦 **Proceso de tu Compra**\n\n' +
             '---\n\n' +
             '¡Es muy sencillo! Te mantendremos informado en cada paso vía **Outlook/Email**:\n\n' +
@@ -24,9 +24,9 @@ export class OrderProcessHandler extends BaseHandler {
             '---\n\n' +
             '¿Quieres revisar el estado de un pedido actual?';
 
-        return ChatResponseDto.actions(message, [
+        return ChatResponseDto.actions(responseMessage, [
             { text: '🚚 Rastrear pedido', type: 'message' },
-            { text: '📦 Ver mis pedidos', url: '/profile/orders', type: 'navigate' },
+            { text: '📦 Ver mis pedidos', url: '/orders', type: 'navigate' },
             { text: '💬 Hablar con agente', type: 'message' },
         ]);
     }

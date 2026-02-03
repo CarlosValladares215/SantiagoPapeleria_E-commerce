@@ -9,8 +9,40 @@ import { ChatResponseDto } from '../dto/chat-response.dto';
 export class GeneralHelpHandler extends BaseHandler {
     readonly intent = ChatIntent.GENERAL_HELP;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
-        const message =
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
+        // Check if this is a company information question by looking at the actual message
+        const messageText = (message || entities?.searchTerm || '').toLowerCase();
+        const isCompanyQuestion =
+            messageText.includes('santiago') ||
+            messageText.includes('papeleria') ||
+            messageText.includes('empresa') ||
+            messageText.includes('quienes son') ||
+            messageText.includes('que es') ||
+            messageText.includes('quien es');
+
+        if (isCompanyQuestion) {
+            const companyMessage =
+                '🏢 **Santiago Papelería**\n\n' +
+                'Somos una empresa ecuatoriana con más de **40 años** sirviendo a Loja y Ecuador. ' +
+                'Ofrecemos útiles escolares, suministros de oficina, productos tecnológicos y bazar en general.\n\n' +
+                '📍 **3 Sucursales en Loja:**\n' +
+                '• Matriz: Azuay y Av. Iberoamérica\n' +
+                '• UTPL: Campus Universitario\n' +
+                '• Norte: Guaranda y Av. Cuxibamba\n\n' +
+                '✨ Desde 1980, renovados como autoservicio en 2018.';
+
+            return ChatResponseDto.actions(
+                companyMessage,
+                [
+                    { text: '📍 Ver mapa de sucursales', url: '/sucursales', type: 'navigate' },
+                    { text: '🔍 Buscar productos', type: 'message' },
+                    { text: '💬 Contactar', type: 'message' },
+                ]
+            );
+        }
+
+        // Default general help menu
+        const helpMessage =
             '🤖 **¡Hola! Soy tu asistente virtual**\n\n' +
             '---\n\n' +
             '📋 **¿Cómo puedo ayudarte?**\n\n' +
@@ -24,7 +56,7 @@ export class GeneralHelpHandler extends BaseHandler {
             'Contáctanos por WhatsApp o elige una opción:';
 
         return ChatResponseDto.actions(
-            message,
+            helpMessage,
             [
                 {
                     text: '💬 WhatsApp',

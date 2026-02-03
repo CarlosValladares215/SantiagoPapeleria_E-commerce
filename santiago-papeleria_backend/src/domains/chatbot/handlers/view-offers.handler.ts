@@ -7,8 +7,8 @@ import { ChatResponseDto } from '../dto/chat-response.dto';
 export class ViewOffersHandler extends BaseHandler {
     readonly intent = ChatIntent.VIEW_OFFERS;
 
-    async execute(): Promise<ChatResponseDto> {
-        const message =
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
+        const responseMessage =
             '🎉 **¡Ofertas y Promociones!**\n\n' +
             '---\n\n' +
             'Tenemos **descuentos especiales** en:\n\n' +
@@ -19,7 +19,7 @@ export class ViewOffersHandler extends BaseHandler {
             '¡Visita nuestra sección de ofertas!';
 
         return ChatResponseDto.actions(
-            message,
+            responseMessage,
             [
                 { text: '🏷️ Ver todas las ofertas', url: '/offers', type: 'navigate' },
                 { text: '🔍 Buscar producto específico', type: 'message' },

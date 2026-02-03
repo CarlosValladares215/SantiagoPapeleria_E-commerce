@@ -220,3 +220,7 @@
     </div>
 </div>
 }
+
+<app-unified-feedback-modal [isOpen]="showModal" [type]="modalType" [title]="modalTitle" [message]="modalMessage"
+    actionText="Aceptar" (action)="closeModal()">
+</app-unified-feedback-modal>

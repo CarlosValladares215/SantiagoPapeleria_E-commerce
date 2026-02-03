@@ -20,10 +20,45 @@ export class ProductSearchHandler extends BaseHandler {
         super();
     }
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         const { searchTerm, category, brand, minPrice, maxPrice } = entities;
 
-        // GUARD: If no real search criteria, ask for clarification
+        // 1. Check for Generic Search Terms (Interactive "Invite" Flow)
+        if (this.isGenericSearch(searchTerm) && !category && !brand) {
+            this.logger.debug(`Generic search detected: "${searchTerm}". Triggering AI invitation.`);
+
+            // Ask Brain to generate a nice invitation
+            const prompt = `
+                Actúa como el asistente virtual de 'Santiago Papelería'.
+                El usuario dijo "${searchTerm}" pero no especificó qué busca.
+                Genera una frase CORTA (mínimo 5, máximo 15 palabras) invitándolo amablemente a escribir el nombre del producto.
+                Tono: Profesional, servicial y experto.
+                NO saludes (ya están hablando).
+                Ejemplos inspiradores (NO COPIAR LITERAL):
+                - "¡Con gusto! ¿Buscas algo escolar, de oficina o tecnología?"
+                - "¿Qué tienes en mente hoy? Cuadernos, lápices..."
+                - "Dime qué necesitas y buscaré las mejores opciones."
+            `;
+
+            try {
+                const aiResponse = await this.nlpService.generateResponse(prompt);
+
+                // If AI returns something valid, use it
+                if (aiResponse && aiResponse.length > 5) {
+                    return ChatResponseDto.text(aiResponse); // Simple text response to encourage typing
+                }
+            } catch (e) {
+                this.logger.warn(`AI Generation failed for generic search: ${e.message}`);
+            }
+
+            // Fallback if AI fails
+            return ChatResponseDto.options(
+                '¡Claro! ¿Qué tienes en mente? Escribe el nombre del producto o elige una categoría:',
+                ['🎒 Escolares', '📎 Oficina', '💻 Tecnología', '🎨 Arte']
+            );
+        }
+
+        // GUARD: If no real search criteria, ask for clarification (Legacy fallback)
         if (!searchTerm && !category && !brand) {
             this.logger.debug('No search criteria provided, asking for clarification');
             const message =
@@ -129,5 +164,19 @@ export class ProductSearchHandler extends BaseHandler {
                 ['🔄 Intentar de nuevo', '🏷️ Ver ofertas', '💬 Hablar con agente']
             );
         }
+    }
+
+    private isGenericSearch(term: string): boolean {
+        if (!term) return false;
+        const normalized = term.toLowerCase().trim();
+        const genericTerms = [
+            'buscar', 'busco', 'buscar producto', 'buscar productos',
+            'ver productos', 'catalogo', 'busqueda', 'explorar',
+            '🔍 buscar productos', '🔍 buscar producto específico',
+            'ver todo', 'todos los productos', 'quiero comprar'
+        ];
+
+        // Check for exact match or starts with generic term (heuristic)
+        return genericTerms.some(t => normalized === t || normalized === t + '...' || normalized === t + '.');
     }
 }

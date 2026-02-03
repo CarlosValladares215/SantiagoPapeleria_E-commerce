@@ -13,6 +13,7 @@ export enum ChatIntent {
     UNCLEAR = 'unclear',
     NAVIGATION_HELP = 'navigation_help',
     RETURNS = 'returns',  // Product returns and refunds
+    RETURN_POLICY = 'return_policy', // Information about returns
     ORDER_TRACKING = 'order_tracking', // Specific tracking inquiries
     ORDER_PROCESS = 'order_process', // Purchase process and notifications
 }

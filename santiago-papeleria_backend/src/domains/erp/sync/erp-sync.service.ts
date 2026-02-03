@@ -210,6 +210,10 @@ export class ErpSyncService {
             if (operations.length < 3) {
                 console.log('[ErpSync] Raw Product Sample:', JSON.stringify(product));
             }
+            if (productCode === '010564') {
+                console.log(`[ErpSync] DEBUG 010564 FOT: ${product.FOT}`);
+                console.log(`[ErpSync] DEBUG 010564 FULL:`, JSON.stringify(product));
+            }
 
             // Fetch previous to compare stock
             const previous = await this.productERPModel.findOne({ codigo: productCode }).select('stock').lean();

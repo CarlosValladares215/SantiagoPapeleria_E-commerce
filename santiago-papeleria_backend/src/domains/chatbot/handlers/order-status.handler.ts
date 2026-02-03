@@ -15,7 +15,7 @@ export class OrderStatusHandler extends BaseHandler {
         super();
     }
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         const { orderId } = entities;
 
         // User must be authenticated to check orders
@@ -71,7 +71,7 @@ export class OrderStatusHandler extends BaseHandler {
             return ChatResponseDto.actions(
                 message,
                 [
-                    { text: '📦 Ver mis pedidos', url: '/profile/orders', type: 'navigate' },
+                    { text: '📦 Ver mis pedidos', url: '/orders', type: 'navigate' },
                     { text: '🔍 Buscar con número de pedido', type: 'message' }
                 ]
             );

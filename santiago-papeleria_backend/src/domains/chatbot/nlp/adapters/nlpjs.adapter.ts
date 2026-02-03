@@ -102,10 +102,46 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             'en tu catalogo hay cuadernos',
             'que productos tienes',
             'muestrame tu catalogo',
+            // Product availability questions (full phrases)
+            'poseen anillos',
+            'poseen anillos en su tienda',
+            'tienen mochilas',
+            'tienen mochilas en stock',
+            'venden cuadernos',
+            'venden cuadernos universitarios',
+            'venden chocolates',
+            'venden golosinas',
+            'venden dulces',
+            'hay lapices',
+            'hay lapices de colores',
+            'manejan carpetas',
+            'manejan cartulinas',
+            'cuentan con borradores',
+            'trabajan con reglas',
+            'disponen de tijeras',
+            'venden temperas en la tienda',
+            'tienen acuarelas',
+            'tienen pegamento',
+            'venden marcadores',
         ];
-        productSearchExamples.forEach(ex =>
-            this.manager.addDocument('es', ex, ChatIntent.PRODUCT_SEARCH)
-        );
+        productSearchExamples.forEach(ex => {
+            this.manager.addDocument('es', ex, ChatIntent.PRODUCT_SEARCH);
+
+            // Extract product name for availability-style questions
+            // Match patterns like "poseen X", "tienen X", "venden X", "hay X", etc.
+            const availabilityPatterns = [
+                /(?:poseen|tienen|venden|hay|manejan|cuentan con|trabajan con|disponen de)\s+([a-záéíóúñ\s]+?)(?:\s+en\s+|\s*$)/i,
+            ];
+
+            for (const pattern of availabilityPatterns) {
+                const match = ex.match(pattern);
+                if (match && match[1]) {
+                    const productName = match[1].trim();
+                    this.manager.addNamedEntityText('searchTerm', productName, ['es'], [productName]);
+                    break;
+                }
+            }
+        });
 
         // ============== ORDER_STATUS ==============
         // Focused on "Status" (Pending, Paid, etc) not "Location/Tracking"
@@ -141,6 +177,9 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             'descuento por cantidad',
             'precio unitario',
             'compra mayorista',
+            'cómo funcionan los descuentos',
+            'como aplican los descuentos',
+            'politica de descuentos',
         ];
         pricingExamples.forEach(ex =>
             this.manager.addDocument('es', ex, ChatIntent.PRICING_INFO)
@@ -183,6 +222,20 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             'menú principal',
             'ver opciones',
             'inicio',
+            'otra consulta',
+            'tengo otra duda',
+            'quiero preguntar algo mas',
+            'otra pregunta',
+            'algo mas',
+            'volver al inicio',
+            // Company info questions
+            'que es Santiago Papeleria',
+            'quien es Santiago Papeleria',
+            'cuentame sobre la empresa',
+            'informacion de la empresa',
+            'donde quedan',
+            'que venden',
+            'a que se dedican',
         ];
         helpExamples.forEach(ex =>
             this.manager.addDocument('es', ex, ChatIntent.GENERAL_HELP)
@@ -281,6 +334,10 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             { text: 'gestionar mis direcciones', destination: 'addresses' },
             { text: 'donde pongo mi direccion', destination: 'addresses' },
             { text: 'añadir direccion', destination: 'addresses' },
+            { text: 'donde cambio mi direccion', destination: 'addresses' },
+            { text: 'mis direcciones', destination: 'addresses' },
+            { text: 'nueva direccion', destination: 'addresses' },
+            { text: 'gestion de direcciones', destination: 'addresses' },
 
             // Cart
             { text: 'donde esta mi carrito', destination: 'cart' },
@@ -338,35 +395,75 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
             { text: 'recuperar acceso', destination: 'forgot_password' },
             { text: 'no puedo entrar a mi cuenta', destination: 'forgot_password' },
             { text: 'resetear contraseña', destination: 'forgot_password' },
+
+            // Branches
+            { text: 'ver sucursales', destination: 'branches' },
+            { text: 'donde quedan las sucursales', destination: 'branches' },
+            { text: 'ubicacion de sucursales', destination: 'branches' },
+            { text: 'mapa de sucursales', destination: 'branches' },
+            { text: 'que sucursales tienen', destination: 'branches' },
+            { text: 'que sucursales maneja Santiago Papeleria', destination: 'branches' },
         ];
 
         navigationExamples.forEach(ex => {
             this.manager.addDocument('es', ex.text, ChatIntent.NAVIGATION_HELP);
-            // Also add entity for destination
-            this.manager.addNamedEntityText('destination', ex.destination, ['es'], [ex.destination]);
+
+            // Extract keywords for entity mapping
+            // Map "sucursales" -> "branches", "direccion" -> "addresses", etc.
+            const keywords = this.extractKeywords(ex.text);
+            if (keywords.length > 0) {
+                this.manager.addNamedEntityText('destination', ex.destination, ['es'], keywords);
+            } else {
+                // Fallback: use the destination itself if no logical keyword found (fallback for exact matches)
+                this.manager.addNamedEntityText('destination', ex.destination, ['es'], [ex.destination]);
+            }
         });
 
         // ============== RETURNS ==============
+        // ============== RETURNS (Action) ==============
         const returnsExamples = [
-            'como hago una devolucion',
             'quiero devolver un producto',
-            'politica de devoluciones',
             'devolver mi compra',
-            'como devuelvo algo',
             'quiero un reembolso',
             'me equivoque de producto',
             'el producto llego dañado',
+            'necesito hacer un cambio',
             'cambio de producto',
-            'como cambio un articulo',
-            'devolucion de dinero',
-            'no me gusta el producto',
-            'quiero cambiar mi pedido',
-            'como solicito devolucion',
+            'como solicito devolucion', // Can be action
             'reembolso de compra',
-            'devoluciones y cambios',
+            'iniciar devolucion',
+            'solicitar cambio',
+            'tramitar devolucion',
+            'empezar proceso de devolucion',
+            'devolver',
+            'quiero devolver',
+            'hacer devolucion',
+            'devolución',
         ];
         returnsExamples.forEach(ex =>
             this.manager.addDocument('es', ex, ChatIntent.RETURNS)
+        );
+
+        // ============== RETURN_POLICY (Info) ==============
+        const returnPolicyExamples = [
+            'politica de devoluciones',
+            'como funcionan las devoluciones',
+            'cuanto tiempo tengo para devolver',
+            'requisitos de devolucion',
+            'condiciones de cambio',
+            'devoluciones y cambios',
+            'proceso de devolucion',
+            'informacion sobre devoluciones',
+            'reglas de devolucion',
+            'cuales son los plazos de devolucion',
+            'normas de reembolso',
+            'se puede devolver si esta abierto',
+            'aceptan devoluciones',
+            'política de reembolso',
+            'quiero saber sobre devoluciones',
+        ];
+        returnPolicyExamples.forEach(ex =>
+            this.manager.addDocument('es', ex, ChatIntent.RETURN_POLICY)
         );
 
         // ============== ORDER_TRACKING ==============
@@ -545,6 +642,19 @@ export class NlpJsAdapter implements ILlmAdapter, OnModuleInit {
         cleaned = cleaned.replace(/[¿?¡!,.;:()]/g, '').replace(/\s+/g, ' ').trim();
 
         return cleaned;
+    }
+
+    private extractKeywords(text: string): string[] {
+        const keywords: string[] = [];
+        if (text.includes('sucursales') || text.includes('sucursal')) keywords.push('sucursales', 'sucursal', 'tienda', 'local');
+        if (text.includes('direccion') || text.includes('direcciones')) keywords.push('direccion', 'direcciones', 'domicilio', 'envio');
+        if (text.includes('oferta') || text.includes('promocion')) keywords.push('ofertas', 'oferta', 'promociones', 'descuento');
+        if (text.includes('catalogo') || text.includes('producto')) keywords.push('catalogo', 'productos', 'tienda virtual');
+        if (text.includes('pedido') || text.includes('orden')) keywords.push('pedido', 'orden', 'mis pedidos', 'historial');
+        if (text.includes('perfil') || text.includes('cuenta')) keywords.push('perfil', 'mi cuenta', 'usuario');
+        if (text.includes('favoritos') || text.includes('lista')) keywords.push('favoritos', 'lista de deseos');
+        if (text.includes('contraseña') || text.includes('clave')) keywords.push('contraseña', 'clave', 'recuperar');
+        return keywords;
     }
 
     async healthCheck(): Promise<boolean> {

@@ -20,6 +20,7 @@ export interface IIntentHandler {
      */
     execute(
         entities: Record<string, any>,
-        userId?: string
+        userId?: string,
+        message?: string
     ): Promise<ChatResponseDto>;
 }

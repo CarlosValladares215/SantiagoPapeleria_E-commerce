@@ -26,8 +26,8 @@ export class SearchBar {
       queryParams: { search: q }
     });
 
-    // Cerrar búsqueda después de buscar en móvil
-    this.closeSearch();
+    // Solo cerrar la UI (móvil/expandido) pero MANTENER el texto
+    this.isExpanded.set(false);
   }
 
   toggleSearch() {

@@ -385,6 +385,606 @@
                     "value": "Crujiente con relleno cremoso"
                 }
             ]
+        },
+        "027708": {
+            "NOT": "Jean",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006146/Jean_fu8qv7.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006146/Jean_fu8qv7.webp"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "010046": {
+            "NOT": "Prisma",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006192/prisma_r2j1ze.png",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006192/prisma_r2j1ze.png"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "010044": {
+            "NOT": "Prisma 2",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006226/prisma2_fnjidr.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006226/prisma2_fnjidr.webp"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "025601": {
+            "NOT": "Aceite P/Cabello V/Colores 125ml Ibeth Patri",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006690/ACEITE_PCABELLO_VCOLORES_125ML_2011880_IBETH_PATRI_qyfhkm.webp",
+            "MRK": "IBETH PATRI",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006690/ACEITE_PCABELLO_VCOLORES_125ML_2011880_IBETH_PATRI_qyfhkm.webp"
+            ],
+            "PES": 0.13,
+            "DIM": {
+                "L": 10,
+                "A": 5,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Contenido",
+                    "value": "125ml"
+                }
+            ]
+        },
+        "029269": {
+            "NOT": "Aretes Marca",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006753/ARETES_MARCA.jpg_zjnhjx.jpg",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006753/ARETES_MARCA.jpg_zjnhjx.jpg"
+            ],
+            "PES": 0.05,
+            "DIM": {
+                "L": 5,
+                "A": 5,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Tipo",
+                    "value": "Aretes"
+                }
+            ]
+        },
+        "029270": {
+            "NOT": "Aretes Topo Niña",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006801/ARETES_TOPO_NI%C3%91A_wsr6lc.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006801/ARETES_TOPO_NI%C3%91A_wsr6lc.webp"
+            ],
+            "PES": 0.05,
+            "DIM": {
+                "L": 5,
+                "A": 5,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Tipo",
+                    "value": "Aretes Niña"
+                }
+            ]
+        },
+        "029271": {
+            "NOT": "Aretes x3 Pares",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006833/ARETES_X3PARES_ktf5tn.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006833/ARETES_X3PARES_ktf5tn.webp"
+            ],
+            "PES": 0.05,
+            "DIM": {
+                "L": 5,
+                "A": 5,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Cantidad",
+                    "value": "3 Pares"
+                }
+            ]
+        },
+        "000312": {
+            "NOT": "Aretes",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006878/ARETES.jpg_b1tshu.jpg",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006878/ARETES.jpg_b1tshu.jpg"
+            ],
+            "PES": 0.05,
+            "DIM": {
+                "L": 5,
+                "A": 5,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Tipo",
+                    "value": "Aretes"
+                }
+            ]
+        },
+        "000264": {
+            "NOT": "Collar Elegante V/Modelos",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006920/COLLAR_ELEGANTE_VMODELOS_sxeob6.avif",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006920/COLLAR_ELEGANTE_VMODELOS_sxeob6.avif"
+            ],
+            "PES": 0.10,
+            "DIM": {
+                "L": 10,
+                "A": 10,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Tipo",
+                    "value": "Collar"
+                }
+            ]
+        },
+        "000239": {
+            "NOT": "Collar Juego Marca",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006959/COLLAR_JUEGO_MARCA_tmymsg.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770006959/COLLAR_JUEGO_MARCA_tmymsg.webp"
+            ],
+            "PES": 0.10,
+            "DIM": {
+                "L": 10,
+                "A": 10,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Tipo",
+                    "value": "Juego Collar"
+                }
+            ]
+        },
+        "029273": {
+            "NOT": "Collar y Manilla Niño/a",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007003/COLLAR_Y_MANILLA_NI%C3%91OA_sdcobl.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007003/COLLAR_Y_MANILLA_NI%C3%91OA_sdcobl.webp"
+            ],
+            "PES": 0.10,
+            "DIM": {
+                "L": 10,
+                "A": 10,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Set",
+                    "value": "Collar + Manilla"
+                }
+            ]
+        },
+        "027255": {
+            "NOT": "Bebida Chaigold Maracuya",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007090/BEBIDA_CHAIGOLD_MARACUYA_060570612_mmw6ql.webp",
+            "MRK": "CHAIGOLD",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007090/BEBIDA_CHAIGOLD_MARACUYA_060570612_mmw6ql.webp"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 10,
+                "A": 5,
+                "H": 20
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Maracuyá"
+                }
+            ]
+        },
+        "005424": {
+            "NOT": "Bubbaloo Sparkies 25gr",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007122/BUBBALOO_SPARKIES_25_GR_9500_gzhn9z.webp",
+            "MRK": "BUBBALOO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007122/BUBBALOO_SPARKIES_25_GR_9500_gzhn9z.webp"
+            ],
+            "PES": 0.025,
+            "DIM": {
+                "L": 5,
+                "A": 5,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Contenido",
+                    "value": "25gr"
+                }
+            ]
+        },
+        "026992": {
+            "NOT": "Choco Trento Blanco Allegro 35gr",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007238/CHOCO_TRENTO_BLANCOALLEGRO_35GR_dnptpp.webp",
+            "MRK": "TRENTO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007238/CHOCO_TRENTO_BLANCOALLEGRO_35GR_dnptpp.webp"
+            ],
+            "PES": 0.035,
+            "DIM": {
+                "L": 10,
+                "A": 3,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Blanco Allegro"
+                }
+            ]
+        },
+        "026995": {
+            "NOT": "Choco Trento Blanco Dark 35gr",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007278/CHOCO_TRENTO_BLANCODARK_35GR_g6ddae.webp",
+            "MRK": "TRENTO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007278/CHOCO_TRENTO_BLANCODARK_35GR_g6ddae.webp"
+            ],
+            "PES": 0.035,
+            "DIM": {
+                "L": 10,
+                "A": 3,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Blanco Dark"
+                }
+            ]
+        },
+        "026997": {
+            "NOT": "Choco Trento Chocolate 32gr",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007339/CHOCO_TRENTO_CHOCOLATE_32GR_2817_mu8npr.webp",
+            "MRK": "TRENTO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007339/CHOCO_TRENTO_CHOCOLATE_32GR_2817_mu8npr.webp"
+            ],
+            "PES": 0.032,
+            "DIM": {
+                "L": 10,
+                "A": 3,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Chocolate"
+                }
+            ]
+        },
+        "026993": {
+            "NOT": "Choco Trento Chocolate Allegro",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007389/CHOCO_TRENTO_CHOCOLATE_ALLEGRO_eeijxr.webp",
+            "MRK": "TRENTO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007389/CHOCO_TRENTO_CHOCOLATE_ALLEGRO_eeijxr.webp"
+            ],
+            "PES": 0.035,
+            "DIM": {
+                "L": 10,
+                "A": 3,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Chocolate Allegro"
+                }
+            ]
+        },
+        "026998": {
+            "NOT": "Choco Trento Mini Bl Dark 16gr",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007422/CHOCO_TRENTO_MINIBLDARK_16GR_pkuqsf.webp",
+            "MRK": "TRENTO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007422/CHOCO_TRENTO_MINIBLDARK_16GR_pkuqsf.webp"
+            ],
+            "PES": 0.016,
+            "DIM": {
+                "L": 5,
+                "A": 2,
+                "H": 1
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Mini Bl Dark"
+                }
+            ]
+        },
+        "026994": {
+            "NOT": "Choco Trento Torta Limón 35gr",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007479/CHOCO_TRENTO_TORTALIMON_35GR_8291_ueb6hs.webp",
+            "MRK": "TRENTO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007479/CHOCO_TRENTO_TORTALIMON_35GR_8291_ueb6hs.webp"
+            ],
+            "PES": 0.035,
+            "DIM": {
+                "L": 10,
+                "A": 3,
+                "H": 2
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Torta Limón"
+                }
+            ]
+        },
+        "001012": {
+            "NOT": "Papa Rizadas Mayonesa 30gr",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007513/PAPA_RIZADAS_MAYONESA_30GR_9999_mvqjmq.webp",
+            "MRK": "RIZADAS",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770007513/PAPA_RIZADAS_MAYONESA_30GR_9999_mvqjmq.webp"
+            ],
+            "PES": 0.030,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Sabor",
+                    "value": "Mayonesa"
+                }
+            ]
+        },
+        "010564": {
+            "NOT": "Acuarelas Para Pintar",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010014/acuarelas-para-pintar-ecuador-AC.C.312_fj4nwz.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010014/acuarelas-para-pintar-ecuador-AC.C.312_fj4nwz.webp"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "016880": {
+            "NOT": "Producto 016880",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010067/AC.P.1225_a7tdxg.png",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010067/AC.P.1225_a7tdxg.png"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "016872": {
+            "NOT": "Producto 016872",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010516/016872_sv8g7l.png",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010516/016872_sv8g7l.png"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "027263": {
+            "NOT": "Producto 027263",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010551/027263_yjkaf7.png",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010551/027263_yjkaf7.png"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "018290": {
+            "NOT": "Producto 018290",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010616/018290_jjxqsx.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010616/018290_jjxqsx.webp"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "018286": {
+            "NOT": "Producto 018286",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010666/018286_lfn0ud.jpg",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010666/018286_lfn0ud.jpg"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "029322": {
+            "NOT": "Producto 029322",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010711/029322_w9dchl.webp",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010711/029322_w9dchl.webp"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "029272": {
+            "NOT": "Producto 029272",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010818/029272_h19kfe.jpg",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010818/029272_h19kfe.jpg"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "000365": {
+            "NOT": "Producto 000365",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010894/000365_dz1k2d.jpg",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010894/000365_dz1k2d.jpg"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
+        },
+        "000334": {
+            "NOT": "Producto 000334",
+            "FOT": "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010948/000334_qlrbbm.jpg",
+            "MRK": "GENERICO",
+            "GAL": [
+                "https://res.cloudinary.com/dufklhqtz/image/upload/v1770010948/000334_qlrbbm.jpg"
+            ],
+            "PES": 0.50,
+            "DIM": {
+                "L": 15,
+                "A": 10,
+                "H": 5
+            },
+            "SPC": [
+                {
+                    "label": "Disponibilidad",
+                    "value": "En stock"
+                }
+            ]
         }
     },
     "default_values": {

@@ -10,7 +10,7 @@ export class HumanEscalationHandler extends BaseHandler {
     private readonly logger = new Logger(HumanEscalationHandler.name);
     readonly intent = ChatIntent.HUMAN_ESCALATION;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         const { reason } = entities;
 
         // Log escalation for future analytics
@@ -27,7 +27,7 @@ export class HumanEscalationHandler extends BaseHandler {
             contextMessage = '🔄 Te ayudaremos con tu solicitud de devolución.\n\n';
         }
 
-        const message =
+        const responseMessage =
             '👨‍💼 **Contacta a nuestro equipo**\n\n' +
             '---\n\n' +
             contextMessage +
@@ -42,7 +42,7 @@ export class HumanEscalationHandler extends BaseHandler {
             'Sábados: **9:00 - 13:00**';
 
         return ChatResponseDto.actions(
-            message,
+            responseMessage,
             [
                 {
                     text: 'WhatsApp (más rápido)',
@@ -52,7 +52,7 @@ export class HumanEscalationHandler extends BaseHandler {
                     style: 'whatsapp',
                     external: true
                 },
-                { text: '📧 Enviar email', url: 'mailto:ventas@santiagopapeleria.com', type: 'navigate' },
+                { text: '📧 Enviar email', url: '/contact', type: 'navigate' },
                 { text: '🏠 Volver al menú', type: 'message' },
             ]
         );

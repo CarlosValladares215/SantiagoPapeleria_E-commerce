@@ -47,8 +47,10 @@ export class ChatWidgetComponent {
 
     constructor() {
         // Auto-scroll when messages change
+        // Auto-scroll when messages change or chat opens
         effect(() => {
-            const _ = this.state.messages();
+            const _msgs = this.state.messages();
+            const _open = this.state.isOpen();
             setTimeout(() => this.scrollToBottom(), 50);
         });
     }

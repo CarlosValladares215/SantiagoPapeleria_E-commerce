@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -61,6 +61,7 @@ export class Orders implements OnInit {
     orderService = inject(OrderService);
     router = inject(Router);
     route = inject(ActivatedRoute);
+    cdr = inject(ChangeDetectorRef);
 
     activeFilter = signal<string>('Todos');
     expandedOrderId = signal<string | null>(null);
@@ -128,24 +129,35 @@ export class Orders implements OnInit {
      * Check for query params to auto-open return modal (from chatbot)
      */
     private checkQueryParams(): void {
-        this.route.queryParams.subscribe(params => {
-            if (params['action'] === 'return' && params['order']) {
-                const orderNumber = parseInt(params['order'], 10);
-                const order = this.orders().find(o => o.orderNumber === orderNumber);
+        // Check snapshot first
+        this.processReturnAction(this.route.snapshot.queryParams);
 
-                if (order && this.canReturn(order)) {
-                    // Small delay to ensure page is rendered
-                    setTimeout(() => {
-                        this.initiateReturn(order);
-                        // Clear query params
-                        this.router.navigate([], {
-                            queryParams: {},
-                            replaceUrl: true
-                        });
-                    }, 300);
-                }
-            }
+        // Also subscribe for changes
+        this.route.queryParams.subscribe(params => {
+            this.processReturnAction(params);
         });
+    }
+
+    private processReturnAction(params: any) {
+        if (params['action'] === 'return' && params['order']) {
+            const orderNumber = parseInt(params['order'], 10);
+            const order = this.orders().find(o => o.orderNumber === orderNumber);
+
+            if (order && this.canReturn(order)) {
+                // Use a small timeout to let the view settle, but ensure it runs
+                setTimeout(() => {
+                    this.initiateReturn(order);
+                    this.cdr.detectChanges(); // Force view update immediately
+
+                    // Clear query params to prevent reopening on reload
+                    this.router.navigate([], {
+                        queryParams: {},
+                        replaceUrl: true,
+                        queryParamsHandling: 'merge'
+                    });
+                }, 100); // Reduced delay for better responsiveness
+            }
+        }
     }
 
     mapBackendOrder(backendOrder: BackendOrder): Order {

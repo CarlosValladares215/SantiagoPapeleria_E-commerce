@@ -24,6 +24,7 @@ import { NavigationHelpHandler } from '../handlers/navigation-help.handler';
 import { ReturnsHandler } from '../handlers/returns.handler';
 import { OrderTrackingHandler } from '../handlers/order-tracking.handler';
 import { OrderProcessHandler } from '../handlers/order-process.handler';
+import { ReturnPolicyHandler } from '../handlers/return-policy.handler';
 
 @Injectable()
 export class ChatbotOrchestrator {
@@ -47,6 +48,7 @@ export class ChatbotOrchestrator {
         private readonly returnsHandler: ReturnsHandler,
         private readonly orderTrackingHandler: OrderTrackingHandler,
         private readonly orderProcessHandler: OrderProcessHandler,
+        private readonly returnPolicyHandler: ReturnPolicyHandler,
     ) {
         // Register handlers
         this.handlers = new Map<ChatIntent, IIntentHandler>();
@@ -64,6 +66,7 @@ export class ChatbotOrchestrator {
         this.handlers.set(ChatIntent.RETURNS, returnsHandler);
         this.handlers.set(ChatIntent.ORDER_TRACKING, orderTrackingHandler);
         this.handlers.set(ChatIntent.ORDER_PROCESS, orderProcessHandler);
+        this.handlers.set(ChatIntent.RETURN_POLICY, returnPolicyHandler);
     }
 
     /**
@@ -86,14 +89,118 @@ export class ChatbotOrchestrator {
             let entities = guardrailResult.entities;
             let usedBrain = false;
 
+            // ========== INTELLIGENT FALLBACK: Product Availability Detection ==========
+            // If NLP is uncertain OR explicitly unclear, try pattern matching
+            const shouldTryPattern = (guardrailResult.confidence < 0.85 || finalIntent === ChatIntent.UNCLEAR) &&
+                finalIntent !== ChatIntent.PRODUCT_SEARCH;
+
+            if (shouldTryPattern) {
+                const normalized = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                this.logger.debug(`🔬 Pattern Check: normalized="${normalized}", confidence=${guardrailResult.confidence}, intent=${finalIntent}`);
+
+                // Detect availability questions: "venden/tienen/poseen/hay + [PRODUCT]"
+                const availabilityPattern = /\b(venden|tienen|poseen|hay|manejan|cuentan con|trabajan con|disponen de)\s+([a-z0-9áéíóúñ\s]+?)(?:\s+en\s+|\?|$)/i;
+                const match = normalized.match(availabilityPattern);
+
+                this.logger.debug(`🔬 Pattern Match Result: ${match ? `YES - Groups: [${match[1]}, ${match[2]}]` : 'NO'}`);
+
+                if (match && match[2]) {
+                    const extractedProduct = match[2].trim();
+
+                    // Validate it's not a generic term
+                    const genericTerms = ['productos', 'cosas', 'articulos', 'algo', 'esto', 'eso'];
+                    if (extractedProduct.length > 2 && !genericTerms.includes(extractedProduct)) {
+                        this.logger.log(`🔍 Pattern Fallback: Detected availability question for "${extractedProduct}"`);
+                        finalIntent = ChatIntent.PRODUCT_SEARCH;
+                        entities = { ...entities, searchTerm: extractedProduct };
+                    } else {
+                        this.logger.debug(`🔬 Rejected: "${extractedProduct}" (length=${extractedProduct.length}, isGeneric=${genericTerms.includes(extractedProduct)})`);
+                    }
+                }
+            } else {
+                this.logger.debug(`🔬 Pattern Check Skipped: confidence=${guardrailResult.confidence} >= 0.85 AND intent=${finalIntent} is not UNCLEAR`);
+            }
+            // ========== END INTELLIGENT FALLBACK ==========
+
             // Decision Logic: Fast Path vs Brain Path
             // Trust NLP.js if:
             // 1. Confidence is extremely high (> 0.92) regardless of intent
-            // 2. OR Intent is "trivial" and confidence is good (> 0.8)
+            // 2. OR Intent is "trivial" and confidence is decent (> 0.60) - lowered to catch more cases
+            // 3. OR Intent is NAVIGATION_HELP and we found a destination entity (entity overrides confidence check)
             const isHighConfidence = guardrailResult.confidence > 0.92;
-            const isTrivial = this.isTrivialIntent(finalIntent) && guardrailResult.confidence > 0.8;
+            const isTrivial = this.isTrivialIntent(finalIntent) && guardrailResult.confidence > 0.60;
 
-            if (isHighConfidence || isTrivial) {
+            this.logger.debug(`Guardrail Entities: ${JSON.stringify(entities)}`); // DEBUG LOG
+
+            // MANUAL FALLBACK: If Navigation Help but no destination, try to guess from text
+            if (finalIntent === ChatIntent.NAVIGATION_HELP) {
+                // Determine if we already have a destination
+                const hasDest = entities && (entities['destination'] || (Array.isArray(entities) && entities.find(e => e.entity === 'destination')));
+
+                if (!hasDest) {
+                    // Normalize message to handle accents (á->a, é->e, etc.)
+                    const lowerMsg = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    let manualDest: string | null = null;
+
+                    // Be conservative - only trigger if there's clear navigation intent
+                    // Check for sucursales/branches (require context words)
+                    if (lowerMsg.includes('sucursal') ||
+                        (lowerMsg.includes('tienda') && (lowerMsg.includes('donde') || lowerMsg.includes('ubicacion') || lowerMsg.includes('quedan')))) {
+                        manualDest = 'branches';
+                    }
+                    // Check for direccion/addresses
+                    else if (lowerMsg.includes('direccion') || lowerMsg.includes('domicilio')) {
+                        manualDest = 'addresses';
+                    }
+                    // Check for pedidos/orders (require context)
+                    else if ((lowerMsg.includes('pedido') || lowerMsg.includes('orden')) &&
+                        (lowerMsg.includes('mis') || lowerMsg.includes('ver') || lowerMsg.includes('donde'))) {
+                        manualDest = 'orders';
+                    }
+                    // Check for perfil/profile
+                    else if (lowerMsg.includes('perfil') || lowerMsg.includes('cuenta')) {
+                        manualDest = 'profile';
+                    }
+
+                    if (manualDest) {
+                        this.logger.debug(`🔧 Manual Entity Fallback: Found ${manualDest} in text`);
+                        // Normalize entities to object if null/empty
+                        if (!entities || Array.isArray(entities)) {
+                            // If array, push fallback
+                            entities = entities || [];
+                            if (Array.isArray(entities)) entities.push({ entity: 'destination', option: manualDest, score: 1 });
+                        } else {
+                            // If map, set key
+                            entities['destination'] = manualDest;
+                        }
+                    }
+                }
+            }
+
+            // Re-check destination existence after manual fallback
+            const hasDestination = entities && (entities['destination'] || (Array.isArray(entities) && entities.find(e => e.entity === 'destination')));
+            const isNavigationWithEntity = finalIntent === ChatIntent.NAVIGATION_HELP && hasDestination;
+
+
+            // Special handling: If we have PRODUCT_SEARCH with searchTerm entity, trust it regardless of confidence
+            const hasProductSearch = finalIntent === ChatIntent.PRODUCT_SEARCH &&
+                entities &&
+                !Array.isArray(entities) &&
+                entities.searchTerm;
+
+            // Clean searchTerm if it contains availability keywords that NLP incorrectly included
+            if (hasProductSearch && !Array.isArray(entities) && entities.searchTerm) {
+                const cleanedTerm = entities.searchTerm
+                    .replace(/\b(venden|tienen|poseen|hay|manejan|cuentan con|trabajan con|disponen de)\s+/gi, '')
+                    .trim();
+
+                if (cleanedTerm !== entities.searchTerm) {
+                    this.logger.log(`🧹 Cleaned searchTerm: "${entities.searchTerm}" → "${cleanedTerm}"`);
+                    entities.searchTerm = cleanedTerm;
+                }
+            }
+
+            if (isHighConfidence || isTrivial || isNavigationWithEntity || hasProductSearch) {
                 this.logger.debug(`🚀 Fast Path (Guardrail): ${finalIntent} (${(guardrailResult.confidence * 100).toFixed(1)}%)`);
             } else {
                 // Step 3: The Brain (Semantic Orchestrator)
@@ -123,7 +230,7 @@ export class ChatbotOrchestrator {
 
             // Step 5: Get handler and execute
             const handler = this.getHandler(finalIntent);
-            const response = await handler.execute(entities, userId);
+            const response = await handler.execute(entities, userId, message);
 
             // Step 6: Save bot response
             await this.memoryService.addMessage(sessionId, 'bot', response.text, finalIntent);
@@ -164,6 +271,9 @@ export class ChatbotOrchestrator {
             ChatIntent.NAVIGATION_HELP, // "como entro a mi perfil" is simple
             ChatIntent.HUMAN_ESCALATION, // "quiero un humano" is simple
             ChatIntent.ORDER_TRACKING, // "donde esta mi pedido" is simple
+            ChatIntent.ORDER_PROCESS, // "como es el proceso de compra" is simple
+            ChatIntent.ORDER_STATUS, // "estado de mi pedido" is simple
+            ChatIntent.RETURN_POLICY, // "como devolver" is simple
         ];
         return trivialIntents.includes(intent);
     }

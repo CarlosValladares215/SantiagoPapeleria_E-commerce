@@ -152,9 +152,45 @@ export class ErpService implements OnModuleInit {
         }
     }
 
+    private reloadEnrichment() {
+        try {
+            const dataDir = path.join(process.cwd(), 'data');
+            const enrichmentPath = path.join(dataDir, 'enrichment.json');
+
+            if (fs.existsSync(enrichmentPath)) {
+                const raw = fs.readFileSync(enrichmentPath, 'utf8');
+                this.enrichmentData = JSON.parse(raw);
+
+                if (this.enrichmentData && this.enrichmentData.products) {
+                    this.products.forEach(p => {
+                        const enriched = this.enrichmentData.products[p.COD];
+
+                        p.NOT = enriched?.NOT || '';
+                        p.FOT = enriched?.FOT || 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768418936/product-placeholder_hdeydz.png';
+
+                        if (enriched?.MRK) {
+                            p.MRK = enriched.MRK;
+                        } else {
+                            const foundBrand = Object.keys(this.brandsData.brands || {}).find(b => p.NOM.includes(b));
+                            p.MRK = foundBrand || 'GENERICO';
+                        }
+
+                        p.GAL = enriched?.GAL || [];
+                        p.PES = enriched?.PES || 0;
+                        p.DIM = enriched?.DIM || {};
+                        p.SPC = enriched?.SPC || [];
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Error reloading enrichment:', e.message);
+        }
+    }
+
     // --- QUERY METHODS ---
 
     getCatalogo(params: any): Product[] {
+        this.reloadEnrichment();
         let result = [...this.products];
 
         // Filter by LIN (Category Code)

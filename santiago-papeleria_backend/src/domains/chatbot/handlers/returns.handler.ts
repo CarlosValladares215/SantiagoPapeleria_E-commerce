@@ -5,6 +5,7 @@ import { BaseHandler } from './base.handler';
 import { ChatIntent } from '../enums/chat-intent.enum';
 import { ChatResponseDto } from '../dto/chat-response.dto';
 import { PedidosService } from '../../orders/pedidos.service';
+import { CatalogService } from '../../products/catalog/catalog.service';
 
 interface ReturnableProduct {
     _id: string;
@@ -22,11 +23,14 @@ export class ReturnsHandler extends BaseHandler {
     private readonly logger = new Logger(ReturnsHandler.name);
     readonly intent = ChatIntent.RETURNS;
 
-    constructor(private readonly pedidosService: PedidosService) {
+    constructor(
+        private readonly pedidosService: PedidosService,
+        private readonly catalogService: CatalogService
+    ) {
         super();
     }
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         this.logger.debug(`Returns inquiry from user: ${userId || 'anonymous'}`);
 
         // If user is not logged in, show policy and login prompt
@@ -43,7 +47,7 @@ export class ReturnsHandler extends BaseHandler {
             }
 
             // Extract products from delivered orders
-            const returnableProducts = this.extractReturnableProducts(deliveredOrders);
+            const returnableProducts = await this.extractReturnableProducts(deliveredOrders);
 
             if (returnableProducts.length === 0) {
                 return this.showNoEligibleProductsMessage();
@@ -76,11 +80,37 @@ export class ReturnsHandler extends BaseHandler {
         });
     }
 
-    private extractReturnableProducts(orders: any[]): ReturnableProduct[] {
+    private async extractReturnableProducts(orders: any[]): Promise<ReturnableProduct[]> {
         const products: ReturnableProduct[] = [];
 
         for (const order of orders) {
             for (const item of order.items || []) {
+                let imageUrl = 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768924502/placeholder_ni9blz.png';
+
+                // Fetch image from Catalog
+                if (item.codigo_dobranet) {
+                    try {
+                        const product = await this.catalogService.findByTerm(item.codigo_dobranet);
+                        if (product && product.images && product.images.length > 0) {
+                            imageUrl = product.images[0];
+                        }
+                    } catch (e) {
+                        // Silent fail for image
+                    }
+                }
+
+                // Fallback: Search by name if still placeholder
+                if (imageUrl.includes('placeholder') && item.nombre) {
+                    try {
+                        const result = await this.catalogService.findProducts({ searchTerm: item.nombre, limit: '1' });
+                        if (result.data.length > 0 && result.data[0].images.length > 0) {
+                            imageUrl = result.data[0].images[0];
+                        }
+                    } catch (e) {
+                        // Silent fail
+                    }
+                }
+
                 products.push({
                     _id: item.codigo_dobranet || item._id || `${order.numero_pedido_web}-${products.length}`,
                     sku: item.codigo_dobranet || 'N/A',
@@ -88,7 +118,7 @@ export class ReturnsHandler extends BaseHandler {
                     price: item.precio_unitario_aplicado || item.subtotal / item.cantidad,
                     brand: 'Pedido #' + order.numero_pedido_web,
                     multimedia: {
-                        principal: 'https://res.cloudinary.com/dufklhqtz/image/upload/v1768924502/placeholder_ni9blz.png'
+                        principal: imageUrl
                     },
                     orderId: order._id.toString(),
                     orderNumber: order.numero_pedido_web,
@@ -104,14 +134,18 @@ export class ReturnsHandler extends BaseHandler {
         const message =
             '🔄 **Solicitar Devolución**\n\n' +
             '---\n\n' +
+            'ℹ️ **Política Simplificada**:\n' +
+            '• Tienes **5 días** desde la entrega.\n' +
+            '• Producto debe estar **sellado** y en buen estado.\n' +
+            '• Se requiere comprobante de compra.\n\n' +
             '📦 Estos son los productos de tus **pedidos entregados** que puedes devolver:\n\n' +
-            '👆 *Haz clic en el producto que deseas devolver*';
+            '👆 *Haz clic en el producto para abrir el formulario*';
 
         // Convert to chat products format with custom URL for navigation
         const chatProducts = products.map(p => ({
             ...p,
             // Add return action URL - will navigate to orders page with return modal
-            returnUrl: `/profile/orders?action=return&order=${p.orderNumber}`,
+            returnUrl: `/orders?action=return&order=${p.orderNumber}`,
         }));
 
         return ChatResponseDto.products(message, chatProducts);
@@ -125,7 +159,7 @@ export class ReturnsHandler extends BaseHandler {
             'Recuerda que tienes **5 días** desde la entrega para solicitar devolución.';
 
         return ChatResponseDto.actions(message, [
-            { text: '📦 Ver todos mis pedidos', url: '/profile/orders', type: 'navigate' },
+            { text: '📦 Ver todos mis pedidos', url: '/orders', type: 'navigate' },
             { text: '📜 Política de devoluciones', url: '/cambios-devoluciones', type: 'navigate' },
             { text: '✨ Descubrir más funcionalidades', type: 'message' },
         ]);
@@ -139,7 +173,7 @@ export class ReturnsHandler extends BaseHandler {
             '¿Necesitas ayuda con algo más?';
 
         return ChatResponseDto.actions(message, [
-            { text: '📦 Ver mis pedidos', url: '/profile/orders', type: 'navigate' },
+            { text: '📦 Ver mis pedidos', url: '/orders', type: 'navigate' },
             { text: '💬 Hablar con soporte', type: 'message' },
             { text: '✨ Descubrir más funcionalidades', type: 'message' },
         ]);

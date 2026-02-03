@@ -9,7 +9,7 @@ import { ChatResponseDto } from '../dto/chat-response.dto';
 export class GreetingHandler extends BaseHandler {
     readonly intent = ChatIntent.GREETING;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         const hour = new Date().getHours();
         let timeGreeting = '¡Hola!';
 
@@ -21,7 +21,7 @@ export class GreetingHandler extends BaseHandler {
             timeGreeting = '¡Buenas noches!';
         }
 
-        const message =
+        const responseMessage =
             `${timeGreeting} 👋\n\n` +
             `Soy el **asistente virtual** de **Santiago Papelería**.\n\n` +
             `---\n\n` +
@@ -33,7 +33,7 @@ export class GreetingHandler extends BaseHandler {
             `¿En qué puedo ayudarte hoy?`;
 
         return ChatResponseDto.options(
-            message,
+            responseMessage,
             ['🔍 Buscar productos', '🏷️ Ver ofertas', '📦 Estado de pedido', '❓ Ayuda']
         );
     }

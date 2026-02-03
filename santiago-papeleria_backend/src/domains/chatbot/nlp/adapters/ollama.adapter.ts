@@ -29,10 +29,10 @@ export class OllamaAdapter implements ILlmAdapter {
     ) {
         this.ollamaUrl = this.configService.get<string>('OLLAMA_URL', 'http://localhost:11434');
         this.model = this.configService.get<string>('OLLAMA_MODEL', 'llama3.2');
-        this.timeoutMs = parseInt(this.configService.get<string>('OLLAMA_TIMEOUT_MS', '60000')); // Increased timeout for "deep thinking"
+        this.timeoutMs = parseInt(this.configService.get<string>('OLLAMA_TIMEOUT_MS', '30000')); // Increased timeout for "deep thinking"
 
         this.logger.log(`Ollama Brain configured: ${this.ollamaUrl}, model: ${this.model}`);
-    }
+    } ""
 
     getName(): string {
         return 'ollama-brain';
@@ -147,7 +147,12 @@ export class OllamaAdapter implements ILlmAdapter {
 
     private safeJsonParse(jsonString: string, originalMessage: string): any {
         try {
-            const parsed = JSON.parse(jsonString);
+            if (!jsonString || typeof jsonString !== 'string') {
+                throw new Error('Empty response');
+            }
+            // Clean markdown code blocks if present
+            const cleanJson = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
+            const parsed = JSON.parse(cleanJson);
             return {
                 intent: parsed.intent || ChatIntent.UNCLEAR,
                 confidence: parsed.confidence || 0.8,

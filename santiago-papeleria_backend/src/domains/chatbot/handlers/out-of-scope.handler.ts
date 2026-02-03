@@ -9,19 +9,19 @@ import { ChatResponseDto } from '../dto/chat-response.dto';
 export class OutOfScopeHandler extends BaseHandler {
     readonly intent = ChatIntent.OUT_OF_SCOPE;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
-        const message =
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
+        const responseMessage =
             '🤔 **Hmm, eso está fuera de mi alcance**\n\n' +
             '---\n\n' +
             'Solo puedo ayudarte con temas de **Santiago Papelería**:\n\n' +
-            '🛒 Productos y catálogo\n' +
+            '🛍️ Productos y catálogo\n' +
             '📦 Pedidos y entregas\n' +
             '💰 Precios y promociones\n' +
             '📍 Sucursales y horarios\n\n' +
             '¿Te ayudo con algo de esto?';
 
         return ChatResponseDto.options(
-            message,
+            responseMessage,
             ['🔍 Buscar productos', '📦 Estado de pedido', '💰 Precios', '❓ Ayuda']
         );
     }

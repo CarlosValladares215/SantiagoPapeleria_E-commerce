@@ -24,6 +24,7 @@ const NAVIGATION_MAP: Record<string, NavigationDestination> = {
     'login': { url: '/login', description: 'inicio de sesión', requiresAuth: false, buttonText: '🔑 Iniciar sesión' },
     'register': { url: '/register', description: 'crear cuenta', requiresAuth: false, buttonText: '📝 Crear cuenta' },
     'forgot_password': { url: '/forgot-password', description: 'recuperar contraseña', requiresAuth: false, buttonText: '🔐 Recuperar contraseña' },
+    'branches': { url: '/sucursales', description: 'nuestras sucursales', requiresAuth: false, buttonText: '📍 Ver mapa de sucursales' },
 
     // Protected routes
     'profile': { url: '/profile?tab=personal', description: 'perfil personal', requiresAuth: true, buttonText: '👤 Mi perfil' },
@@ -39,7 +40,7 @@ export class NavigationHelpHandler extends BaseHandler {
     private readonly logger = new Logger(NavigationHelpHandler.name);
     readonly intent = ChatIntent.NAVIGATION_HELP;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         const destination = entities.destination as string;
 
         this.logger.debug(`Navigation help requested: destination=${destination}, userId=${userId || 'anon'}`);

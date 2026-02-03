@@ -9,7 +9,7 @@ import { ChatResponseDto } from '../dto/chat-response.dto';
 export class PricingInfoHandler extends BaseHandler {
     readonly intent = ChatIntent.PRICING_INFO;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         // Correct pricing info based on actual business logic
         return ChatResponseDto.text(
             '💰 **Sistema de Precios**\n\n' +

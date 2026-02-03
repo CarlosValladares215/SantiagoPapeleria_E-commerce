@@ -9,10 +9,10 @@ import { ChatResponseDto } from '../dto/chat-response.dto';
 export class UnclearHandler extends BaseHandler {
     readonly intent = ChatIntent.UNCLEAR;
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         // Check if user clicked "Buscar productos" without a specific term
         if (entities?.needsProductClarification) {
-            const message =
+            const clarificationMessage =
                 '🔍 **¡Perfecto! ¿Qué producto buscas?**\n\n' +
                 '---\n\n' +
                 'Escribe el nombre directamente, por ejemplo:\n\n' +
@@ -23,20 +23,20 @@ export class UnclearHandler extends BaseHandler {
                 'O elige una categoría popular:';
 
             return ChatResponseDto.options(
-                message,
+                clarificationMessage,
                 ['🎒 Mochilas', '📓 Cuadernos', '✏️ Lápices', '📁 Carpetas', '🏷️ Ver ofertas']
             );
         }
 
         // Generic unclear response
-        const message =
+        const responseMessage =
             '🤔 **No estoy seguro de entenderte**\n\n' +
             '---\n\n' +
             '¿Puedes ser más específico?\n' +
             'O elige una de estas opciones:';
 
         return ChatResponseDto.options(
-            message,
+            responseMessage,
             ['🔍 Buscar productos', '📦 Estado de pedido', '💰 Precios', '💬 Hablar con agente']
         );
     }

@@ -1,7 +1,9 @@
-import { Component, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
+
+import { Component, ChangeDetectorRef, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ErpService } from '../../../services/erp/erp.service';
+import { UnifiedFeedbackModalComponent, ModalType } from '../../../shared/components/unified-feedback-modal/unified-feedback-modal.component';
 
 type SyncType = 'complete' | 'products' | 'categories';
 type SyncStatus = 'idle' | 'syncing' | 'completed' | 'failed';
@@ -15,7 +17,7 @@ interface ProgressStep {
 @Component({
     selector: 'app-manual-sync',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, UnifiedFeedbackModalComponent],
     templateUrl: './manual-sync.component.html',
 })
 export class ManualSyncComponent implements OnDestroy {
@@ -29,6 +31,12 @@ export class ManualSyncComponent implements OnDestroy {
     startTime = 0;
     syncResults: any = null;
     private interval: any;
+
+    // Modal State
+    showModal = false;
+    modalType: ModalType = 'success';
+    modalTitle = '';
+    modalMessage = '';
 
     // Simplified steps for Real Data flow
     progressSteps: ProgressStep[] = [
@@ -216,7 +224,21 @@ export class ManualSyncComponent implements OnDestroy {
 
         this.syncStatus = 'completed';
         this.progress = 100;
+
+        // Trigger Modal
+        this.showCompletionModal();
         this.cd.detectChanges();
+    }
+
+    private showCompletionModal() {
+        this.modalType = 'success';
+        this.modalTitle = 'Sincronización Exitosa';
+        this.modalMessage = 'La sincronización con DobraNet se ha completado correctamente.';
+        this.showModal = true;
+    }
+
+    closeModal() {
+        this.showModal = false;
     }
 
     cancelSync() {

@@ -17,7 +17,7 @@ export class OrderTrackingHandler extends BaseHandler {
         super();
     }
 
-    async execute(entities: Record<string, any>, userId?: string): Promise<ChatResponseDto> {
+    async execute(entities: Record<string, any>, userId?: string, message?: string): Promise<ChatResponseDto> {
         this.logger.debug(`Order tracking inquiry from user: ${userId || 'anonymous'}`);
 
         // 1. User must be authenticated
@@ -38,9 +38,9 @@ export class OrderTrackingHandler extends BaseHandler {
             // 2. Get shipped orders with tracking info
             const orders = await this.pedidosService.findByUser(userId);
 
-            // Filter: Status 'ENVIADO' or has tracking info
+            // Filter: Status 'ENVIADO' (exclude delivered) and has tracking info
             const trackingOrders = orders.filter(o =>
-                (o.estado_pedido?.toUpperCase() === 'ENVIADO' || o.estado_pedido?.toUpperCase() === 'ENTREGADO') &&
+                o.estado_pedido?.toUpperCase() === 'ENVIADO' &&
                 o.datos_envio?.guia_tracking
             );
 
@@ -53,7 +53,7 @@ export class OrderTrackingHandler extends BaseHandler {
                     'Si tu pedido dice **"Preparando"**, pronto recibirás la guía por correo.';
 
                 return ChatResponseDto.actions(message, [
-                    { text: '📦 Ver mis pedidos', url: '/profile/orders', type: 'navigate' },
+                    { text: '📦 Ver mis pedidos', url: '/orders', type: 'navigate' },
                     { text: '💬 Hablar con agente', type: 'message' },
                 ]);
             }

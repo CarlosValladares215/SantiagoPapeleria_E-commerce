@@ -142,6 +142,12 @@ export class CatalogService {
 
         // 2. Build Sort Options
         const sortOptions: any = {};
+
+        // PRIORITY 1: Stock Status (Alfabético Descendente)
+        // 'normal' > 'bajo' > 'agotado'
+        // Esto asegura que los agotados siempre vayan al final
+        sortOptions['stock.estado_stock'] = -1;
+
         const sortParam = filterDto.sortBy || 'name';
 
         switch (sortParam) {

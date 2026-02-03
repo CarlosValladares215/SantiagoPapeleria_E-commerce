@@ -37,6 +37,7 @@ import { NavigationHelpHandler } from './handlers/navigation-help.handler';
 import { ReturnsHandler } from './handlers/returns.handler';
 import { OrderTrackingHandler } from './handlers/order-tracking.handler';
 import { OrderProcessHandler } from './handlers/order-process.handler';
+import { ReturnPolicyHandler } from './handlers/return-policy.handler';
 
 // External Modules
 import { ProductosModule } from '../products/productos.module';
@@ -91,6 +92,7 @@ import { ClassificationModule } from '../erp/classification/classification.modul
         ReturnsHandler,
         OrderTrackingHandler,
         OrderProcessHandler,
+        ReturnPolicyHandler,
     ],
     exports: [ChatbotOrchestrator],
 })

@@ -22,7 +22,7 @@ import { ChatRequest, ChatResponse, ChatHealthResponse } from '../models/chat.mo
 export class ChatApiService {
     private readonly http = inject(HttpClient);
     private readonly baseUrl = `${environment.baseApiUrl}/chatbot`;
-    private readonly REQUEST_TIMEOUT = 30000; // 30 seconds
+    private readonly REQUEST_TIMEOUT = 125000; // 125 seconds (matching backend 120s + buffer)
 
     /**
      * Send a message to the chatbot backend
