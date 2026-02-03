@@ -1,5 +1,6 @@
 ## ¿Como utilizar el asistente virtual?
 
+### Instalación
 Para que el bot Ollama funcione de forma local usted debera de descargarlo desde su sitio oficial
 
 https://ollama.com/download
@@ -15,6 +16,8 @@ Cuando termine de descargar se debe de ejecutar la siguiente linea desde la term
 ```
 ollama run llama3:8b
 ```
+
+### Configuración
 
 Para evitar que el bot consuma recursos en segundo plano se debera de ingresar al administrador de tareas y en la sección de "Aplicaciones de arraque" se debera de deshabilitar el bot Ollama, tal como se puede observar en la siguiente imagen:
 
