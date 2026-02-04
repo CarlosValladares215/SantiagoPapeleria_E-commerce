@@ -22,8 +22,13 @@ import { PaymentsModule } from './domains/payments/payments.module';
 
 @Module({
   imports: [
-    // Copia esta línea EXACTAMENTE en tu app.module.ts, verificando la contraseña.
-    MongooseModule.forRoot('mongodb+srv://admin:admin@santiagopapeleria.ogosw2n.mongodb.net/PapeleriaSantiago?retryWrites=true&w=majority'),
+    // ConfigModule debe estar PRIMERO para cargar las variables de entorno
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    // Ahora MongooseModule puede usar process.env.MONGO_URI
+    MongooseModule.forRoot(process.env.MONGO_URI!),
     ProductosModule,
     PedidosModule,
     UsuariosModule,
@@ -36,10 +41,6 @@ import { PaymentsModule } from './domains/payments/payments.module';
     PaymentsModule,
     FilesModule,
     ChatbotModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    })
   ],
   controllers: [AppController],
   providers: [AppService],
